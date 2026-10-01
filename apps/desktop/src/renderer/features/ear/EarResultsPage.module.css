@@ -1,0 +1,138 @@
+/* Ear results (docs/ui.md §3) — the Complete.dc.html composition, copied from its inline styles;
+   line numbers cited per rule. Card (hero, Complete:28), Confetti (Complete:20–26), StatTile
+   (Complete:49–60) and the buttons carry their own design CSS. */
+
+/* Complete:18 */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Complete:30 */
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Complete:31 — 84px circle; pass teal + teal halo; fail lavender + lavender-tint halo. */
+.badge {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+.pass {
+  background: var(--teal);
+  box-shadow: var(--halo-check);
+}
+.fail {
+  background: var(--lavender);
+  box-shadow: 0 0 0 10px var(--lavender-tint);
+}
+
+/* Complete:34 */
+.title {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+
+/* Complete:35 */
+.subtitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Complete:38 */
+.chips {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Complete:39 — 60px r14 chip, Fredoka 600 20 (one line: ten chips share the row). */
+.chip {
+  flex: 1 1 0;
+  height: 60px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ink);
+}
+.teal {
+  background: var(--teal);
+}
+/* engine.md §6.12 — a miss is lavender, never red. */
+.lavender {
+  background: var(--lavender);
+}
+
+/* Complete:48 */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+/* Complete:71 */
+.reviewNote {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Complete:74 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.actions > * {
+  white-space: nowrap;
+}
+
+/* Not in the design: start errors and the loading / fallback states. */
+.error {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.status {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}

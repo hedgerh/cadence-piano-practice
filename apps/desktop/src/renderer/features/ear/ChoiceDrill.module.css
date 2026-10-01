@@ -1,0 +1,139 @@
+/* EarInterval.dc.html (and EarChord.dc.html for the context button row) — copied from the
+   design's inline styles; line numbers cited per rule. TaskHeader, SegmentedProgress,
+   PlayButton, AnswerChip and FeedbackPanel carry their own design CSS. */
+
+/* EarInterval:20 */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* EarInterval:39 */
+.bar {
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--page-x);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* EarInterval:45 */
+.count {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+/* EarInterval:48 */
+.main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 20px 48px 36px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* EarInterval:50 */
+.playColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* EarInterval:54 */
+.playLabel {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* EarInterval:55 */
+.prompt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* EarChord:57 — the context button beside the main one. */
+.playRow {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+/* EarChord:58 */
+.contextColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* EarChord:62 */
+.contextLabel {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+/* EarChord:64 */
+.playColumnChord {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* EarChord:72 */
+.chipBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+/* EarChord:73 */
+.question {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* EarInterval:58 */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 900px;
+}
+
+/* EarInterval:68 */
+.greyed {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Not in the design: the moment between the last Next and the results screen. */
+.done {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}

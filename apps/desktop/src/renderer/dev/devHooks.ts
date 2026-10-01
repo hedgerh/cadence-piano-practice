@@ -14,6 +14,15 @@ export interface CadenceDevHooks {
     held(): Midi[];
     status(): MidiStatus;
   };
+  /** Set by the ear drill while mounted (features/ear/useEarDrill.ts); e2e reads the target. */
+  ear?: {
+    currentAnswer: string | null;
+    stepId: string | null;
+    /** MIDI numbers of the current prompt sound. */
+    notes: number[];
+    q: number;
+    phase: string;
+  };
 }
 
 declare global {

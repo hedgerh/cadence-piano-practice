@@ -45,6 +45,19 @@
   font-size: 13px;
 }
 
+/* Not in a design — chord-quality chips: interval type sizes, room for "Diminished". */
+.wide {
+  width: 150px;
+  height: 64px;
+}
+.wide .primary {
+  font-size: 20px;
+}
+.wide .secondary {
+  font-size: 12px;
+  line-height: 1.1;
+}
+
 /* EarInterval:150 */
 .active {
   background: var(--paper);
