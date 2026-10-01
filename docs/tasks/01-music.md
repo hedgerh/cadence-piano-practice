@@ -1,6 +1,6 @@
 # 01 — `@cadence/music`
 
-**Status:** todo
+**Status:** done
 
 Pure TypeScript music theory and matching. Zero dependencies. Used by both the renderer (real-time grading) and main (validation).
 
@@ -36,3 +36,16 @@ Pure TypeScript music theory and matching. Zero dependencies. Used by both the r
 ## Out of scope
 
 Content generation (Task 02), persistence, UI.
+
+## Notes
+
+Implemented as specified; `pnpm check` green with 74 tests across the six modules. Deviations and choices worth knowing:
+
+- `Spelling = 'sharps' | 'flats' | 'default' | { key }`. The `{ key }` variant spells diatonic notes from the key's scale and falls back to the key's accidental family (flats / sharps / default for C major, A minor) for non-diatonic pitch classes. To avoid a runtime import cycle, `pitch.ts` owns the low-level spelling primitive (`spellOnLetters`, `MODE_OFFSETS`) and `keys.ts` builds `scale()` on it; `pitch.ts` only `import type`s `Key`.
+- `Accidental` is single (`'' | '#' | 'b'`): no circle key needs a double accidental. `spellOnLetters` throws a `RangeError` when one would be needed (e.g. G# major), so misuse fails loudly.
+- `Triad.name` / `.short` render with the pretty glyphs ("C♯ minor", "C♯m", "G♯°") to match the design and the `blurb` generator in engine.md §2.2. The hand tables in the tests are written in ASCII and compared through `pretty()`.
+- `placeScale(key)` places the tonic in C3..B3 (`48 + pc`) so all eight notes stay inside `PRACTICE_RANGE`; the spec did not fix the tonic octave.
+- `cadenceVoicing(key)` returns four ascending `Midi[]` of four notes each (bass + triad): I root position on `placeRoot`, IV second inversion on the same tonic note, V first inversion with its third just below the tonic, I again.
+- `MatchState` is one flat object `{ status, index, tries, found, then, chosen }` for every spec type (`then` holds the chained `root.then` state). `sequence.direction` is carried but not used by the matcher (the notes already encode direction). Sequence reset sets `status: 'idle'` (silent), a `root` miss sets `'wrong'` and records the note in `tries`; `sequence`, `root` and `choice` are terminal once `matched`, while `chord` / `voicing` recompute from the held set each time.
+- `hintFor(root)` returns the tonic name and every octave of the tonic within `PRACTICE_RANGE` (engine.md §6.13 "home lights every octave"); `voicing` / `sequence` hints return pitch-class names without octaves plus the exact MIDI keys.
+- Extra tested exports beyond the spec list: `ALL_KEYS`, `MODE_OFFSETS`, `spellOnLetters`, `spelledNote`, `parsePitchClass`, `parseNote`, `isLetter`/`isPitchClass`/`isNote`, `triadQuality`, `numeralFor`, `triadShort`, `intervalById`, `stackAbove`.

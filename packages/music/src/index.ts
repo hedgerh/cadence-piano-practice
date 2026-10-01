@@ -1,2 +1,7 @@
-// @cadence/music — see docs/tasks for the implementation task.
-export {};
+// @cadence/music — pure music theory and matching. Zero dependencies.
+export * from './pitch';
+export * from './keys';
+export * from './triads';
+export * from './intervals';
+export * from './voicing';
+export * from './match';
