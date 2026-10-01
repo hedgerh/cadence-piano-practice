@@ -1,0 +1,133 @@
+/* Complete.dc.html — copied from the design's inline styles; line numbers cited per rule.
+   Card (hero, Complete:28), Confetti (Complete:20–26), RomanChip (Complete:39–45), StatTile
+   (Complete:49–60), ProgressBar and the buttons carry their own design CSS. */
+
+/* Complete:18 */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Complete:30 */
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Complete:31 */
+.check {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: var(--halo-check);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Complete:32 — stroke #211B16 */
+  color: var(--ink);
+}
+
+/* Complete:34 */
+.title {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+
+/* Complete:35 */
+.subtitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Complete:38 */
+.chips {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Complete:48 */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+/* Complete:63 */
+.track {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Complete:64 */
+.trackLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+/* Complete:71 */
+.reviewNote {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Complete:74 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  /* Not in the design: the skipped variant has three actions; wrap whole buttons, never labels,
+     with the text button tucked right under the row. */
+  row-gap: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.actions > * {
+  white-space: nowrap;
+}
+
+/* Not in the design: start errors and the loading / fallback states. Practice:20-style page. */
+.error {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.status {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}

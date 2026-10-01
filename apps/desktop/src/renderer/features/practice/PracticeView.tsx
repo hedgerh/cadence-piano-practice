@@ -30,6 +30,7 @@ import {
   progressSegments,
   type MarkPlayedMode,
 } from './practiceSelectors';
+import type { XpToast } from './usePracticeSession';
 
 export interface PracticeViewProps {
   state: PracticeState;
@@ -45,6 +46,8 @@ export interface PracticeViewProps {
   onFinish: () => void;
   finishing?: boolean;
   finishError?: string | null;
+  /** Task 09: "+5 XP" after each recorded step. */
+  xpToast?: XpToast | null;
 }
 
 export function PracticeView({
@@ -60,6 +63,7 @@ export function PracticeView({
   onFinish,
   finishing = false,
   finishError = null,
+  xpToast = null,
 }: PracticeViewProps) {
   const total = state.steps.length;
   const finished = state.phase === 'finished';
@@ -194,6 +198,12 @@ export function PracticeView({
             ))}
           </div>
         </footer>
+      )}
+
+      {xpToast !== null && (
+        <div key={xpToast.id} className={styles.xpToast} role="status" data-testid="xp-toast">
+          +{xpToast.amount} XP
+        </div>
       )}
     </div>
   );

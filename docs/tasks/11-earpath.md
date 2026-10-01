@@ -1,6 +1,6 @@
 # 11 — EarPath (ladder track map)
 
-**Status:** todo
+**Status:** done
 
 The ladder map for non-key tracks: five stages with unlock conditions and level progress.
 
@@ -25,3 +25,12 @@ The ladder map for non-key tracks: five stages with unlock conditions and level 
 ## Out of scope
 
 Drill screens (Tasks 12–15).
+
+## Notes
+
+- Files: `features/path/LadderPathPage.tsx` (data: `useMe`, `useTracks`, `useTrackOverview`, `useStartSession`, `useSetTrackSettings`), `LadderPathView.tsx` (pure view), `LadderModel.ts` (overview → StageRow/TrackPill mapping), `LadderPathPage.module.css` (EarPath.dc.html lines cited), `LadderPathPage.test.tsx`; dev screen `features/earpath/dev.tsx`; `e2e/earpath.spec.ts`; screenshot `e2e/screenshots/11-earpath.png`.
+- Dev screen is `/dev/screens/ear-path` (not `earpath`), matching the existing `ear-path` fixture key. It lives in `features/earpath/` because the registry only globs `features/*/dev.tsx` and `features/path/dev.tsx` belongs to Task 10. Knobs: `?vis=num|name|all`, `?stage1=done`.
+- **Added beyond the design** (docs/decisions.md, Task 11): a compact ShowMeControl row under "How a level works" sets the ear track's `visibility`, which Task 14's drills read. At 1280×820 it pushes "Start Level 3" partly below the fold, and the page scrolls about 20px.
+- Several open stages each render as `current` (tangerine node and segments). Only the stage holding `upNext` links its card to `upNext.route`. Locked and done cards are not links. The design links stages 4 and 5, which looks like a prototype leftover.
+- "Up next" title is `${stageTitle} · ${title}` and the CTA label is `upNext.label`, both from the engine. "Track · stage N of M" is the stage holding up-next.
+- e2e border probe: on 1.5× displays Chromium reports the locked node's 3px border as `2.66667px`, so the probe accepts either value. The 3px rail is probed by width and passes exactly.

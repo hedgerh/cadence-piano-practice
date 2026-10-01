@@ -1,0 +1,27 @@
+/* Path:60 — card title 15/800. */
+.title {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Path:41 — pill row. */
+.keys {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Path:43 — outlined pill: 44px r999, white, 2px line-strong, 15/800 (a <button> here). */
+.key {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 15px;
+}
+.key:disabled {
+  color: var(--muted);
+}

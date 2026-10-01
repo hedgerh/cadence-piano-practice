@@ -46,3 +46,8 @@ Append-only. One entry per architectural or product decision agents must follow.
 - **Keyboard lighting is keyed by MIDI number**, not note name (`KeyStates = Record<Midi, KeyState>`, built from spelled notes with `keyStates()`), so enharmonic spellings (C♯4 / D♭4) light the same key.
 - **MIDI composition**: one Zustand store over three roles: `device` (Web MIDI; its status is the pill), `fallback` (computer keyboard; heard when no device is connected, always in dev), and `dev` (a `FakeMidiInput` behind `window.__cadenceDev.midi`).
 - **Cadence chord length**: the first three chords of a `cadence` Sound ring 0.6 s at 0.65 s spacing and the final I rings 1.2 s (~3.2 s total). engine.md §7 gives only the spacing.
+
+## 2026-10-01 — EarPath (Task 11)
+
+- **Ear track "Show me"**: ear drills (Task 14 Chords in a key) read the **ear track's** `track_settings.visibility`. It is set from EarPath with a compact `ShowMeControl` row under the "How a level works" card (`tracks.setSettings {trackId, visibility}`); the drill header gets no control. Not in EarPath.dc.html; it adds one 36px row to the left column, so at 1280×820 the "Start Level N" button sits partly below the fold.
+- **Ladder stage → StageRow**: engine stage `open` → `current` (tangerine node, "Level N of M", level segments), `locked` → `locked` (engine `unlockText`), `complete` → `done` (teal check, "Complete"). Several stages can be open at once; each renders `current`, and only the stage holding `upNext` links its card (to `upNext.route`).

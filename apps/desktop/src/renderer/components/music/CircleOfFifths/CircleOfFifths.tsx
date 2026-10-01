@@ -11,6 +11,8 @@ export interface CircleKey {
   compact?: boolean;
   /** Done and current nodes are buttons. */
   onClick?: () => void;
+  /** Accessible name for a done/current node (defaults to "<label> major, …"). */
+  ariaLabel?: string;
 }
 
 export interface CircleOfFifthsProps {
@@ -20,6 +22,8 @@ export interface CircleOfFifthsProps {
   minors: readonly string[];
   complete: number;
   total?: number;
+  /** Path:101 — "inner ring: relative minors" (the minor track's inner ring holds majors). */
+  innerLabel?: string;
   'data-testid'?: string;
 }
 
@@ -29,6 +33,7 @@ export function CircleOfFifths({
   minors,
   complete,
   total = 12,
+  innerLabel = 'inner ring: relative minors',
   'data-testid': testId,
 }: CircleOfFifthsProps) {
   const outer = ringBox('outer');
@@ -50,7 +55,7 @@ export function CircleOfFifths({
           <span className={styles.of}>/{total}</span>
         </span>
         <span className={styles.caption}>keys complete</span>
-        <span className={styles.legend}>inner ring: relative minors</span>
+        <span className={styles.legend}>{innerLabel}</span>
       </div>
 
       {keys.map((k, i) => {
@@ -76,7 +81,9 @@ export function CircleOfFifths({
             className={className}
             style={style}
             onClick={k.onClick}
-            aria-label={`${label} major${k.state === 'current' ? ', up next' : ', complete'}`}
+            aria-label={
+              k.ariaLabel ?? `${label} major${k.state === 'current' ? ', up next' : ', complete'}`
+            }
             data-node="key"
             data-index={i}
             data-state={k.state}

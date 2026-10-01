@@ -43,8 +43,25 @@ function useLatest<T>(value: T): { readonly current: T } {
   return ref;
 }
 
+/** Task 09: the live "+5 XP" toast after a step is recorded (small, bottom-right, 1.2 s). */
+export const XP_TOAST_MS = 1200;
+
+export interface XpToast {
+  /** Increments per toast so the view restarts its animation. */
+  id: number;
+  amount: number;
+}
+
+/** `sessions.recordStep` → `xpAwarded` (the dev screen's fake returns nothing). */
+function xpAwardedOf(result: unknown): number {
+  if (typeof result !== 'object' || result === null || !('xpAwarded' in result)) return 0;
+  const xp = result.xpAwarded;
+  return typeof xp === 'number' ? xp : 0;
+}
+
 export interface PracticeSessionApi {
   state: PracticeState;
+  xpToast: XpToast | null;
   hint: () => void;
   skip: () => void;
   markPlayed: () => void;
@@ -95,14 +112,25 @@ export function usePracticeSession(
   const inflight = useRef<Set<Promise<void>>>(new Set());
   const failed = useRef<Map<number, Resolution>>(new Map());
   const sessionId = session.sessionId;
+  const [xpToast, setXpToast] = useState<XpToast | null>(null);
+  const toastSeq = useRef(0);
   const post = useCallback(
     (r: Resolution, delays?: readonly number[]): Promise<void> =>
       withRetry(() => ioRef.current.recordStep({ sessionId, ...r }), delays).then(
-        () => void failed.current.delete(r.ordinal),
+        (res) => {
+          failed.current.delete(r.ordinal);
+          const amount = xpAwardedOf(res);
+          if (amount > 0) setXpToast({ id: ++toastSeq.current, amount });
+        },
         () => void failed.current.set(r.ordinal, r),
       ),
     [sessionId, ioRef],
   );
+  useEffect(() => {
+    if (xpToast === null) return;
+    const t = setTimeout(() => setXpToast(null), XP_TOAST_MS);
+    return () => clearTimeout(t);
+  }, [xpToast]);
   useEffect(() => {
     for (const r of state.results) {
       if (posted.current.has(r.ordinal)) continue;
@@ -147,6 +175,7 @@ export function usePracticeSession(
 
   return {
     state,
+    xpToast,
     hint: useCallback(() => dispatch({ type: 'HINT', at: Date.now() }), []),
     skip: useCallback(() => dispatch({ type: 'SKIP', at: Date.now() }), []),
     markPlayed: useCallback(() => dispatch({ type: 'MARK_PLAYED', at: Date.now() }), []),
@@ -162,9 +191,15 @@ export function useLivePracticeIo(): PracticeIo {
   const qc = useQueryClient();
   const { mutate: saveSettings } = useSetTrackSettings();
   const saveRef = useLatest(saveSettings);
+  // Task 09: XP/streak (header pills), plan and overviews refresh after every recorded step.
+  const invalidateRef = useLatest(useInvalidateProgress());
   return useMemo<PracticeIo>(
     () => ({
-      recordStep: (input) => api['sessions.recordStep'](input),
+      recordStep: async (input) => {
+        const result = await api['sessions.recordStep'](input);
+        void invalidateRef.current();
+        return result;
+      },
       setVisibility: (trackId, visibility) => {
         qc.setQueryData<ChannelOutput<'tracks.overview'>>(
           queryKey('tracks.overview', { trackId }),
@@ -174,7 +209,7 @@ export function useLivePracticeIo(): PracticeIo {
       },
       finish: (input) => api['sessions.finish'](input),
     }),
-    [qc, saveRef],
+    [qc, saveRef, invalidateRef],
   );
 }
 

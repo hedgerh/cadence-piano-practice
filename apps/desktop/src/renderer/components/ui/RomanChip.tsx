@@ -12,6 +12,8 @@ interface Common {
   sub?: string;
   /** Path:68 (48) · Learn:44 (52) · Complete:39 (60) · Practice:173 (64). */
   size: 48 | 52 | 60 | 64;
+  /** Extra class from the screen (e.g. Learn's sounding-chip highlight). */
+  className?: string | undefined;
   'data-testid'?: string;
 }
 
@@ -22,7 +24,7 @@ export type RomanChipProps = Common &
   );
 
 export function RomanChip(props: RomanChipProps) {
-  const { numeral, sub, size } = props;
+  const { numeral, sub, size, className } = props;
   const quality = props.mode === 'quality';
   return (
     <span
@@ -31,6 +33,7 @@ export function RomanChip(props: RomanChipProps) {
         styles[`s${size}`],
         quality && props.emphasized && styles.emphasized,
         !quality && styles[props.state],
+        className,
       )}
       style={quality ? { background: qualityColor(props.quality) } : undefined}
       data-testid={props['data-testid']}

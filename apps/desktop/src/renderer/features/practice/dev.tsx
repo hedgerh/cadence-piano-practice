@@ -121,6 +121,7 @@ function DevPracticeScreen({ search }: { search: string }) {
       onFinish={practice.finish}
       finishing={practice.finishing}
       finishError={practice.finishError}
+      xpToast={practice.xpToast}
     />
   );
 }

@@ -170,3 +170,45 @@
   color: var(--muted);
   text-align: center;
 }
+
+/* Task 09 (not in the design): live "+5 XP" toast — small, tangerine tint, bottom-right, 1.2 s
+   (XP_TOAST_MS). Sits above the Practice:120 footer strip (36px padding + 64px chips). */
+.xpToast {
+  position: fixed;
+  right: 24px;
+  bottom: 112px;
+  z-index: 10;
+  pointer-events: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--tangerine-tint);
+  border: 2px solid var(--tangerine);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  animation: xp-toast 1.2s ease-out forwards;
+}
+
+@keyframes xp-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  15%,
+  75% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xpToast {
+    animation: none;
+  }
+}

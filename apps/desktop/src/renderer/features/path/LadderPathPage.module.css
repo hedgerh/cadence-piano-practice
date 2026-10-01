@@ -1,0 +1,132 @@
+/* EarPath:18 — page column on the ground colour. */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* EarPath:39 */
+.main {
+  max-width: 1184px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 48px 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* EarPath:49 — two columns at 1280 (auto-fit, min 440), aligned to the top. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr));
+  gap: 40px;
+  align-items: start;
+}
+
+/* EarPath:51 */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* EarPath:52 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* EarPath:53 */
+.eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--lavender-deep);
+}
+
+/* EarPath:54 */
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* EarPath:55 */
+.blurb {
+  margin: 0;
+  font-size: 17px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* EarPath:58 — "How a level works" card. */
+.how {
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* EarPath:59 */
+.howTitle {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Not in the design (decisions.md, Task 11): the ear track's "Show me" setting, one compact
+   row tucked under the "How a level works" card (12px from it, like the card's own gap). */
+.showMe {
+  display: flex;
+  margin-top: -10px;
+}
+
+/* EarPath:69 */
+.upNextEyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--lavender-deep);
+}
+
+/* EarPath:70 */
+.upNextTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+}
+
+/* EarPath:71 */
+.upNextBody {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* EarPath:74 — the CTA sits at the start of the column (align-self: flex-start). */
+.cta {
+  align-self: flex-start;
+  display: flex;
+}
+
+/* EarPath:80 */
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}

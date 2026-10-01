@@ -55,6 +55,7 @@ function LivePractice({ session }: { session: PracticeSession }) {
       onFinish={practice.finish}
       finishing={practice.finishing}
       finishError={practice.finishError}
+      xpToast={practice.xpToast}
     />
   );
 }

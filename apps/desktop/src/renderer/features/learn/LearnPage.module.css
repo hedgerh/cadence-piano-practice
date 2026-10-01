@@ -1,0 +1,127 @@
+/* Learn:18 — page column on the ground colour. */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Learn:29 */
+.main {
+  max-width: 880px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 8px 48px 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Learn:30 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Learn:31 */
+.eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Learn:32 */
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 44px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* Learn:33 */
+.lede {
+  margin: 0;
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 600;
+  max-width: 720px;
+}
+
+/* Learn:36 — white, 2px line, r24, --sh-card, p 26/30, gap 22. */
+.card {
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--sh-card);
+  padding: 26px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Learn:38 */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Learn:39 */
+.rowHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Learn:40 */
+.rowLabel {
+  font-size: 15px;
+  font-weight: 800;
+  width: 150px;
+}
+
+/* Learn:41 */
+.rowCaption {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Learn:43 */
+.chips {
+  display: flex;
+  gap: 8px;
+}
+
+/* Beyond the design: the chip currently sounding lifts with a hard ink shadow (ui.md §3). */
+.chips > .sounding {
+  transform: translateY(-4px);
+  box-shadow: var(--sh-ink);
+}
+.chips > .soundingPivot {
+  box-shadow: var(--ring-ink-3), var(--sh-ink);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chips > * {
+    transition:
+      transform 120ms ease-out,
+      box-shadow 120ms ease-out;
+  }
+}
+
+/* Learn:82 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}

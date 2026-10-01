@@ -1,0 +1,125 @@
+/* Path:18 — page column on the ground colour. */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Path:39 */
+.main {
+  max-width: 1184px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 48px 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Path:49 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr));
+  gap: 40px;
+  align-items: center;
+}
+
+/* Path:51 */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Path:52 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Path:53, Path:79 — 13/800 ls 1 uppercase tangerine-deep. */
+.eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tangerine-deep);
+}
+
+/* Path:54 */
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* Path:55 */
+.blurb {
+  margin: 0;
+  font-size: 17px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Path:59 */
+.patternHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Path:60 */
+.patternTitle {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Path:67 */
+.chips {
+  display: flex;
+  gap: 8px;
+}
+
+/* Path:80 */
+.upTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+}
+
+/* Path:81 */
+.upBody {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Beyond the design: the lesson note under the "Ready to start" body (Path:81 size, eyebrow colour). */
+.upNote {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--tangerine-deep);
+}
+
+/* Path:84 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Path:93 */
+.circleWrap {
+  display: flex;
+  justify-content: center;
+}
