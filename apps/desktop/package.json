@@ -1,6 +1,7 @@
 {
   "name": "@cadence/desktop",
   "version": "0.1.0",
+  "productName": "Cadence",
   "private": true,
   "description": "Cadence desktop app (Electron + React)",
   "main": "./out/main/index.js",
@@ -12,7 +13,8 @@
     "dist": "electron-vite build && electron-builder --win",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p e2e/tsconfig.json",
     "e2e": "pnpm build && playwright test -c e2e/playwright.config.ts",
-    "rebuild:native": "electron-builder install-app-deps"
+    "rebuild:native": "electron-builder install-app-deps",
+    "icon": "node scripts/generate-icon.mjs"
   },
   "dependencies": {
     "@cadence/content": "workspace:*",

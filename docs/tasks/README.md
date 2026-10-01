@@ -5,23 +5,23 @@ Work these in order, one Claude Code session per task. Each file is self-contain
 | #   | Task                                                                 | Status |
 | --- | -------------------------------------------------------------------- | ------ |
 | 00  | [Scaffold](00-scaffold.md)                                           | done   |
-| 01  | [@cadence/music](01-music.md)                                        | todo   |
-| 02  | [@cadence/content](02-content.md)                                    | todo   |
-| 03  | [@cadence/db](03-db.md)                                              | todo   |
-| 04  | [@cadence/core](04-core.md)                                          | todo   |
-| 05  | [Main wiring + IPC](05-main-ipc.md)                                  | todo   |
-| 06  | [Renderer foundation + component library](06-renderer-foundation.md) | todo   |
-| 07  | [Today](07-today.md)                                                 | todo   |
-| 08  | [Practice](08-practice.md)                                           | todo   |
-| 09  | [Complete + review wiring](09-complete.md)                           | todo   |
-| 10  | [Path (circle) + Learn + minor track](10-path-learn.md)              | todo   |
-| 11  | [EarPath](11-earpath.md)                                             | todo   |
-| 12  | [Ear: Intervals + results](12-ear-intervals.md)                      | todo   |
-| 13  | [Ear: Scale degrees + Chord quality](13-ear-degrees-quality.md)      | todo   |
-| 14  | [Ear: Chords in a key](14-ear-chords-in-key.md)                      | todo   |
-| 15  | [Ear: Find the key](15-ear-find-key.md)                              | todo   |
-| 16  | [Polish](16-polish.md)                                               | todo   |
-| 17  | [Packaging verification](17-packaging.md)                            | todo   |
+| 01  | [@cadence/music](01-music.md)                                        | done   |
+| 02  | [@cadence/content](02-content.md)                                    | done   |
+| 03  | [@cadence/db](03-db.md)                                              | done   |
+| 04  | [@cadence/core](04-core.md)                                          | done   |
+| 05  | [Main wiring + IPC](05-main-ipc.md)                                  | done   |
+| 06  | [Renderer foundation + component library](06-renderer-foundation.md) | done   |
+| 07  | [Today](07-today.md)                                                 | done   |
+| 08  | [Practice](08-practice.md)                                           | done   |
+| 09  | [Complete + review wiring](09-complete.md)                           | done   |
+| 10  | [Path (circle) + Learn + minor track](10-path-learn.md)              | done   |
+| 11  | [EarPath](11-earpath.md)                                             | done   |
+| 12  | [Ear: Intervals + results](12-ear-intervals.md)                      | done   |
+| 13  | [Ear: Scale degrees + Chord quality](13-ear-degrees-quality.md)      | done   |
+| 14  | [Ear: Chords in a key](14-ear-chords-in-key.md)                      | done   |
+| 15  | [Ear: Find the key](15-ear-find-key.md)                              | done   |
+| 16  | [Polish](16-polish.md)                                               | done   |
+| 17  | [Packaging verification](17-packaging.md)                            | done   |
 
 Definition of done for every task is in `CLAUDE.md`. Suggested first prompt for a session:
 

@@ -3,7 +3,7 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import type { OpenedDatabase } from '@cadence/db';
 import { loadContent } from './content';
-import { openAppDatabase } from './db';
+import { databasePath, openAppDatabase } from './db';
 import { loadClockOffset } from './dev/clockOffset';
 import { buildHandlers, type RuntimeEnv } from './ipc/handlers';
 import { registerHandlers } from './ipc/register';
@@ -34,6 +34,9 @@ log.errorHandler.startCatching();
 
 let database: OpenedDatabase | null = null;
 
+// Unpackaged runs have no embedded exe icon; point the window at the generated one.
+const windowIcon = app.isPackaged ? undefined : join(app.getAppPath(), 'resources', 'icon.ico');
+
 function start(): void {
   // §4.2 both MIDI permission handlers.
   installPermissionHandlers();
@@ -41,7 +44,12 @@ function start(): void {
   const userData = app.getPath('userData');
 
   // §4.3 SQLite (WAL, foreign keys) + bundled Drizzle migrations.
-  database = openAppDatabase();
+  const opened = openAppDatabase();
+  database = opened;
+  log.info(
+    `Database ${databasePath()}: applied ${opened.migrations.applied} migration(s), ` +
+      `${opened.migrations.total} total`,
+  );
 
   // §4.4 content: throws in dev, logs in prod.
   const content = loadContent(env.dev, log);
@@ -59,7 +67,7 @@ function start(): void {
   );
 
   // §4.6 the window.
-  createMainWindow();
+  createMainWindow(windowIcon);
 
   log.info(
     `Cadence ${app.getVersion()} started; userData=${userData}; ` +
@@ -73,7 +81,7 @@ app
   .then(() => {
     start();
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+      if (BrowserWindow.getAllWindows().length === 0) createMainWindow(windowIcon);
     });
   })
   .catch((err: unknown) => {

@@ -4,7 +4,11 @@ import { BrowserWindow, shell } from 'electron';
 /** The designs are 1280x820; the layouts are fluid but the keyboard (661px) and circle (580px) are fixed. */
 export const WINDOW = { width: 1280, height: 820, minWidth: 1100, minHeight: 720 } as const;
 
-export function createMainWindow(): BrowserWindow {
+/**
+ * `icon` is only needed unpackaged (dev, e2e): the packaged exe embeds `resources/icon.ico`
+ * (electron-builder `win.icon`) and Windows uses it for the window and taskbar.
+ */
+export function createMainWindow(icon?: string): BrowserWindow {
   const win = new BrowserWindow({
     width: WINDOW.width,
     height: WINDOW.height,
@@ -15,6 +19,7 @@ export function createMainWindow(): BrowserWindow {
     autoHideMenuBar: true,
     backgroundColor: '#FAF7F2',
     title: 'Cadence',
+    ...(icon ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

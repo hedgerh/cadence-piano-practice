@@ -142,6 +142,10 @@ export default tseslint.config(
     },
   },
   {
+    files: ['apps/desktop/scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node } },
+  },
+  {
     files: ['apps/desktop/src/{main,preload}/**/*.ts'],
     languageOptions: { globals: { ...globals.node } },
   },
