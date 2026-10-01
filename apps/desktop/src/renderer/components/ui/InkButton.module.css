@@ -1,0 +1,12 @@
+/* EarInterval:89 — 52, r14, ink fill, white text, 16/800. */
+.ink,
+.ink:hover {
+  gap: 8px;
+  height: 52px;
+  padding: 0 22px;
+  border-radius: 14px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 16px;
+  white-space: nowrap;
+}

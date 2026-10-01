@@ -1,0 +1,89 @@
+/* EarPath:82 */
+.row {
+  display: flex;
+  gap: 18px;
+}
+
+/* EarPath:83 */
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 48px;
+}
+
+/* EarPath:84 / 106 — 48px node, Fredoka 700 20. */
+.node {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.current {
+  background: var(--tangerine);
+  box-shadow: var(--halo-6);
+}
+.locked {
+  background: var(--paper);
+  border: 3px solid var(--line-strong);
+  box-sizing: border-box;
+  color: var(--muted);
+}
+/* ui.md §3 "done stages show teal check" (not in the design). */
+.done {
+  background: var(--teal);
+}
+
+/* EarPath:85 — 3px rail, line-strong. */
+.line {
+  width: 3px;
+  flex-grow: 1;
+  background: var(--line-strong);
+  min-height: 24px;
+}
+
+/* EarPath:87 — margin below every card except the last. */
+.card {
+  margin-bottom: 16px;
+}
+.lastCard {
+  margin-bottom: 0;
+}
+
+/* EarPath:88 */
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* EarPath:89 */
+.title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* EarPath:90 (current) / EarPath:112 (others) */
+.meta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.metaCurrent {
+  font-weight: 800;
+  color: var(--tangerine-deep);
+}
+
+/* EarPath:92 */
+.blurb {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}

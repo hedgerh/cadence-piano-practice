@@ -1,0 +1,28 @@
+/* EarPath:60 — column gap 8, 15/600 muted. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* EarPath:61 */
+.item {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+/* EarPath:61 — Fredoka 700 ink, 22px wide. */
+.number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+  width: 22px;
+  flex-shrink: 0;
+}

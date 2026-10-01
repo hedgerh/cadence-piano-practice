@@ -1,0 +1,40 @@
+.legend {
+  display: flex;
+  font-weight: 800;
+  color: var(--muted);
+}
+.item {
+  display: inline-flex;
+  align-items: center;
+}
+.swatch {
+  display: inline-block;
+}
+
+/* Path:61–62 — sm: gap 12, 12/800; swatch 10px r3, item gap 5. */
+.sm {
+  gap: 12px;
+  font-size: 12px;
+}
+.sm .item {
+  gap: 5px;
+}
+.sm .swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+/* Learn:75–76 — md: gap 14, 13/800; swatch 12px r4, item gap 6. */
+.md {
+  gap: 14px;
+  font-size: 13px;
+}
+.md .item {
+  gap: 6px;
+}
+.md .swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}

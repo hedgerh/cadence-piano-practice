@@ -1,0 +1,23 @@
+/* Practice:16–17, 33, 103 — .cad-dot: a solid dot, optionally pulsing. */
+.dot {
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.s10 {
+  width: 10px;
+  height: 10px;
+}
+.s12 {
+  width: 12px;
+  height: 12px;
+}
+.tealDeep {
+  background: var(--teal-deep);
+}
+.dune {
+  background: var(--dune);
+}
+.pulsing {
+  animation: var(--pulse);
+}

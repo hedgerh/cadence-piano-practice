@@ -6,14 +6,15 @@ import { _electron as electron, type ElectronApplication, type Page } from '@pla
 /**
  * Launches the built app (apps/desktop, main = out/main/index.js) with a throwaway userData folder
  * and CADENCE_E2E=1 so dev-only IPC (dev.seed, window.__cadenceDev) is available.
- * Run `pnpm build` first (the `e2e` script does).
+ * Run `pnpm build` first (the `e2e` script does). Pass `userData` to relaunch over an existing
+ * profile (persistence checks).
  */
-export async function launchCadence(): Promise<{
+export async function launchCadence(opts: { userData?: string } = {}): Promise<{
   app: ElectronApplication;
   page: Page;
   userData: string;
 }> {
-  const userData = mkdtempSync(join(tmpdir(), 'cadence-e2e-'));
+  const userData = opts.userData ?? mkdtempSync(join(tmpdir(), 'cadence-e2e-'));
   const app = await electron.launch({
     // Launch the app directory so Electron reads package.json (main, version).
     args: [resolve(__dirname, '..')],

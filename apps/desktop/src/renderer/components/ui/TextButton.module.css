@@ -1,0 +1,17 @@
+/* Practice:112–113, EarKey:94 — 48, r14, transparent, muted 15/800. */
+.text,
+.text:hover {
+  gap: 8px;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Practice:112 */
+.underline {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}

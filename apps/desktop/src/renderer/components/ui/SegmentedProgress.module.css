@@ -1,0 +1,27 @@
+/* Practice:41 / EarInterval:40 / EarKey:40 — gap 6, grows to a max width. */
+.track {
+  display: flex;
+  gap: 6px;
+}
+.grow {
+  flex-grow: 1;
+}
+
+/* Practice:185 — flex 1, 10px, r999. */
+.seg {
+  flex: 1 1 0;
+  height: 10px;
+  border-radius: 999px;
+}
+.done {
+  background: var(--teal);
+}
+.current {
+  background: var(--tangerine);
+}
+.wrong {
+  background: var(--lavender);
+}
+.empty {
+  background: var(--sand-deep);
+}

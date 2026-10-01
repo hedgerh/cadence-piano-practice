@@ -1,0 +1,97 @@
+.chip {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  color: var(--ink);
+}
+.numeral {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+}
+.sub {
+  font-weight: 800;
+}
+
+/* Path:68 — 48, r12, Fredoka 600 20. */
+.s48 {
+  height: 48px;
+  border-radius: 12px;
+}
+.s48 .numeral {
+  font-size: 20px;
+  line-height: normal;
+}
+
+/* Learn:44 — 52, r12, Fredoka 600 22. */
+.s52 {
+  height: 52px;
+  border-radius: 12px;
+}
+.s52 .numeral {
+  font-size: 22px;
+  line-height: normal;
+}
+
+/* Complete:39 — 60, r14, gap 2; numeral 20, sub 13/800. */
+.s60 {
+  height: 60px;
+  border-radius: 14px;
+  gap: 2px;
+}
+.s60 .numeral {
+  font-size: 20px;
+}
+.s60 .sub {
+  font-size: 13px;
+}
+
+/* Practice:173 — 64, r14, gap 4; numeral 22, sub 14/800 lh 1.1. */
+.s64 {
+  height: 64px;
+  border-radius: 14px;
+  gap: 4px;
+}
+.s64 .numeral {
+  font-size: 22px;
+}
+.s64 .sub {
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+/* Learn:49 — emphasized (pivot) ring. */
+.emphasized {
+  box-shadow: var(--ring-ink-3);
+}
+
+/* Practice:176–179, Complete:45 — state mode. */
+.done {
+  background: var(--teal);
+  border: 2px solid var(--teal);
+  color: var(--ink);
+}
+.current {
+  background: var(--tangerine);
+  border: 2px solid var(--tangerine);
+  color: var(--ink);
+  box-shadow: var(--halo-4);
+}
+.upcoming {
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  color: var(--muted);
+}
+.skipped {
+  background: var(--paper);
+  border: 2px dashed var(--dune);
+  color: var(--muted);
+}
+.hinted {
+  background: var(--tangerine-tint-soft);
+  border: 2px solid var(--tangerine);
+  color: var(--ink);
+}

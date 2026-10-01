@@ -1,0 +1,41 @@
+/* Practice:48 */
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Practice:49 */
+.label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+/* Practice:50 — sand well r12 p4 gap4. */
+.well {
+  display: inline-flex;
+  background: var(--sand);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+/* Practice:188–190 — 36px segments (Task 16 raises to 44px). */
+.seg {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 0;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted);
+}
+.on {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--sh-seg-on);
+}

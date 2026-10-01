@@ -1,0 +1,79 @@
+/* EarInterval:142 / EarChord:75 — r14, column, gap 4, border-box. */
+.chip {
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  padding: 0;
+  cursor: default;
+}
+.primary {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+}
+.secondary {
+  font-weight: 800;
+}
+
+/* EarInterval:142, 61–62 — 118×64; Fredoka 20; 12/800 lh 1.1. */
+.interval {
+  width: 118px;
+  height: 64px;
+}
+.interval .primary {
+  font-size: 20px;
+}
+.interval .secondary {
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+/* EarChord:75 — 104×68; Fredoka 22; 13/800. */
+.chord {
+  width: 104px;
+  height: 68px;
+}
+.chord .primary {
+  font-size: 22px;
+}
+.chord .secondary {
+  font-size: 13px;
+}
+
+/* EarInterval:150 */
+.active {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  box-shadow: var(--sh-ink);
+  cursor: pointer;
+}
+/* EarInterval:146 — greyed-out (arrives in a later level). */
+.inactive {
+  background: var(--sand);
+  border: 2px solid var(--sand);
+  color: var(--muted);
+}
+/* EarInterval:147 */
+.correct {
+  background: var(--teal);
+  border: 2px solid var(--teal);
+  color: var(--ink);
+}
+/* EarInterval:148 */
+.chosenWrong {
+  background: var(--tangerine-tint);
+  border: 2px solid var(--tangerine-deep);
+  color: var(--ink);
+}
+/* EarInterval:149 / EarChord:75 */
+.dimmed {
+  background: var(--paper);
+  border: 2px solid var(--line);
+  color: var(--muted);
+}

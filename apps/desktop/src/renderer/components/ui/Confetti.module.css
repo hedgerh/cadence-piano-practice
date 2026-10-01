@@ -1,0 +1,63 @@
+/* Complete:20–26 — seven fixed shapes, absolutely positioned in the page. */
+.piece {
+  position: absolute;
+}
+.p1 {
+  left: 160px;
+  top: 120px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--tangerine);
+}
+.p2 {
+  left: 260px;
+  top: 560px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--teal);
+  transform: rotate(20deg);
+}
+.p3 {
+  left: 1040px;
+  top: 150px;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--sun);
+  transform: rotate(-15deg);
+}
+.p4 {
+  left: 1120px;
+  top: 520px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--lavender);
+}
+.p5 {
+  left: 120px;
+  top: 380px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--sun);
+}
+.p6 {
+  left: 980px;
+  top: 660px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--tangerine);
+}
+.p7 {
+  left: 1150px;
+  top: 300px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--teal);
+  transform: rotate(35deg);
+}

@@ -1,0 +1,11 @@
+/* Main:162 — 48, r14, 2px dashed dune, muted 15/800, plus icon. */
+.dashed,
+.dashed:hover {
+  gap: 8px;
+  height: 48px;
+  border-radius: 14px;
+  background: transparent;
+  border: 2px dashed var(--dune);
+  color: var(--muted);
+  font-size: 15px;
+}

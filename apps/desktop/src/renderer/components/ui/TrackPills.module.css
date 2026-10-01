@@ -1,0 +1,42 @@
+/* Path:41 */
+.pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Path:42–46 — 44px r999 15/800. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
+}
+
+/* Path:42 — active: ink fill, white text (no border, content-box). */
+.active,
+.active:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Path:43 — available: white, 2px line-strong. */
+.available,
+.available:hover {
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  color: var(--ink);
+  box-sizing: border-box;
+}
+
+/* Path:44 — locked: white, 2px line, muted <span>. */
+.locked {
+  background: var(--paper);
+  border: 2px solid var(--line);
+  color: var(--muted);
+  box-sizing: border-box;
+}

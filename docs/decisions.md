@@ -39,3 +39,10 @@ Append-only. One entry per architectural or product decision agents must follow.
 - **Streak counting**: any completed chord level or passed ear level counts toward `day_log.blocks_completed`, inside or outside the plan. Failed ear attempts and abandoned sessions do not count.
 - **Plan/session linking**: `sessions.start` resumes today's unfinished session for the level and claims today's not-done plan block for that level when no block id is given. A failed or abandoned session returns its block to `pending`.
 - **Seeds** drive the real services on past local days (via a FakeClock-backed service set over the same repos), so seeded data always satisfies the ledger, streak and schedule invariants. Seeds require an empty database.
+
+## 2026-10-01 — Renderer foundation (Task 06)
+
+- **Dev/e2e gating** uses the `app.ping` reply: the renderer pings once at startup (`lib/runtimeMode.ts`), seeds the TanStack cache with the reply, and enables `/dev/*` routes and `window.__cadenceDev` when `import.meta.env.DEV || env.dev || env.e2e`. No build-time `VITE_*` flag, so the same `out/` bundle serves both `pnpm e2e` and production.
+- **Keyboard lighting is keyed by MIDI number**, not note name (`KeyStates = Record<Midi, KeyState>`, built from spelled notes with `keyStates()`), so enharmonic spellings (C♯4 / D♭4) light the same key.
+- **MIDI composition**: one Zustand store over three roles: `device` (Web MIDI; its status is the pill), `fallback` (computer keyboard; heard when no device is connected, always in dev), and `dev` (a `FakeMidiInput` behind `window.__cadenceDev.midi`).
+- **Cadence chord length**: the first three chords of a `cadence` Sound ring 0.6 s at 0.65 s spacing and the final I rings 1.2 s (~3.2 s total). engine.md §7 gives only the spacing.

@@ -1,0 +1,23 @@
+/* Practice:70 */
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Practice:72 — min-w 52, 44px, r12, tangerine tint + 2px tangerine, Fredoka 600 22. */
+.chip {
+  min-width: 52px;
+  height: 44px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--tangerine-tint);
+  border: 2px solid var(--tangerine);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+}

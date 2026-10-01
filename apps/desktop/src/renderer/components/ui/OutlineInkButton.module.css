@@ -1,0 +1,33 @@
+/* Practice:194 (48) / EarKey:92 (60) — white, 2px ink, hard ink shadow. */
+.outline,
+.outline:hover {
+  gap: 8px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  box-shadow: var(--sh-ink);
+}
+
+/* Practice:194 */
+.s48 {
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+/* EarKey:92 */
+.s60 {
+  height: 60px;
+  padding: 0 32px;
+  border-radius: 16px;
+  font-size: 18px;
+}
+
+/* Practice:195 — disabled: sand fill + border, muted, no shadow. */
+.outline:disabled {
+  background: var(--sand);
+  border: 2px solid var(--sand);
+  color: var(--muted);
+  box-shadow: none;
+}

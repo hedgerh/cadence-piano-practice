@@ -1,0 +1,110 @@
+/* Main:57 — row; Main:89 — the last row pads 14 0 4. */
+.row {
+  display: flex;
+  gap: 20px;
+  padding: 14px 0;
+}
+.last {
+  padding: 14px 0 4px;
+}
+
+/* Main:58 */
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 44px;
+}
+
+/* Main:59 / 76 / 91 — 44px node. */
+.node {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink);
+}
+.done {
+  background: var(--teal);
+}
+.current {
+  background: var(--tangerine);
+  box-shadow: var(--halo-6);
+}
+.upcoming {
+  background: var(--paper);
+  border: 3px solid var(--line-strong);
+  box-sizing: border-box;
+  color: var(--muted);
+}
+
+/* Main:62 — 3px rail. */
+.line {
+  width: 3px;
+  flex-grow: 1;
+  background: var(--line);
+  border-radius: 2px;
+  min-height: 18px;
+}
+
+/* Main:64 */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+  padding-bottom: 8px;
+}
+.last .body {
+  padding-bottom: 0;
+}
+
+/* Main:65 */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Main:66 / 81 / 95 — eyebrow tone by kind. */
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.warmup {
+  color: var(--teal-deep);
+}
+.learn {
+  color: var(--tangerine-deep);
+}
+.review {
+  color: var(--lavender-deep);
+}
+
+/* Main:67 */
+.detail {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Main:69 */
+.title {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* Main:70 */
+.blurb {
+  font-size: 15px;
+  color: var(--muted);
+  font-weight: 600;
+}

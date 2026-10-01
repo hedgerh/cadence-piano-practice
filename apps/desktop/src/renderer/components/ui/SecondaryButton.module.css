@@ -1,0 +1,13 @@
+/* Complete:79 (also Path:89, Learn:87) — 56, r16, white, 2px line-strong, --sh-card, 16/800. */
+.secondary,
+.secondary:hover {
+  gap: 8px;
+  height: 56px;
+  padding: 0 22px;
+  border-radius: 16px;
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 16px;
+  box-shadow: var(--sh-card);
+}

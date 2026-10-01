@@ -1,0 +1,108 @@
+/* Dev-only gallery chrome. Not a design surface; tokens only. */
+.page {
+  min-height: 100vh;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+.main {
+  padding: 28px 48px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 32px;
+}
+.lede {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 6px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.variant {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.chipRow {
+  display: flex;
+  gap: 8px;
+  width: 560px;
+}
+.wrapRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 900px;
+}
+.fixed {
+  width: 520px;
+}
+.confettiBox {
+  position: relative;
+  width: 1184px;
+  height: 700px;
+  overflow: hidden;
+  background: var(--paper);
+  border: 2px dashed var(--line);
+  border-radius: 20px;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 14px;
+}
+.pre {
+  margin: 0;
+  padding: 16px;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  font-size: 12px;
+  overflow: auto;
+  max-height: 60vh;
+}

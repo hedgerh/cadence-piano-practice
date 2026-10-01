@@ -1,0 +1,24 @@
+/* Main:105 (60) / Practice:82 (56) — tangerine, ink text, hard tangerine-deep shadow. */
+.primary,
+.primary:hover {
+  gap: 10px;
+  background: var(--tangerine);
+  color: var(--ink);
+  box-shadow: var(--sh-primary);
+}
+
+/* Main:105 */
+.s60 {
+  height: 60px;
+  padding: 0 32px;
+  border-radius: 18px;
+  font-size: 19px;
+}
+
+/* Practice:82 */
+.s56 {
+  height: 56px;
+  padding: 0 28px;
+  border-radius: 16px;
+  font-size: 17px;
+}

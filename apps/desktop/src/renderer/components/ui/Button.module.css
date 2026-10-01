@@ -1,0 +1,16 @@
+/* Shared reset for <button> and <a> versions of the design's buttons. Zero specificity
+   (:where) so every variant's own rules win regardless of stylesheet order. */
+:where(.base) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+}
+:where(.base:disabled) {
+  cursor: default;
+}

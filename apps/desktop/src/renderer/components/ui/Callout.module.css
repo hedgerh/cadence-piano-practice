@@ -1,0 +1,19 @@
+/* Learn:54 — ground bg, r14, p 12/16, arrow icon, 15/700. */
+.callout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--ground);
+  border-radius: 14px;
+  color: var(--ink);
+}
+.callout > svg {
+  flex-shrink: 0;
+}
+
+/* Learn:56 */
+.text {
+  font-size: 15px;
+  font-weight: 700;
+}

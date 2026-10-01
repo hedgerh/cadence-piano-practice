@@ -1,0 +1,19 @@
+/* Main:124 — 12px r999 sand track, overflow hidden. */
+.track {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--sand);
+  overflow: hidden;
+}
+
+/* Main:125 / Main:139 */
+.fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.tangerine {
+  background: var(--tangerine);
+}
+.teal {
+  background: var(--teal);
+}

@@ -1,0 +1,9 @@
+/* Practice:102 — 16/800 teal-deep with a 12px pulsing dot. */
+.indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--teal-deep);
+}

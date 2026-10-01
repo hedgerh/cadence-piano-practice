@@ -1,0 +1,73 @@
+/* Practice:22 / Learn:20 — 76px, no border. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 76px;
+  padding: 0 48px;
+  box-sizing: border-box;
+}
+
+/* Practice:23 — back link 15/800 muted in a 220px slot. */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--muted);
+}
+.slot {
+  width: 220px;
+}
+
+/* Practice:27 */
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Practice:28 */
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+}
+
+/* Practice:29 — 12/800 uppercase ls 1 (Learn:25 uses 13). */
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.eyebrowLesson {
+  font-size: 13px;
+}
+.tangerine {
+  color: var(--tangerine-deep);
+}
+.lavender {
+  color: var(--lavender-deep);
+}
+.teal {
+  color: var(--teal-deep);
+}
+
+/* Practice:31 */
+.right {
+  display: flex;
+  justify-content: flex-end;
+  width: 220px;
+}
+
+/* Learn:26 */
+.spacer {
+  width: 80px;
+}

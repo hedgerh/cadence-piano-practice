@@ -1,0 +1,27 @@
+.play {
+  border-radius: 50%;
+  color: var(--ink);
+  padding: 0;
+}
+
+/* EarInterval:51 — 112 tangerine circle, --sh-play, speaker 48. */
+.s112 {
+  width: 112px;
+  height: 112px;
+  border: 0;
+  background: var(--tangerine);
+  box-shadow: var(--sh-play);
+}
+
+/* EarChord:59 — 72 white, 2px ink, --sh-ink, note 30. */
+.s72 {
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: var(--sh-ink);
+}
+
+.play:disabled {
+  opacity: 0.6;
+}

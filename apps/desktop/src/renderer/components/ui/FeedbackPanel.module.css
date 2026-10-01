@@ -1,0 +1,51 @@
+/* EarInterval:178 / EarChord:86 — gap 28, p 20/24, r20. */
+.panel {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 20px 24px;
+  border-radius: 20px;
+}
+.correct {
+  border: 2px solid var(--teal);
+  background: var(--teal-tint);
+}
+.wrong {
+  border: 2px solid var(--tangerine-line);
+  background: var(--tangerine-tint-soft);
+}
+
+/* EarInterval:73 (min 260) / EarChord:87 (min 280). */
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* EarInterval:74 */
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+/* EarInterval:75 */
+.body {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* EarInterval:76 */
+.playback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--teal-deep);
+}

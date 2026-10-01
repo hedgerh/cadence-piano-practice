@@ -1,0 +1,122 @@
+/* Path:94 */
+.circle {
+  position: relative;
+  width: 580px;
+  height: 580px;
+  flex-shrink: 0;
+}
+
+/* Path:95 — outer ring 464, 3px dashed line-strong. */
+.ringOuter {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px dashed var(--line-strong);
+  box-sizing: border-box;
+}
+/* Path:96 — inner ring 300, 2px dashed line. */
+.ringInner {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px dashed var(--line);
+  box-sizing: border-box;
+}
+
+/* Path:98 */
+.center {
+  position: absolute;
+  left: 212px;
+  top: 226px;
+  width: 156px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+/* Path:99 */
+.count {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+}
+.of {
+  font-size: 22px;
+  color: var(--muted);
+}
+/* Path:100 */
+.caption {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+/* Path:101 */
+.legend {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Path:104–115 — outer key nodes. */
+.node {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--ink);
+  padding: 0;
+  border: 0;
+}
+button.node {
+  cursor: pointer;
+}
+/* Path:104 */
+.done {
+  width: 72px;
+  height: 72px;
+  background: var(--teal);
+  box-shadow: var(--sh-node-done);
+}
+/* Path:107 */
+.current {
+  width: 84px;
+  height: 84px;
+  background: var(--tangerine);
+  box-shadow: var(--sh-node-current);
+  font-size: 30px;
+}
+/* Path:108 */
+.upcoming {
+  width: 72px;
+  height: 72px;
+  background: var(--paper);
+  border: 3px solid var(--line-strong);
+  box-sizing: border-box;
+  font-weight: 600;
+  color: var(--muted);
+}
+/* Path:110 — G♭ is set at 20px. */
+.compact {
+  font-size: 20px;
+}
+
+/* Path:117–128 — inner relative minors. */
+.minor {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--sand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}

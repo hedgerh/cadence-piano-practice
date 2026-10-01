@@ -1,0 +1,60 @@
+/* EarKey:61 / 70 — flex 1, p 16/20, r18. */
+.card {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  text-align: left;
+}
+.done {
+  background: var(--teal-tint);
+  border: 2px solid var(--teal);
+}
+.current {
+  background: var(--paper);
+  border: 2px solid var(--tangerine);
+  box-shadow: var(--halo-4);
+}
+
+/* EarKey:62 / 71 — 40px circle. */
+.badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ink);
+}
+.done .badge {
+  background: var(--teal);
+}
+.current .badge {
+  background: var(--tangerine);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* EarKey:65 */
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* EarKey:66 */
+.title {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* EarKey:67 */
+.body {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}

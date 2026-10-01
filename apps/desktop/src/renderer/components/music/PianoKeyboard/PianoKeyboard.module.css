@@ -1,0 +1,91 @@
+/* Practice:90 — two-octave: 661px, r10, hard dune shadow. */
+.keyboard {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--ink);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.twoOctave {
+  border-radius: 10px;
+  width: 661px;
+  box-shadow: var(--sh-keyboard);
+}
+/* EarInterval:81 — one-octave: 332px, r8, no shadow. */
+.oneOctave {
+  border-radius: 8px;
+  width: 332px;
+}
+
+/* Practice:163 — white key 44×150, label 11/800 bottom-aligned. */
+.white {
+  position: relative;
+  width: 44px;
+  height: 150px;
+  border-radius: 0 0 7px 7px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--paper);
+  color: var(--key-label);
+}
+/* EarInterval:171 — one-octave white key 44×120. */
+.oneOctave .white {
+  height: 120px;
+  border-radius: 0 0 6px 6px;
+  padding-bottom: 6px;
+}
+
+/* Practice:170 — black key 28×95, absolute, rendered after the whites. */
+.black {
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 95px;
+  border-radius: 0 0 5px 5px;
+  background: var(--ink);
+}
+/* EarInterval:175 — one-octave black key 28×76. */
+.oneOctave .black {
+  height: 76px;
+}
+
+/* Practice:166 / 170, EarKey:109–110 — fills by state. Lit keys get ink text;
+   lit black keys add the inset ink ring. */
+.white.hint,
+.black.hint {
+  background: var(--tangerine);
+}
+.white.correct,
+.black.correct,
+.white.home,
+.black.home {
+  background: var(--teal);
+}
+.white.held,
+.black.held {
+  background: var(--key-held);
+}
+.white.tried,
+.black.tried {
+  background: var(--sand);
+}
+.white.hint,
+.white.correct,
+.white.home,
+.white.held {
+  color: var(--ink);
+}
+.black.hint,
+.black.correct,
+.black.home,
+.black.held,
+.black.tried {
+  box-shadow: inset 0 0 0 3px var(--ink);
+}

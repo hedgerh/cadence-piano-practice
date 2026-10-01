@@ -1,0 +1,33 @@
+/* Complete:49 — p16 r16, column gap 4. */
+.tile {
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ground {
+  background: var(--ground);
+}
+/* Complete:57 */
+.lavender {
+  background: var(--lavender);
+}
+
+/* Complete:50 — Fredoka 700 30 lh 1. */
+.value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1;
+}
+
+/* Complete:51 / 59 — 13/800, muted on ground, ink on lavender. */
+.label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.lavender .label {
+  color: var(--ink);
+}

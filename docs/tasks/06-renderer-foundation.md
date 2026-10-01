@@ -1,6 +1,6 @@
 # 06 — Renderer foundation + component library
 
-**Status:** todo
+**Status:** done
 
 Everything the nine screens share: the shared components with pixel-exact CSS, the keyboard and circle geometry, MIDI and audio adapters, design fixtures, and a dev gallery to review components in isolation.
 
@@ -31,3 +31,20 @@ Everything the nine screens share: the shared components with pixel-exact CSS, t
 ## Out of scope
 
 Screens and session reducers (Tasks 07–15).
+
+## Notes
+
+**Dev/e2e gating.** `main.tsx` awaits `detectRuntimeMode()` (`lib/runtimeMode.ts`) before rendering. It calls `api['app.ping']()` once, seeds the query cache with the reply (so the Shell doesn't ping again), and reads `env` defensively (`(ping as { env?: … }).env`). Dev tools are on when `import.meta.env.DEV || env.dev || env.e2e`. When on, `createAppRouter({ devRoutes: true })` registers `/dev/components` and `/dev/screens/:name`, a `FakeMidiInput` is attached to the MIDI hub, and `window.__cadenceDev = { mode, midi: { press, release, releaseAll, held, status } }` is installed. A packaged build (env.dev = env.e2e = false) has neither the routes nor the global. Recorded in `docs/decisions.md`.
+
+**What landed.** `components/ui/*` (every ui.md §2 row plus `StreakPill`/`XpPill`/`MidiPill`, a shared `ButtonBase`, `PulseDot` and `icons.tsx`), `components/music/PianoKeyboard` + `keyboardLayout.ts`, `components/music/CircleOfFifths` + `circleLayout.ts`, `lib/quality.ts`, `midi/*` (`MidiInput`, `WebMidiInput`, `KeyboardMidiInput`, `FakeMidiInput`, `midiStore` with `device`/`fallback`/`dev` roles, `hooks.ts`, `appMidi.ts`), `audio/*` (`Synth`, `WebAudioSynth`, `NullSynth`, `player`, `useAudio` + `installAudioUnlock`), `dev/fixtures/*` (one file per design), `dev/DevComponents.tsx` (gallery, every variant wrapped in `data-testid="g-…"`), `dev/DevScreens.tsx` (placeholder + fixture JSON), `e2e/probes.ts`, `e2e/components.spec.ts`, `e2e/screenshots/06-components.png`.
+
+**Deviations from the designs / spec.**
+
+- _Keyboard shortcut in Acceptance._ ui.md §4's mapping (`a w s e d f t g …` = C4…E5) puts `a s d` on C4 D4 E4, not C4 E4 G4. I implemented ui.md's mapping; `a d g` lights C4 E4 G4, and the e2e spec asserts that.
+- _Circle labels._ ui.md says two-character upcoming labels are 20px, but Path:110 sets only G♭ at 20px (D♭, A♭, E♭, B♭ stay 24px). `CircleKey.compact` reproduces the design exactly; the fixture sets it on G♭.
+- _Buttons as `<button>`._ Designs use `<a>` for CTAs. `ButtonBase` renders a router `Link` when `to` is given, otherwise a `<button>` with `border: 0` and `font-family` reset so it matches the `<a>` metrics. The shared reset is `:where()`-scoped (zero specificity) so each variant's verbatim CSS wins.
+- _Card variants._ Each variant takes its default `gap` from the first cited design line (flat 14 from Path:58; EarPath:58 uses 12). Screens can override via `className`.
+- _Not in the designs (from ui.md):_ MidiPill states other than connected (dune dot; "Looking for keyboards…" pulses; "MIDI unavailable" for no Web MIDI), StageRow `done` (teal check), RomanChip `skipped`/`hinted` at 64px, OutlineInk disabled at 60, one-octave black-key lighting, and PlayButton `:disabled` (opacity 0.6).
+- _ShowMeControl_ stays 36px as designed (Task 16 raises it).
+- _Synth timings not fixed by engine.md §7:_ phrase notes ring 0.5 s each; cadence chords 0.6 s (last 1.2 s). The voice is the design's `tone()` envelope verbatim, through master gain → compressor (−12 dB, ratio 4).
+- _Gallery screenshot_ shows the live MIDI device name if one is plugged in (the spec accepts `no-device` or `connected`).
