@@ -40,6 +40,8 @@ export interface ProfileRow {
   midiDeviceId: string | null;
   midiDeviceName: string | null;
   showMarkPlayedAlways: boolean;
+  /** Hands-free key loop: auto-finish + auto-advance (decisions.md 2026-10-01). */
+  autoContinue: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -178,7 +180,15 @@ export interface NewProfile {
 }
 
 export type ProfilePatch = Partial<
-  Pick<ProfileRow, 'name' | 'timezone' | 'midiDeviceId' | 'midiDeviceName' | 'showMarkPlayedAlways'>
+  Pick<
+    ProfileRow,
+    | 'name'
+    | 'timezone'
+    | 'midiDeviceId'
+    | 'midiDeviceName'
+    | 'showMarkPlayedAlways'
+    | 'autoContinue'
+  >
 >;
 
 export type TrackSettingsPatch = Partial<Omit<TrackSettingsRow, 'trackId'>>;

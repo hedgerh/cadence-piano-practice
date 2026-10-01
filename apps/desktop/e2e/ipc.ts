@@ -43,12 +43,18 @@ export async function fakeKeyboard(
 /**
  * Seed a scenario, then reload the renderer so every query refetches against the new state.
  * The reloaded app hears the design's keyboard (a fake port; see `fakeKeyboard`).
+ * `autoContinue: false` turns the hands-free key loop off (decisions.md 2026-10-01) via
+ * `me.update` before the reload, for specs that click "Finish the key" / "Keep going" themselves.
  */
 export async function seed(
   page: Page,
   scenario: ChannelInput<'dev.seed'>['scenario'],
+  opts: { autoContinue?: boolean } = {},
 ): Promise<void> {
   await invoke(page, 'dev.seed', { scenario });
+  if (opts.autoContinue !== undefined) {
+    await invoke(page, 'me.update', { settings: { autoContinue: opts.autoContinue } });
+  }
   await page.reload();
   await fakeKeyboard(page);
 }

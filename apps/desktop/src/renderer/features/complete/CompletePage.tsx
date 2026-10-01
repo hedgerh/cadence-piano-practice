@@ -12,7 +12,13 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import type { ChannelOutput } from '@shared/ipc/contracts';
 import { api, queryKey } from '../../lib/api';
 import type { CompleteRouteState } from '../practice/usePracticeSession';
-import { sessionRoute, useStartSession, type CompleteDto } from '../shared/hooks';
+import {
+  sessionRoute,
+  useMe,
+  useStartSession,
+  useUpdateMe,
+  type CompleteDto,
+} from '../shared/hooks';
 import type { CompleteAction } from './complete';
 import styles from './CompletePage.module.css';
 import { CompleteView } from './CompleteView';
@@ -77,6 +83,16 @@ function LiveComplete({ complete }: { complete: CompleteDto }) {
   const qc = useQueryClient();
   const start = useStartSession();
   const [error, setError] = useState<string | null>(null);
+  // decisions.md 2026-10-01 "Hands-free key loop": the toggle flips at once (optimistic) and
+  // reverts if me.update fails; off until me.get has loaded (never navigate on a guess).
+  const me = useMe();
+  const updateMe = useUpdateMe();
+  const [chosen, setChosen] = useState<boolean | null>(null);
+  const autoContinue = chosen ?? me.data?.settings.autoContinue ?? false;
+  const onAutoContinueChange = (on: boolean) => {
+    setChosen(on);
+    updateMe.mutate({ settings: { autoContinue: on } }, { onError: () => setChosen(null) });
+  };
 
   /** engine.md §6.8: reuse today's open plan block for the level when there is one. */
   const startLevel = async (levelId: string, fallbackKind: 'learn' | 'review') => {
@@ -113,6 +129,13 @@ function LiveComplete({ complete }: { complete: CompleteDto }) {
   };
 
   return (
-    <CompleteView complete={complete} onAction={onAction} busy={start.isPending} error={error} />
+    <CompleteView
+      complete={complete}
+      onAction={onAction}
+      busy={start.isPending}
+      error={error}
+      autoContinue={autoContinue}
+      onAutoContinueChange={onAutoContinueChange}
+    />
   );
 }

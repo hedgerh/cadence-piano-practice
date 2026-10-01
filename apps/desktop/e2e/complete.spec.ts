@@ -60,7 +60,9 @@ test('complete: A major with G♯° hinted → Complete, Keep going, review due 
   page.on('pageerror', (e) => errors.push(e.message));
   try {
     await page.setViewportSize({ width: 1280, height: 820 });
-    await seed(page, 'day8');
+    // This spec clicks "Finish the key" and "Keep going" itself and inspects Complete at leisure:
+    // the hands-free loop is off here (covered by autocontinue.spec.ts).
+    await seed(page, 'day8', { autoContinue: false });
     expect((await invoke(page, 'me.get')).xpTotal).toBe(1240);
     await go(page, '/practice/a-major');
     await expect(page.getByTestId('numeral')).toHaveText('I');
@@ -112,6 +114,12 @@ test('complete: A major with G♯° hinted → Complete, Keep going, review due 
     );
     await expect(page.getByTestId('complete-next')).toHaveText('Keep going — E major');
     await expect(page.getByTestId('complete-done')).toHaveText('Done for today');
+    // Hands-free off: no countdown, but a key on the piano still keeps going.
+    await expect(page.getByTestId('complete-countdown')).toHaveCount(0);
+    await expect(page.getByTestId('complete-midi-caption')).toHaveText(
+      'Play any key to keep going.',
+    );
+    await expect(page.getByTestId('complete-auto-toggle')).not.toBeChecked();
 
     // ---- probes (docs/ui.md §5) ----
     await expectStyle(card, {
@@ -216,6 +224,27 @@ test('complete dev screen: design fixture and ?skipped=1,4', async () => {
     await expect(page.getByTestId('complete-title')).toHaveText('A major, complete');
     await expect(page.getByTestId('stat-tile').nth(0)).toHaveText('2:14time, no tempo');
     await expect(page.getByTestId('complete-next')).toHaveText('Keep going — E major');
+    // Hands-free (default ?auto=1): the dev screen's countdown is frozen at 3.
+    await expect(page.getByTestId('complete-countdown')).toHaveText('Next: E major in 3…');
+    await expect(page.getByTestId('complete-stay')).toHaveText('Stay here');
+    await expect(page.getByTestId('complete-auto-toggle')).toBeChecked();
+    await expect(page.getByTestId('complete-midi-caption')).toHaveText(
+      'Play any key to keep going.',
+    );
+    await expectSize(page.getByTestId('complete-stay'), { height: 48 });
+    // The taller card still fits the 1280×820 window.
+    const box = await page.getByTestId('complete-card').boundingBox();
+    expect(box && box.y >= 0 && box.y + box.height <= 820).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(
+      820,
+    );
+    await page.screenshot({ path: 'e2e/screenshots/09-complete-auto.png' });
+
+    await go(page, '/dev/screens/complete?auto=0');
+    await expect(page.getByTestId('complete-countdown')).toHaveCount(0);
+    await expect(page.getByTestId('complete-auto-toggle')).not.toBeChecked();
+    await page.getByTestId('complete-auto-toggle').check();
+    await expect(page.getByTestId('complete-countdown')).toHaveText('Next: E major in 3…');
 
     await go(page, '/dev/screens/complete?skipped=1,4');
     await expect(page.getByTestId('complete')).toHaveAttribute('data-skipped', '2');
@@ -233,6 +262,8 @@ test('complete dev screen: design fixture and ?skipped=1,4', async () => {
     await expect(page.getByTestId('complete-replay')).toHaveText('Play the two you skipped');
     await expect(page.getByTestId('complete-next')).toHaveText('Keep going — E major');
     await expect(page.getByTestId('complete-done')).toHaveText('Done for today');
+    // Skipped variant: nothing hands-free.
+    await expect(page.getByTestId('complete-hands-free')).toHaveCount(0);
     await page.screenshot({ path: 'e2e/screenshots/09-complete-skipped.png' });
   } finally {
     await app.close();

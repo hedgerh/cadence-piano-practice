@@ -1,6 +1,7 @@
 // /dev/screens/practice — Practice.dc.html's default state (A major, I and ii done, iii current,
 // vis all, no hint; Practice:136) driven through the real reducer, with live dev MIDI.
-// Knobs: ?hint=0|1|2 &vis=num|name|all &midi=none|denied &finished=1
+// Knobs: ?hint=0|1|2 &vis=num|name|all &midi=none|denied &finished=1 &auto=1 (hands-free
+// auto-finish; the dev screen has no session, so it ends in the finish error)
 import { keyLevel } from '@cadence/content';
 import type { ComponentType } from 'react';
 import { useMemo } from 'react';
@@ -104,7 +105,11 @@ function DevPracticeScreen({ search }: { search: string }) {
     for (let i = 0; i < hint; i++) s = practiceReducer(s, { type: 'HINT', at: 0 });
     return s;
   }, [session, hint]);
-  const practice = usePracticeSession(session, NO_IO, { onFinished: () => undefined, initial });
+  const practice = usePracticeSession(session, NO_IO, {
+    onFinished: () => undefined,
+    initial,
+    autoFinish: params.get('auto') === '1',
+  });
 
   return (
     <PracticeView
@@ -122,6 +127,7 @@ function DevPracticeScreen({ search }: { search: string }) {
       onFinish={practice.finish}
       finishing={practice.finishing}
       finishError={practice.finishError}
+      autoFinishing={practice.autoFinishing}
       xpToast={practice.xpToast}
     />
   );

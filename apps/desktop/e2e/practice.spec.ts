@@ -64,7 +64,8 @@ test('practice: A major via dev MIDI — auto-advance, resume, Show-me persisten
   page.on('pageerror', (e) => errors.push(e.message));
   try {
     await page.setViewportSize({ width: 1280, height: 820 });
-    await seed(page, 'day8');
+    // This spec clicks "Finish the key" itself: hands-free auto-finish off (autocontinue.spec.ts).
+    await seed(page, 'day8', { autoContinue: false });
     await go(page, '/practice/a-major');
 
     // sessions.start runs on mount and writes ?session= into the URL.

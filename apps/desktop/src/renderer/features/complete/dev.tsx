@@ -1,11 +1,14 @@
 // /dev/screens/complete — Complete.dc.html's fixture (A major, vii° hinted) as a CompleteDto.
 // Knob: ?skipped=1,4 (0-based ordinals resolved as skipped: dashed chips, adjusted copy,
 // "Play the two you skipped" primary and "Keep going" demoted; docs/ui.md §3).
-import type { ComponentType } from 'react';
+// Knob: ?auto=1|0 (default 1, the profile default): the hands-free countdown, frozen at "in 3…"
+// for deterministic screenshots; add &run=1 to let it count down (decisions.md 2026-10-01).
+import { useState, type ComponentType } from 'react';
 import { useSearchParams } from 'react-router';
 import { completeFixture } from '../../dev/fixtures/complete';
 import type { CompleteDto } from './complete';
 import { CompleteView } from './CompleteView';
+import { frozenSchedule, realSchedule } from './useHandsFreeNext';
 
 const STEP_IDS = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7'] as const;
 const QUALITIES = ['major', 'minor', 'minor', 'major', 'major', 'minor', 'diminished'] as const;
@@ -88,8 +91,23 @@ export function parseSkipped(raw: string | null): number[] {
 
 function CompleteDevScreen() {
   const [params] = useSearchParams();
+  const search = params.toString();
+  // Remount on knob changes so the toggle and countdown restart.
+  return <CompleteDevFixture key={search} params={params} />;
+}
+
+function CompleteDevFixture({ params }: { params: URLSearchParams }) {
   const complete = completeDtoFixture(parseSkipped(params.get('skipped')));
-  return <CompleteView complete={complete} onAction={() => undefined} />;
+  const [auto, setAuto] = useState(params.get('auto') !== '0');
+  return (
+    <CompleteView
+      complete={complete}
+      onAction={() => undefined}
+      autoContinue={auto}
+      onAutoContinueChange={setAuto}
+      schedule={params.get('run') === '1' ? realSchedule : frozenSchedule}
+    />
+  );
 }
 
 export const devScreens: Record<string, ComponentType> = { complete: CompleteDevScreen };

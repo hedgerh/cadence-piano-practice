@@ -1,6 +1,7 @@
 // docs/engine.md §5 Practice — the effects around the pure practiceReducer: MIDI → HELD_CHANGED,
 // the 600 ms teal flash, recordStep posts (with a small in-memory retry), the optimistic
-// visibility mutation, resume via sessions.get, and "Finish the key" → sessions.finish.
+// visibility mutation, resume via sessions.get, and "Finish the key" → sessions.finish (by itself
+// AUTO_FINISH_MS after the last chord when `autoFinish` is on; decisions.md 2026-10-01).
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -46,6 +47,9 @@ function useLatest<T>(value: T): { readonly current: T } {
 /** Task 09: the live "+5 XP" toast after a step is recorded (small, bottom-right, 1.2 s). */
 export const XP_TOAST_MS = 1200;
 
+/** decisions.md 2026-10-01 "Hands-free key loop": "All seven. Nice." shows this long first. */
+export const AUTO_FINISH_MS = 1200;
+
 export interface XpToast {
   /** Increments per toast so the view restarts its animation. */
   id: number;
@@ -69,6 +73,8 @@ export interface PracticeSessionApi {
   finish: () => void;
   finishing: boolean;
   finishError: string | null;
+  /** Auto-finish is on and the key is finished: the view shows "Finishing…". */
+  autoFinishing: boolean;
 }
 
 export function usePracticeSession(
@@ -78,6 +84,8 @@ export function usePracticeSession(
     onFinished: (dto: CompleteDto) => void;
     /** Start from this state instead of `initialPracticeState(session)` (dev fixtures). */
     initial?: PracticeState;
+    /** The profile's `autoContinue`: run `finish` AUTO_FINISH_MS after the key is finished. */
+    autoFinish?: boolean;
   },
 ): PracticeSessionApi {
   const initial = opts.initial;
@@ -161,6 +169,19 @@ export function usePracticeSession(
     })();
   }, [sessionId, stateRef, ioRef, onFinishedRef]);
 
+  // Hands-free: the same path as the "Finish the key" button, once (a failure waits for a click).
+  const autoFinish = opts.autoFinish ?? false;
+  const isFinished = state.phase === 'finished';
+  const autoFired = useRef(false);
+  useEffect(() => {
+    if (!autoFinish || !isFinished || autoFired.current) return;
+    const t = setTimeout(() => {
+      autoFired.current = true;
+      finish();
+    }, AUTO_FINISH_MS);
+    return () => clearTimeout(t);
+  }, [autoFinish, isFinished, finish]);
+
   const trackId = session.trackId;
   const setVisibility = useCallback(
     (vis: Visibility) => {
@@ -180,6 +201,7 @@ export function usePracticeSession(
     finish,
     finishing,
     finishError,
+    autoFinishing: autoFinish && isFinished && finishError === null,
   };
 }
 

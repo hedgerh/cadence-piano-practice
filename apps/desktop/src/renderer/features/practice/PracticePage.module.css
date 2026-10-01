@@ -115,6 +115,13 @@
   margin-top: 10px;
 }
 
+/* Not in the design (decisions.md 2026-10-01): the hands-free auto-finish hint. */
+.finishHint {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
 /* Not in the design: shown if sessions.finish fails. */
 .finishError {
   font-size: 14px;

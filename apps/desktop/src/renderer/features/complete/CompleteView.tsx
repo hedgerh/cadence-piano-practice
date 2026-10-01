@@ -11,6 +11,7 @@ import { StatTile } from '../../components/ui/StatTile';
 import { TextButton } from '../../components/ui/TextButton';
 import { completeView, type CompleteAction, type CompleteDto } from './complete';
 import styles from './CompletePage.module.css';
+import { useHandsFreeNext, type Schedule } from './useHandsFreeNext';
 
 export interface CompleteViewProps {
   complete: CompleteDto;
@@ -18,6 +19,12 @@ export interface CompleteViewProps {
   /** A start is in flight: the session buttons are disabled. */
   busy?: boolean;
   error?: string | null;
+  /** decisions.md 2026-10-01: the profile's `autoContinue` (countdown to "Keep going"). */
+  autoContinue?: boolean;
+  /** The "Keep going automatically" toggle; persisted by the live page via me.update. */
+  onAutoContinueChange?: (on: boolean) => void;
+  /** Countdown timer (tests and the dev screen inject one). */
+  schedule?: Schedule;
 }
 
 const TEST_ID: Record<CompleteAction['kind'], string> = {
@@ -31,8 +38,19 @@ export function CompleteView({
   onAction,
   busy = false,
   error = null,
+  autoContinue = false,
+  onAutoContinueChange,
+  schedule,
 }: CompleteViewProps) {
   const view = completeView(complete);
+  const autoNext = view.autoNext;
+  const handsFree = useHandsFreeNext({
+    next: autoNext?.action ?? null,
+    autoContinue,
+    busy,
+    onContinue: onAction,
+    ...(schedule ? { schedule } : {}),
+  });
   const button = (action: CompleteAction | null, as: 'primary' | 'secondary' | 'text') => {
     if (action === null) return null;
     const props = {
@@ -103,6 +121,35 @@ export function CompleteView({
           {button(view.secondary, 'secondary')}
           {button(view.tertiary, 'text')}
         </div>
+        {autoNext !== null && (
+          <div className={styles.handsFree} data-testid="complete-hands-free">
+            <div className={styles.handsFreeRow}>
+              {handsFree.remaining !== null && (
+                <>
+                  <span className={styles.countdown} role="status" data-testid="complete-countdown">
+                    Next: {autoNext.title} in {handsFree.remaining}…
+                  </span>
+                  <TextButton onClick={handsFree.stay} data-testid="complete-stay">
+                    Stay here
+                  </TextButton>
+                </>
+              )}
+              <label className={styles.toggle}>
+                <input
+                  type="checkbox"
+                  className={styles.toggleBox}
+                  checked={autoContinue}
+                  onChange={(e) => onAutoContinueChange?.(e.currentTarget.checked)}
+                  data-testid="complete-auto-toggle"
+                />
+                Keep going automatically
+              </label>
+            </div>
+            <p className={styles.caption} data-testid="complete-midi-caption">
+              Play any key to keep going.
+            </p>
+          </div>
+        )}
         {error !== null && (
           <p className={styles.error} role="alert">
             {error}

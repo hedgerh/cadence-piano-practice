@@ -114,6 +114,59 @@
   white-space: nowrap;
 }
 
+/* Not in the design (decisions.md 2026-10-01 "Hands-free key loop"): the countdown, "Stay
+   here", the MIDI caption and the "Keep going automatically" toggle under the actions. Kept
+   compact (one 48px row + one caption line) so the card still fits a 1280×820 window. */
+.handsFree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -18px;
+}
+
+.handsFreeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  min-height: 48px;
+}
+
+.countdown {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.caption {
+  margin: -4px 0 0;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap-min);
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.toggleBox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--teal-deep);
+  cursor: pointer;
+}
+
 /* Not in the design: start errors and the loading / fallback states. Practice:20-style page. */
 .error {
   margin: 0;

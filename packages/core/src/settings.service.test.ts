@@ -46,6 +46,22 @@ describe('SettingsService', () => {
     );
   });
 
+  // decisions.md 2026-10-01 "Hands-free key loop": autoContinue defaults on and persists.
+  it('autoContinue defaults to true (even before onboarding) and me.update toggles it', () => {
+    expect(createHarness().services.settings.me().settings.autoContinue).toBe(true);
+    const { services } = onboarded();
+    expect(services.settings.me().settings).toEqual({
+      showMarkPlayedAlways: false,
+      autoContinue: true,
+    });
+    const off = services.settings.updateMe({ settings: { autoContinue: false } });
+    expect(off.settings).toEqual({ showMarkPlayedAlways: false, autoContinue: false });
+    expect(services.settings.me().settings.autoContinue).toBe(false);
+    expect(
+      services.settings.updateMe({ settings: { autoContinue: true } }).settings.autoContinue,
+    ).toBe(true);
+  });
+
   it('tracks.setSettings enrolls on demand and persists visibility per track', () => {
     const { services } = onboarded();
     expect(services.settings.trackSettingsDto('minor-diatonic-chords').enrolled).toBe(false);

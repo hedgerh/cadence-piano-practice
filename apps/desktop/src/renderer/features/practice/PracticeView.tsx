@@ -48,6 +48,8 @@ export interface PracticeViewProps {
   onFinish: () => void;
   finishing?: boolean;
   finishError?: string | null;
+  /** decisions.md 2026-10-01: the key finishes by itself; show "Finishing…" under the button. */
+  autoFinishing?: boolean;
   /** Task 09: "+5 XP" after each recorded step. */
   xpToast?: XpToast | null;
 }
@@ -66,6 +68,7 @@ export function PracticeView({
   onFinish,
   finishing = false,
   finishError = null,
+  autoFinishing = false,
   xpToast = null,
 }: PracticeViewProps) {
   const total = state.steps.length;
@@ -135,6 +138,11 @@ export function PracticeView({
                 Finish the key
               </PrimaryButton>
             </div>
+            {autoFinishing && (
+              <span className={styles.finishHint} role="status" data-testid="auto-finish-hint">
+                Finishing…
+              </span>
+            )}
             {finishError !== null && (
               <span className={styles.finishError} role="alert">
                 {finishError}

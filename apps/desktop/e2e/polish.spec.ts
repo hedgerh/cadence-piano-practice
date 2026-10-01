@@ -139,7 +139,8 @@ test('no keyboard: unplug mid-session clears held notes; mark-as-played finishes
   const { app, page } = await launchCadence();
   try {
     await page.setViewportSize({ width: 1280, height: 820 });
-    await seed(page, 'day8');
+    // Clicks "Finish the key" itself: hands-free auto-finish off (autocontinue.spec.ts).
+    await seed(page, 'day8', { autoContinue: false });
     await expect(page.getByTestId('today')).toBeVisible();
     await fakeDevices(page, [FP30]);
     await go(page, '/practice/a-major');

@@ -1,3 +1,4 @@
+import { readMigrationFiles } from 'drizzle-orm/migrator';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type {
   DailyPlanRow,
@@ -11,7 +12,7 @@ import type {
   TrackSettingsRow,
   XpLedgerRow,
 } from '@cadence/core';
-import { runMigrations, type OpenedDatabase, type schema } from '../src';
+import { openDatabase, runMigrations, type OpenedDatabase, type schema } from '../src';
 import { MIGRATIONS, freshDb } from './helpers';
 
 const TABLES = [
@@ -66,6 +67,21 @@ describe('migrations', () => {
     expect(applied()).toEqual(before);
     expect(objects(sqlite, 'table')).toEqual(TABLES);
     expect(repos.profile.get()?.name).toBe('Harry');
+  });
+
+  // decisions.md 2026-10-01 "Hands-free key loop": existing profiles upgrade with autoContinue on.
+  it('0001 adds profile.auto_continue defaulting to 1 for an existing profile', () => {
+    const [first, second] = readMigrationFiles({ migrationsFolder: MIGRATIONS });
+    expect(first && second).toBeTruthy();
+    const { sqlite } = openDatabase(':memory:');
+    for (const stmt of first?.sql ?? []) if (stmt.trim()) sqlite.exec(stmt);
+    sqlite
+      .prepare(
+        `INSERT INTO profile (id, name, timezone, created_at, updated_at) VALUES ('local', 'Harry', 'UTC', 1, 1)`,
+      )
+      .run();
+    for (const stmt of second?.sql ?? []) if (stmt.trim()) sqlite.exec(stmt);
+    expect(sqlite.prepare('SELECT auto_continue AS v FROM profile').get()).toEqual({ v: 1 });
   });
 
   it('enables foreign keys; memory databases skip WAL', () => {

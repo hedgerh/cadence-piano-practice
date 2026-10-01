@@ -8,6 +8,13 @@
       "when": 1790840449397,
       "tag": "0000_brave_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790879530701,
+      "tag": "0001_smooth_revanche",
+      "breakpoints": true
     }
   ]
 }

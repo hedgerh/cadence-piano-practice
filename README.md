@@ -23,6 +23,8 @@ It is a Windows desktop app (Electron, React, SQLite). It runs fully offline and
 
 Plug in your keyboard before or after launching; Cadence notices it either way. With more than one MIDI device connected, click the keyboard pill in the top-right corner to choose one. Cadence remembers the choice.
 
+Once you finish a key's seven chords, Cadence moves on to the next key by itself, so you can stay at the piano. Play any key on the Complete screen to go on straight away, or untick **Keep going automatically** there to wait for a click instead.
+
 ## Where your data lives
 
 Everything is stored in `%APPDATA%\Cadence`:

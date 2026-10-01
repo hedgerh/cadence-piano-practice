@@ -69,7 +69,10 @@ export function createSettingsService(ctx: ServiceContext, streak: StreakService
       xpTotal: p?.xpTotal ?? 0,
       streak: p ? streak.current() : { days: 0, keptToday: false, atRisk: false },
       midi,
-      settings: { showMarkPlayedAlways: p?.showMarkPlayedAlways ?? false },
+      settings: {
+        showMarkPlayedAlways: p?.showMarkPlayedAlways ?? false,
+        autoContinue: p?.autoContinue ?? true,
+      },
       firstRun: p === null,
     };
   };
@@ -103,6 +106,9 @@ export function createSettingsService(ctx: ServiceContext, streak: StreakService
         if (patch.midi?.deviceName !== undefined) p.midiDeviceName = patch.midi.deviceName;
         if (patch.settings?.showMarkPlayedAlways !== undefined) {
           p.showMarkPlayedAlways = patch.settings.showMarkPlayedAlways;
+        }
+        if (patch.settings?.autoContinue !== undefined) {
+          p.autoContinue = patch.settings.autoContinue;
         }
         if (Object.keys(p).length > 0) repos.profile.update(p, clock.now());
       });

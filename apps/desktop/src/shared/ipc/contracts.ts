@@ -64,7 +64,7 @@ export const MeSchema = z.object({
     deviceId: z.string().exactOptional(),
     deviceName: z.string().exactOptional(),
   }),
-  settings: z.object({ showMarkPlayedAlways: z.boolean() }),
+  settings: z.object({ showMarkPlayedAlways: z.boolean(), autoContinue: z.boolean() }),
   firstRun: z.boolean(),
 });
 
@@ -77,7 +77,12 @@ export const MeUpdateSchema = z.object({
       deviceName: z.string().nullable().exactOptional(),
     })
     .exactOptional(),
-  settings: z.object({ showMarkPlayedAlways: z.boolean().exactOptional() }).exactOptional(),
+  settings: z
+    .object({
+      showMarkPlayedAlways: z.boolean().exactOptional(),
+      autoContinue: z.boolean().exactOptional(),
+    })
+    .exactOptional(),
 });
 
 // ---------------------------------------------------------------- content.*

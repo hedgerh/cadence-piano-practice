@@ -56,6 +56,7 @@ export const profile = sqliteTable('profile', {
   midiDeviceId: text('midi_device_id'),
   midiDeviceName: text('midi_device_name'),
   showMarkPlayedAlways: bool('show_mark_played_always').notNull().default(false),
+  autoContinue: bool('auto_continue').notNull().default(true),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 });

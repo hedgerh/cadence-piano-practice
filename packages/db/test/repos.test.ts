@@ -19,6 +19,7 @@ describe('ProfileRepo', () => {
       midiDeviceId: null,
       midiDeviceName: null,
       showMarkPlayedAlways: false,
+      autoContinue: true,
       createdAt: T0,
       updatedAt: T0,
     });
@@ -29,7 +30,12 @@ describe('ProfileRepo', () => {
   it('update patches fields and bumps updatedAt', () => {
     t.repos.profile.create({ name: 'Harry', timezone: 'UTC', now: T0 });
     const p = t.repos.profile.update(
-      { midiDeviceId: 'dev-1', midiDeviceName: 'Keystation', showMarkPlayedAlways: true },
+      {
+        midiDeviceId: 'dev-1',
+        midiDeviceName: 'Keystation',
+        showMarkPlayedAlways: true,
+        autoContinue: false,
+      },
       T0 + 5,
     );
     expect(p).toMatchObject({
@@ -37,6 +43,7 @@ describe('ProfileRepo', () => {
       midiDeviceId: 'dev-1',
       midiDeviceName: 'Keystation',
       showMarkPlayedAlways: true,
+      autoContinue: false,
       createdAt: T0,
       updatedAt: T0 + 5,
     });

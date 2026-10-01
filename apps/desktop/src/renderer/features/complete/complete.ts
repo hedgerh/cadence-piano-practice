@@ -58,10 +58,22 @@ export function chipView(chip: CompleteDto['chips'][number]): CompleteChipView {
   }
 }
 
+export type NextAction = { kind: 'next'; label: string; levelId: string };
+
 export type CompleteAction =
-  | { kind: 'replay'; label: string }
-  | { kind: 'next'; label: string; levelId: string }
-  | { kind: 'done'; label: string };
+  { kind: 'replay'; label: string } | NextAction | { kind: 'done'; label: string };
+
+/**
+ * decisions.md 2026-10-01 "Hands-free key loop": the "Keep going" the screen may run without a
+ * click (countdown when `autoContinue` is on; any MIDI note-on regardless). Only a clean
+ * chord-practice pass with a next level qualifies: never with skips, at the end of the circle,
+ * or for an ear drill (those keep requiring a click).
+ */
+export interface AutoNextView {
+  action: NextAction;
+  /** "E major" for "Next: E major in 3…". */
+  title: string;
+}
 
 export interface CompleteView {
   title: string;
@@ -77,6 +89,7 @@ export interface CompleteView {
   secondary: CompleteAction | null;
   tertiary: CompleteAction | null;
   skipped: number;
+  autoNext: AutoNextView | null;
 }
 
 const DONE: CompleteAction = { kind: 'done', label: 'Done for today' };
@@ -105,7 +118,7 @@ function nextLabel(dto: CompleteDto): string | null {
 
 export function completeView(dto: CompleteDto): CompleteView {
   const skipped = dto.skippedCount;
-  const next: CompleteAction | null = dto.next
+  const next: NextAction | null = dto.next
     ? { kind: 'next', label: dto.next.label, levelId: dto.next.levelId }
     : null;
 
@@ -148,5 +161,9 @@ export function completeView(dto: CompleteDto): CompleteView {
     secondary,
     tertiary,
     skipped,
+    autoNext:
+      next !== null && skipped === 0 && !dto.isEar
+        ? { action: next, title: dto.track.nextTitle ?? next.label.replace(/^Keep going — /, '') }
+        : null,
   };
 }

@@ -40,6 +40,8 @@ function LivePractice({ session }: { session: PracticeSession }) {
       const state: CompleteRouteState = { complete };
       void navigate(`/complete/${encodeURIComponent(complete.sessionId)}`, { state });
     },
+    // decisions.md 2026-10-01 "Hands-free key loop" (off until me.get has loaded).
+    autoFinish: me.data?.settings.autoContinue ?? false,
   });
   return (
     <PracticeView
@@ -55,6 +57,7 @@ function LivePractice({ session }: { session: PracticeSession }) {
       onFinish={practice.finish}
       finishing={practice.finishing}
       finishError={practice.finishError}
+      autoFinishing={practice.autoFinishing}
       xpToast={practice.xpToast}
     />
   );

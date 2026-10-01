@@ -1,0 +1,1 @@
+ALTER TABLE `profile` ADD `auto_continue` integer DEFAULT true NOT NULL;
