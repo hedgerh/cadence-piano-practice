@@ -1,0 +1,96 @@
+/* Main:18 — page column on the ground colour. */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main:20 / Main:22 — header height and wordmark, without nav or pills (no profile yet). */
+.wordmark {
+  display: flex;
+  align-items: center;
+  height: 76px;
+  padding: 0 48px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -0.5px;
+}
+
+.main {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 48px 76px;
+}
+
+/* Main:46 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Main:47 */
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 44px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* Main:48 */
+.lede {
+  margin: 0;
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* 15/800 label (Main:109 scale, heavier). */
+.label {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Field geometry from SecondaryButton (Complete:79): 56, r16, 2px line-strong. */
+.input {
+  width: 100%;
+  height: 56px;
+  box-sizing: border-box;
+  padding: 0 18px;
+  border-radius: 16px;
+  border: 2px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+.input::placeholder {
+  color: var(--muted);
+  font-weight: 600;
+}
+.input:focus-visible {
+  border-color: var(--tangerine);
+  box-shadow: var(--halo-4);
+}

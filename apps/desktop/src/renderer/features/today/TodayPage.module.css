@@ -1,0 +1,121 @@
+/* Main:18 — page column on the ground colour. */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main:43 — two columns at 1280 (auto-fit, min 420). */
+.main {
+  max-width: 1184px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 48px 48px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: 48px;
+}
+
+/* Main:45 */
+.practice {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Main:46 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Main:47 */
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 44px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* Main:48 */
+.subtitle {
+  margin: 0;
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Main:52 */
+.planHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* Main:53 / Main:115 */
+.h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+/* Main:54 */
+.planMeta {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Main:104 */
+.ctaRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Main:109 */
+.ctaNote {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Main:113 */
+.tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Main:114 */
+.tracksHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+/* Main:116 */
+.mapLink {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--tangerine-deep);
+  text-decoration: none;
+}
+
+/* Main:147 */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

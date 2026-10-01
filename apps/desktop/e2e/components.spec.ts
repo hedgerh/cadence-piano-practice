@@ -194,12 +194,16 @@ test('component gallery: probes, MIDI input, offline fonts, no console errors', 
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: 'e2e/screenshots/06-components.png' });
 
-    // ---- Screen placeholders ----
+    // ---- Screen registry: registered screens render (Task 08 practice); others fall back ----
     await page.evaluate(() => {
       window.location.hash = '#/dev/screens/practice';
     });
+    await expect(page.getByTestId('practice')).toBeVisible();
+    await page.evaluate(() => {
+      window.location.hash = '#/dev/screens/not-a-screen';
+    });
     await expect(page.getByTestId('dev-screens')).toBeVisible();
-    await expect(page.getByTestId('fixture-json')).toContainText('Learn · diatonic chords');
+    await expect(page.getByTestId('dev-screens')).toContainText('Unknown screen');
 
     expect(errors).toEqual([]);
   } finally {

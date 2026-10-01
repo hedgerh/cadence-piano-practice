@@ -1,0 +1,75 @@
+/* Not in the designs: a scrim over the page, tinted from --ink. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--ink) 35%, transparent);
+  z-index: 10;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 480px;
+}
+
+/* Main:53 — card heading. */
+.title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+/* Main:70 — muted 15/600 body copy. */
+.lede {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Main:147 */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Main:156–157 — available track row, as a button. */
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 14px 22px;
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  border-radius: 16px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+.option:hover:not(:disabled) {
+  border-color: var(--tangerine);
+}
+.option:disabled {
+  cursor: default;
+}
+
+/* Main:136 — "Ready to start" teal-deep 13/800. */
+.optionCta {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--teal-deep);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}

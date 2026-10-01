@@ -1,0 +1,218 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { connectedMidi, midiStatuses } from '../../dev/fixtures/user';
+import { AddTrackDialog } from './AddTrackDialog';
+import { fixtureToday } from './dev';
+import { Onboarding } from './Onboarding';
+import {
+  addableTracks,
+  blockStates,
+  ctaAction,
+  ctaNote,
+  greetingFor,
+  partitionTracks,
+  type TodayDto,
+} from './today';
+import { TodayView } from './TodayView';
+
+afterEach(cleanup);
+
+describe('greetingFor (Task 07: morning < 12, afternoon < 18, evening otherwise)', () => {
+  it.each([
+    [0, 'Good morning, Harry.'],
+    [11, 'Good morning, Harry.'],
+    [12, 'Good afternoon, Harry.'],
+    [17, 'Good afternoon, Harry.'],
+    [18, 'Good evening, Harry.'],
+    [23, 'Good evening, Harry.'],
+  ])('hour %i → %s', (hour, want) => {
+    expect(greetingFor('Harry', hour)).toBe(want);
+  });
+
+  it('drops the name when empty', () => {
+    expect(greetingFor('  ', 9)).toBe('Good morning.');
+  });
+});
+
+describe('blockStates (Main:59/76/91)', () => {
+  it('done blocks check, first open is current, the rest upcoming', () => {
+    const s = (...st: ('pending' | 'in_progress' | 'done')[]) =>
+      blockStates(st.map((status) => ({ status })));
+    expect(s('pending', 'pending', 'pending')).toEqual(['current', 'upcoming', 'upcoming']);
+    expect(s('done', 'in_progress', 'pending')).toEqual(['done', 'current', 'upcoming']);
+    expect(s('done', 'done', 'pending')).toEqual(['done', 'done', 'current']);
+    expect(s('done', 'done', 'done')).toEqual(['done', 'done', 'done']);
+  });
+});
+
+describe('ctaAction (engine.md §4 PlanService step 8)', () => {
+  it('starts the first non-done block with its plan block id', () => {
+    expect(ctaAction(fixtureToday(1))).toEqual({
+      type: 'start',
+      input: { levelId: 'a-major', kind: 'learn', planBlockId: 'fixture-1' },
+    });
+    expect(ctaAction(fixtureToday(0))).toMatchObject({ input: { levelId: 'c-major' } });
+  });
+
+  it('routes to the lesson first when lessonFirst', () => {
+    const t = fixtureToday(1);
+    const today: TodayDto = {
+      ...t,
+      cta: { ...t.cta, lessonFirst: true },
+      blocks: t.blocks.map((b) => ({ ...b, trackId: 'minor-diatonic-chords' })),
+    };
+    expect(ctaAction(today)).toEqual({
+      type: 'navigate',
+      to: '/tracks/minor-diatonic-chords/lesson',
+    });
+  });
+
+  it('follows cta.route when everything is done', () => {
+    expect(ctaAction(fixtureToday(3))).toEqual({ type: 'navigate', to: '/tracks' });
+  });
+});
+
+describe('tracks', () => {
+  it('circle tracks that are available get cards; ladder and unavailable tracks are rows', () => {
+    const { cards, rows } = partitionTracks(fixtureToday(1).tracks);
+    expect(cards.map((c) => c.title)).toEqual(['Major diatonic chords', 'Minor diatonic chords']);
+    expect(rows.map((c) => c.title)).toEqual([
+      'Minor scales',
+      'Inversions & voice leading',
+      'Ear training',
+    ]);
+  });
+
+  it('addable = available and not active', () => {
+    const summaries = [
+      { id: 'a', title: 'A', map: 'ladder' as const, available: true },
+      { id: 'b', title: 'B', map: 'ladder' as const, available: true },
+      { id: 'c', title: 'C', map: 'ladder' as const, available: false },
+    ];
+    expect(addableTracks(summaries, [{ trackId: 'a', active: true }]).map((t) => t.id)).toEqual([
+      'b',
+    ]);
+  });
+
+  it('ctaNote follows MIDI and the all-done streak (Main:109, ui.md §3)', () => {
+    expect(ctaNote({ allDone: false, streakDays: 8, midi: connectedMidi })).toBe(
+      'Your keyboard is listening — just play.',
+    );
+    expect(ctaNote({ allDone: false, streakDays: 8, midi: midiStatuses['no-device'] })).toMatch(
+      /mark each chord/,
+    );
+    expect(ctaNote({ allDone: true, streakDays: 9, midi: connectedMidi })).toBe(
+      'Day 9 streak kept',
+    );
+  });
+});
+
+function renderView(done: number, onCta = vi.fn()) {
+  render(
+    <MemoryRouter>
+      <TodayView
+        greeting="Good evening, Harry."
+        streakDays={8}
+        xp={1240}
+        today={fixtureToday(done)}
+        midi={connectedMidi}
+        midiOverride={connectedMidi}
+        onCta={onCta}
+        onAddTrack={() => undefined}
+      />
+    </MemoryRouter>,
+  );
+  return onCta;
+}
+
+describe('TodayView states (ui.md §3: 0/1/2/3 done)', () => {
+  it('done=1 reproduces Main.dc.html', () => {
+    const onCta = renderView(1);
+    expect(screen.getByTestId('today-greeting').textContent).toBe('Good evening, Harry.');
+    const rows = screen.getAllByTestId('block-row');
+    expect(rows.map((r) => r.dataset.state)).toEqual(['done', 'current', 'upcoming']);
+    expect(rows[0]?.textContent).toContain('2 min · done');
+    expect(rows[1]?.textContent).toContain('5 min · up next');
+    expect(screen.getByTestId('today-cta').textContent).toBe('Continue with A major');
+    fireEvent.click(screen.getByTestId('today-cta'));
+    expect(onCta).toHaveBeenCalledOnce();
+    expect(screen.getByTestId('track-card-major-diatonic-chords').getAttribute('href')).toBe(
+      '/tracks/major-diatonic-chords',
+    );
+    expect(screen.getByTestId('track-row-ear-training').textContent).toContain(
+      'Intervals · Level 3',
+    );
+    expect(screen.getByTestId('track-row-minor-scales').tagName).toBe('DIV');
+  });
+
+  it('done=0 starts the warm-up', () => {
+    renderView(0);
+    expect(screen.getAllByTestId('block-row').map((r) => r.dataset.state)).toEqual([
+      'current',
+      'upcoming',
+      'upcoming',
+    ]);
+    expect(screen.getByTestId('today-cta').textContent).toBe('Start C major');
+  });
+
+  it('done=2 makes the review current', () => {
+    renderView(2);
+    expect(screen.getAllByTestId('block-row').map((r) => r.dataset.state)).toEqual([
+      'done',
+      'done',
+      'current',
+    ]);
+    expect(screen.getByTestId('today-cta').textContent).toBe('Start G major');
+  });
+
+  it('done=3 shows the all-done variant', () => {
+    renderView(3);
+    expect(screen.queryByTestId('today-cta')).toBeNull();
+    expect(screen.getByTestId('today-extra').textContent).toBe('Practice something extra');
+    expect(screen.getByTestId('today-cta-note').textContent).toBe('Day 8 streak kept');
+    expect(screen.getByText('Come back tomorrow to keep the streak.')).toBeTruthy();
+  });
+});
+
+describe('Onboarding', () => {
+  it('submits the trimmed name; disabled while empty', () => {
+    const onSubmit = vi.fn();
+    render(<Onboarding onSubmit={onSubmit} />);
+    const button = screen.getByTestId('onboarding-submit');
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByTestId('onboarding-name'), { target: { value: '  Harry ' } });
+    fireEvent.click(button);
+    expect(onSubmit).toHaveBeenCalledWith('Harry');
+  });
+});
+
+describe('AddTrackDialog', () => {
+  it('picks a track and closes on Escape', () => {
+    const onPick = vi.fn();
+    const onClose = vi.fn();
+    render(
+      <AddTrackDialog
+        tracks={[
+          {
+            id: 'minor-diatonic-chords',
+            title: 'Minor diatonic chords',
+            map: 'circle-of-fifths',
+            available: true,
+          },
+        ]}
+        onPick={onPick}
+        onClose={onClose}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('add-track-minor-diatonic-chords'));
+    expect(onPick).toHaveBeenCalledWith('minor-diatonic-chords');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('says so when nothing is left to add', () => {
+    render(<AddTrackDialog tracks={[]} onPick={() => undefined} onClose={() => undefined} />);
+    expect(screen.getByTestId('add-track-dialog').textContent).toMatch(/already learning/);
+  });
+});

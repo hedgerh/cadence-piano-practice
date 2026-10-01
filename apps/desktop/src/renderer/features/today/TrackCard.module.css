@@ -1,0 +1,55 @@
+/* Main:120 */
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Main:121 */
+.title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* Main:122 (in progress) / Main:136 (ready) */
+.status {
+  font-size: 13px;
+  font-weight: 800;
+}
+.statusWarm {
+  color: var(--tangerine-deep);
+}
+.statusCool {
+  color: var(--teal-deep);
+}
+
+/* Main:127 */
+.foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Main:149 (muted) / Main:157 (available) */
+.rowTitle {
+  font-size: 16px;
+  font-weight: 800;
+}
+.rowTitleMuted {
+  color: var(--muted);
+}
+
+/* Main:150 (not started) */
+.rowStatus {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Main:158 — current ladder level */
+.rowStatusLive {
+  font-weight: 800;
+  color: var(--lavender-deep);
+}

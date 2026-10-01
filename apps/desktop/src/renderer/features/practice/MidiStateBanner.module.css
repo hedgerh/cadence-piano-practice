@@ -1,0 +1,34 @@
+/* Practice:102 — same metrics as the Listening line, muted instead of teal-deep. */
+.line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+/* ui.md §3 denied help card — Card `row` metrics (r16, p 14/22) on paper with a 2px line. */
+.card {
+  max-width: 520px;
+  padding: 14px 22px;
+  border-radius: 16px;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  text-align: left;
+}
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.cardBody {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--muted);
+}
