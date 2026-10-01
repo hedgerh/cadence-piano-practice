@@ -49,3 +49,5 @@ Deviations from Practice.dc.html / decisions taken:
 - **Timer**: `Date.now()`; `durationMs` = resumed results' `elapsedMs` + the live span from the first note-on/hint/skip/mark to the last resolve.
 - **Finish navigation** passes router state `{ complete: CompleteDto }` (`CompleteRouteState` in `usePracticeSession.ts`) for Task 09.
 - Loading / error placeholder ("Getting your keys ready…") is not in the design.
+
+**Task 16 follow-ups.** The header pill is the live device picker (`PracticeView.headerMidiStatus` is only set by the dev screen). Retries go through `PostQueue`: a post that keeps failing is re-sent with the next resolution, then by Finish. Unplugging the keyboard mid-chord clears the held keys and promotes "Mark as played" (e2e `polish.spec.ts`).

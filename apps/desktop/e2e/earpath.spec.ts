@@ -48,6 +48,11 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
     const start = page.getByTestId('ladder-start');
     await expect(start).toHaveText('Start Level 3');
     await expectSize(start, { height: 56 });
+    // Task 16: the CTA (and its 5px shadow) is above the fold at 1280×820; Show me sits below it.
+    const startBox = await start.boundingBox();
+    expect(startBox && startBox.y + startBox.height + 5).toBeLessThanOrEqual(820);
+    const showMeBox = await page.getByTestId('ladder-show-me').boundingBox();
+    expect(showMeBox && startBox && showMeBox.y > startBox.y + startBox.height).toBe(true);
 
     // ---- stages from the engine (EarPath:82–157; engine.md §6.9 unlock copy) ----
     const rows = page.getByTestId('stage-row');
@@ -115,6 +120,8 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
 
     // ---- Show me sets the ear track's visibility (decisions.md, Task 11) ----
     const showMe = page.getByTestId('ladder-show-me');
+    // decisions.md (Task 16): segments are 44px tap targets (the design's 36px, raised).
+    await expectSize(showMe.getByRole('button', { name: 'Numerals only' }), { height: 44 });
     await showMe.getByRole('button', { name: 'Numerals only' }).click();
     await expect(showMe.getByRole('button', { name: 'Numerals only' })).toHaveAttribute(
       'aria-pressed',

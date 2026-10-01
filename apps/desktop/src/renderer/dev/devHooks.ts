@@ -1,8 +1,10 @@
 import type { Midi } from '@cadence/music';
 import type { RuntimeMode } from '../lib/runtimeMode';
 import type { FakeMidiInput } from '../midi/FakeMidiInput';
-import type { MidiStatus } from '../midi/MidiInput';
+import { createFakeMidiAccess, type FakeMidiAccess } from '../midi/fakeMidiAccess';
+import type { MidiDeviceInfo, MidiStatus } from '../midi/MidiInput';
 import { appMidi } from '../midi/midiStore';
+import { WebMidiInput } from '../midi/WebMidiInput';
 
 /** `window.__cadenceDev` — only installed in dev or e2e runs (see lib/runtimeMode.ts). */
 export interface CadenceDevHooks {
@@ -13,6 +15,19 @@ export interface CadenceDevHooks {
     releaseAll(): void;
     held(): Midi[];
     status(): MidiStatus;
+    /**
+     * Task 16: replace the real Web MIDI device with a WebMidiInput over a fake MIDIAccess
+     * holding these ports (`[]` = no keyboard), so e2e can exercise the picker, hot-plug and the
+     * no-device path deterministically on any machine.
+     */
+    fakeDevices(devices: MidiDeviceInfo[]): void;
+    plug(device: MidiDeviceInfo): void;
+    unplug(id: string): void;
+    /** Raw bytes from a fake port (only heard while WebMidiInput listens to it). */
+    sendFrom(id: string, bytes: number[]): void;
+    /** Fake ports with a message handler attached. */
+    listening(): string[];
+    devices(): MidiDeviceInfo[];
   };
   /** Set by the ear drill while mounted (features/ear/useEarDrill.ts); e2e reads the target. */
   ear?: {
@@ -38,6 +53,11 @@ declare global {
 }
 
 export function installDevHooks(input: FakeMidiInput, mode: RuntimeMode): void {
+  let fake: FakeMidiAccess | null = null;
+  const requireFake = (): FakeMidiAccess => {
+    if (!fake) throw new Error('call __cadenceDev.midi.fakeDevices() first');
+    return fake;
+  };
   window.__cadenceDev = {
     mode,
     midi: {
@@ -46,6 +66,15 @@ export function installDevHooks(input: FakeMidiInput, mode: RuntimeMode): void {
       releaseAll: () => input.stop(),
       held: () => [...appMidi.store.getState().held].sort((a, b) => a - b),
       status: () => appMidi.store.getState().status,
+      fakeDevices: (devices) => {
+        fake = createFakeMidiAccess(devices);
+        appMidi.replaceDevice(new WebMidiInput(fake.navigator));
+      },
+      plug: (device) => requireFake().plug(device),
+      unplug: (id) => requireFake().unplug(id),
+      sendFrom: (id, bytes) => requireFake().send(id, bytes),
+      listening: () => requireFake().listening(),
+      devices: () => [...appMidi.store.getState().devices],
     },
   };
 }

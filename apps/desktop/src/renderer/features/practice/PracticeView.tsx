@@ -38,6 +38,8 @@ export interface PracticeViewProps {
   title: string;
   eyebrow: { text: string; tone: EyebrowTone };
   midiStatus: MidiStatus;
+  /** Fixed header pill (dev fixtures). The live page omits it: the pill opens the device picker. */
+  headerMidiStatus?: MidiStatus | undefined;
   markPlayed: MarkPlayedMode;
   onHint: () => void;
   onSkip: () => void;
@@ -55,6 +57,7 @@ export function PracticeView({
   title,
   eyebrow,
   midiStatus,
+  headerMidiStatus,
   markPlayed,
   onHint,
   onSkip,
@@ -86,7 +89,7 @@ export function PracticeView({
         title={title}
         eyebrow={eyebrow.text}
         eyebrowTone={eyebrow.tone}
-        midiStatus={midiStatus}
+        midiStatus={headerMidiStatus}
       />
 
       <div className={styles.bar}>

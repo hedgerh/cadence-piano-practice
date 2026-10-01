@@ -34,3 +34,5 @@ Drill screens (Tasks 12–15).
 - Several open stages each render as `current` (tangerine node and segments). Only the stage holding `upNext` links its card to `upNext.route`. Locked and done cards are not links. The design links stages 4 and 5, which looks like a prototype leftover.
 - "Up next" title is `${stageTitle} · ${title}` and the CTA label is `upNext.label`, both from the engine. "Track · stage N of M" is the stage holding up-next.
 - e2e border probe: on 1.5× displays Chromium reports the locked node's 3px border as `2.66667px`, so the probe accepts either value. The 3px rail is probed by width and passes exactly.
+
+**Task 16 follow-ups.** ShowMeControl segments are 44px now, and the control moved below "Start Level N", so the CTA is above the fold at 1280×820 (the e2e asserts it). When every stage is complete, a lavender "Complete · Every level done" card replaces up-next, and the eyebrow reads "Track · stage 5 of 5" (screenshot `16-earpath-complete.png`).

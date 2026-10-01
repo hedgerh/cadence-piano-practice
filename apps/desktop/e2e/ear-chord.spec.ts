@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { go, invoke, seed } from './ipc';
+import { go, invoke, seed, fakeKeyboard } from './ipc';
 import { launchCadence } from './launch';
 import { expectSize, expectStyle } from './probes';
 
@@ -175,6 +175,7 @@ test('chords in a key L2: numeral chips, content explain, numerals-only Show me'
     // Show me → numerals only: names disappear after a reload, chips keep their size.
     await invoke(page, 'tracks.setSettings', { trackId: 'ear-training', visibility: 'num' });
     await page.reload();
+    await fakeKeyboard(page);
     await expect(page.getByTestId('ear-chips').locator('button')).toHaveCount(7);
     await expect(page.getByTestId('ear-caption')).toHaveText(/^Numerals only/);
     for (const n of G_MAJOR) {

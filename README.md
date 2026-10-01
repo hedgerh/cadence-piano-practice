@@ -1,34 +1,74 @@
 # Cadence
 
-Daily music-theory practice for a beginner pianist with a MIDI keyboard. Think Duolingo for theory, with no tempo pressure. Windows desktop app built with Electron, React and SQLite.
+Cadence is a daily music-theory practice app for a beginner pianist. Think Duolingo for theory, with no tempo pressure. Each day it plans about ten minutes: a warm-up, one new key or ear-training level, and a review of whatever is due. You play the chords on a MIDI keyboard and Cadence listens. It hints when you are stuck, schedules your misses for review, and keeps an XP total and a daily streak.
 
-**Status:** scaffold complete; screens and engine are being built task by task (see `docs/tasks/`).
+What you can practice today:
+
+- **Major diatonic chords**: all seven chords in each major key, clockwise around the circle of fifths.
+- **Minor diatonic chords**: the same pattern in natural minor, with a one-minute lesson first.
+- **Ear training**: intervals, scale degrees, chord quality, chords in a key, and finding the key of a phrase.
+
+It is a Windows desktop app (Electron, React, SQLite). It runs fully offline and has no account.
 
 ## Requirements
 
-- Windows 10/11, x64.
-- A USB MIDI keyboard (optional: every chord can be marked as played by hand).
-- For development: Node ≥ 22.12 and pnpm 12 (`npm i -g pnpm`).
+- Windows 10 or 11, 64-bit.
+- A USB MIDI keyboard is **optional**. Without one, every chord can be marked as played, and the computer keyboard plays notes: the home row `A S D F G H J K L ;` is C4–E5, the row above is the black keys, and `Z` / `X` shift the octave.
+
+## Install
+
+1. Download `Cadence Setup x.y.z.exe` and run it.
+2. The installer is not code-signed, so Windows SmartScreen shows "Windows protected your PC". Click **More info → Run anyway**.
+3. Choose an install folder and finish. Cadence appears in the Start menu.
+
+Plug in your keyboard before or after launching; Cadence notices it either way. With more than one MIDI device connected, click the keyboard pill in the top-right corner to choose one. Cadence remembers the choice.
+
+## Where your data lives
+
+Everything is stored in `%APPDATA%\Cadence`:
+
+- `cadence.sqlite`: your profile, progress, review schedule, XP and streak.
+- `logs\main.log`: the app log, useful in bug reports.
+
+Uninstalling removes the app but keeps this folder. Delete it by hand to start over.
 
 ## Development
 
+You need Node ≥ 22.12 and pnpm 12 (`npm i -g pnpm`). Use pnpm only, never npm or yarn.
+
 ```bash
-pnpm install
-pnpm dev        # Electron with renderer hot reload
-pnpm check      # typecheck + lint + format + tests
-pnpm e2e        # build, then Playwright drives the real app
-pnpm dist       # NSIS installer into apps/desktop/dist
+pnpm install          # also downloads Electron and the SQLite prebuilt
+pnpm dev              # Electron with renderer hot reload
+pnpm check            # typecheck + lint + format:check + unit tests (Vitest)
+pnpm test             # unit tests only
+pnpm format           # Prettier
+pnpm e2e              # build, then Playwright drives the real app with a throwaway profile
+pnpm dist             # NSIS installer into apps/desktop/dist
+pnpm db:generate      # Drizzle migration after editing packages/db/src/schema.ts
+pnpm rebuild:native   # after bumping Electron: rebuild better-sqlite3 for its ABI
 ```
 
-The installer is unsigned; Windows SmartScreen will show "Windows protected your PC" → **More info → Run anyway**. App data lives in `%APPDATA%\Cadence`.
+The first `pnpm dist` may need Windows Developer Mode (electron-builder's cache uses symlinks).
 
-## Repository
+### Repository
 
-- `apps/desktop` — Electron main, preload, React renderer, Playwright e2e.
-- `packages/music` — pure music theory and MIDI matching.
-- `packages/content` — the tracks the learner practices (generated, validated).
-- `packages/core` — the engine: today's plan, review scheduling, XP, streaks.
-- `packages/db` — Drizzle schema, migrations, repositories.
-- `docs/` — handoff from design, architecture, engine rules, UI system, decisions, and the task backlog.
+| Path               | What                                                                    |
+| ------------------ | ----------------------------------------------------------------------- |
+| `apps/desktop`     | Electron main, preload, React renderer, Playwright e2e and screenshots. |
+| `packages/music`   | Pure music theory: pitches, keys, triads, intervals, MIDI match rules.  |
+| `packages/content` | The tracks the learner practices (generated from code, validated).      |
+| `packages/core`    | The engine: today's plan, sessions, review scheduling, XP, streaks.     |
+| `packages/db`      | Drizzle schema, migrations and the repositories behind `core`'s ports.  |
 
-Start with `CLAUDE.md` if you are an agent, or `docs/architecture.md` if you are a human.
+Adding or changing what the learner practices means editing `packages/content` only.
+
+## Documentation
+
+All design and engineering docs live in [`docs/`](docs/):
+
+- `docs/handoff/`: the original product handoff and the screen designs.
+- `docs/architecture.md`, `docs/engine.md`, `docs/ui.md`: how the app is put together, the engine rules, and the UI system.
+- `docs/decisions.md`: the decisions log.
+- `docs/tasks/`: the build backlog, one file per task, with notes on every deviation from the designs.
+
+If you are an AI agent working in this repo, start with [`CLAUDE.md`](CLAUDE.md).

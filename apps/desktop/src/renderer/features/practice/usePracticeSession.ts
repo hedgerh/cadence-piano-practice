@@ -7,7 +7,7 @@ import { useSearchParams } from 'react-router';
 import type { ChannelInput, ChannelOutput } from '@shared/ipc/contracts';
 import { api, queryKey } from '../../lib/api';
 import { useHeldNotes } from '../../midi/hooks';
-import { withRetry } from './retry';
+import { PostQueue } from './retry';
 import { useInvalidateProgress, useSetTrackSettings } from '../shared/hooks';
 import {
   durationMs,
@@ -107,23 +107,22 @@ export function usePracticeSession(
     if (state.phase === 'advancing') dispatch({ type: 'ADVANCE', at: Date.now() });
   }, [state.phase]);
 
-  // recordStep: post each new resolution once (idempotent on ordinal), retrying in memory.
+  // recordStep: post each new resolution once (idempotent on ordinal). Task 16: a post that
+  // keeps failing is parked in memory and re-sent with the next resolution, then by Finish.
   const posted = useRef<Set<number>>(new Set(session.results.map((r) => r.ordinal)));
-  const inflight = useRef<Set<Promise<void>>>(new Set());
-  const failed = useRef<Map<number, Resolution>>(new Map());
+  const queue = useRef(new PostQueue<number>());
   const sessionId = session.sessionId;
   const [xpToast, setXpToast] = useState<XpToast | null>(null);
   const toastSeq = useRef(0);
   const post = useCallback(
-    (r: Resolution, delays?: readonly number[]): Promise<void> =>
-      withRetry(() => ioRef.current.recordStep({ sessionId, ...r }), delays).then(
-        (res) => {
-          failed.current.delete(r.ordinal);
+    (r: Resolution): void => {
+      void queue.current
+        .post(r.ordinal, () => ioRef.current.recordStep({ sessionId, ...r }))
+        .then((res) => {
           const amount = xpAwardedOf(res);
           if (amount > 0) setXpToast({ id: ++toastSeq.current, amount });
-        },
-        () => void failed.current.set(r.ordinal, r),
-      ),
+        });
+    },
     [sessionId, ioRef],
   );
   useEffect(() => {
@@ -135,8 +134,7 @@ export function usePracticeSession(
     for (const r of state.results) {
       if (posted.current.has(r.ordinal)) continue;
       posted.current.add(r.ordinal);
-      const p = post(r).finally(() => inflight.current.delete(p));
-      inflight.current.add(p);
+      post(r);
     }
   }, [state.results, post]);
 
@@ -148,9 +146,8 @@ export function usePracticeSession(
     setFinishError(null);
     void (async () => {
       try {
-        await Promise.all([...inflight.current]);
-        for (const r of [...failed.current.values()]) await post(r, [500]);
-        if (failed.current.size > 0) throw new Error('recordStep failed');
+        const stillFailing = await queue.current.flush([500]);
+        if (stillFailing.length > 0) throw new Error('recordStep failed');
         const dto = await ioRef.current.finish({
           sessionId,
           durationMs: durationMs(stateRef.current, Date.now()),
@@ -162,7 +159,7 @@ export function usePracticeSession(
         setFinishing(false);
       }
     })();
-  }, [post, sessionId, stateRef, ioRef, onFinishedRef]);
+  }, [sessionId, stateRef, ioRef, onFinishedRef]);
 
   const trackId = session.trackId;
   const setVisibility = useCallback(

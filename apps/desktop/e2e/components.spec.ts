@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { fakeKeyboard } from './ipc';
 import { launchCadence } from './launch';
 import { box, expectSize, expectStyle } from './probes';
 
@@ -67,6 +68,7 @@ test('component gallery: probes, MIDI input, offline fonts, no console errors', 
     });
     await page.reload();
     await expect(page.getByTestId('dev-components')).toBeVisible();
+    await fakeKeyboard(page);
 
     // ---- AppHeader (Main:20–41) ----
     const header = page.getByTestId('g-app-header-today').getByTestId('app-header');

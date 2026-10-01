@@ -195,3 +195,22 @@ export function PlayIcon({ size = 18 }: Pick<IconProps, 'size'>) {
     </svg>
   );
 }
+
+/** Not in the designs (Task 16): the MidiPill picker's caret when several keyboards are plugged in. */
+export function ChevronDownIcon({ size = 14, strokeWidth = 2.8 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}

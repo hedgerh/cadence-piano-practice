@@ -93,4 +93,7 @@
 .input:focus-visible {
   border-color: var(--tangerine);
   box-shadow: var(--halo-4);
+  /* Task 16: the global ink focus ring, restated over the reset above. */
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }

@@ -150,3 +150,25 @@ describe('finishing A major with G♯° hinted (Complete.dc.html)', () => {
     expect(today.cta.label).toBe('Start G major');
   });
 });
+
+// Task 16 edge states: every key on the circle and every ear level complete.
+describe("seed 'all-complete'", () => {
+  it('completes the circle and the ladder; Today has no learn block and complete cards', () => {
+    const { services } = createHarness();
+    seed(services, 'all-complete', { timezone: TZ });
+    const major = services.progress.trackOverview('major-diatonic-chords');
+    expect(major.progress).toMatchObject({ done: 12, total: 12 });
+    expect(major.nodes?.every((n) => n.state === 'done')).toBe(true);
+    expect(major.upNext).toBeNull();
+    const ear = services.progress.trackOverview('ear-training');
+    expect(ear.stages?.every((s) => s.state === 'complete')).toBe(true);
+    expect(ear.upNext).toBeNull();
+
+    const today = services.plan.getToday();
+    expect(today.blocks.some((b) => b.type === 'learn')).toBe(false);
+    expect(today.resume).toBeNull();
+    const cards = new Map(today.tracks.map((t) => [t.trackId, t]));
+    expect(cards.get('major-diatonic-chords')?.status).toBe('complete');
+    expect(cards.get('ear-training')?.status).toBe('complete');
+  });
+});

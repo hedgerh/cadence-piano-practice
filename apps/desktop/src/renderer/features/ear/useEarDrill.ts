@@ -14,7 +14,7 @@ import type { ChannelInput, ChannelOutput } from '@shared/ipc/contracts';
 import { useAudio } from '../../audio/useAudio';
 import { api } from '../../lib/api';
 import { useHeldNotes, useMidiEvents } from '../../midi/hooks';
-import { withRetry } from '../practice/retry';
+import { PostQueue } from '../practice/retry';
 import { useInvalidateProgress } from '../shared/hooks';
 import { autoPlaySounds, contextId, playbackSpec, soundNotes } from './choiceModel';
 import {
@@ -67,12 +67,6 @@ export interface EarDrillApi {
 }
 
 /** Keep `p` in `set` until it settles (Finish waits for every in-flight post). */
-function trackIn(set: Set<Promise<void>>, p: Promise<void>): Promise<void> {
-  set.add(p);
-  void p.finally(() => set.delete(p));
-  return p;
-}
-
 function useLatest<T>(value: T): { readonly current: T } {
   const ref = useRef(value);
   useEffect(() => {
@@ -177,28 +171,24 @@ export function useEarDrill(
 
   const sessionId = session.sessionId;
   const posted = useRef<Set<number>>(new Set(session.results.map((r) => r.ordinal)));
-  const stepPosts = useRef<Map<number, Promise<void>>>(new Map());
-  const inflight = useRef<Set<Promise<void>>>(new Set());
-  const failed = useRef<Map<number, EarResult>>(new Map());
+  const stepPosts = useRef<Map<number, Promise<unknown>>>(new Map());
+  // Task 16: posts that keep failing are parked in memory and re-sent with the next answer or
+  // play-back, then once more before finishing. Keys: `step:<ordinal>` / `playback:<ordinal>`.
+  const queue = useRef(new PostQueue<string>());
 
   const postStep = useCallback(
-    (r: EarResult, delays?: readonly number[]): Promise<void> =>
-      withRetry(
-        () =>
-          ioRef.current.recordStep({
-            sessionId,
-            stepId: r.stepId,
-            ordinal: r.ordinal,
-            result: r.result,
-            hintLevel: r.result === 'hinted' ? 1 : 0,
-            chosen: r.chosen,
-            elapsedMs: r.elapsedMs === null ? null : Math.round(r.elapsedMs),
-            ...(r.tries !== undefined ? { tries: r.tries } : {}),
-          }),
-        delays,
-      ).then(
-        () => void failed.current.delete(r.ordinal),
-        () => void failed.current.set(r.ordinal, r),
+    (r: EarResult): Promise<unknown> =>
+      queue.current.post(`step:${r.ordinal}`, () =>
+        ioRef.current.recordStep({
+          sessionId,
+          stepId: r.stepId,
+          ordinal: r.ordinal,
+          result: r.result,
+          hintLevel: r.result === 'hinted' ? 1 : 0,
+          chosen: r.chosen,
+          elapsedMs: r.elapsedMs === null ? null : Math.round(r.elapsedMs),
+          ...(r.tries !== undefined ? { tries: r.tries } : {}),
+        }),
       ),
     [sessionId, ioRef],
   );
@@ -207,7 +197,7 @@ export function useEarDrill(
     for (const r of state.results) {
       if (posted.current.has(r.ordinal)) continue;
       posted.current.add(r.ordinal);
-      stepPosts.current.set(r.ordinal, trackIn(inflight.current, postStep(r)));
+      stepPosts.current.set(r.ordinal, postStep(r));
     }
   }, [state.results, postStep]);
 
@@ -220,15 +210,10 @@ export function useEarDrill(
     const ordinal = question.ordinal;
     if (playbackPosted.current.has(ordinal)) return;
     playbackPosted.current.add(ordinal);
-    const after = stepPosts.current.get(ordinal) ?? Promise.resolve();
-    void trackIn(
-      inflight.current,
-      after
-        .then(() => withRetry(() => ioRef.current.recordPlayback({ sessionId, ordinal })))
-        .then(
-          () => undefined,
-          () => undefined,
-        ),
+    void queue.current.post(
+      `playback:${ordinal}`,
+      () => ioRef.current.recordPlayback({ sessionId, ordinal }),
+      stepPosts.current.get(ordinal),
     );
   }, [state.playedBack, question, sessionId, ioRef]);
 
@@ -296,9 +281,9 @@ export function useEarDrill(
     setFinishing(true);
     setFinishError(null);
     try {
-      await Promise.all([...inflight.current]);
-      for (const r of [...failed.current.values()]) await postStep(r, [500]);
-      if (failed.current.size > 0) throw new Error('recordStep failed');
+      // Answers must be stored before finishing; a lost play-back bonus never blocks it.
+      const stillFailing = await queue.current.flush([500]);
+      if (stillFailing.some((k) => k.startsWith('step:'))) throw new Error('recordStep failed');
       const dto = await ioRef.current.finish({
         sessionId,
         durationMs: durationMs(stateRef.current, Date.now()),
@@ -310,7 +295,7 @@ export function useEarDrill(
     } finally {
       setFinishing(false);
     }
-  }, [postStep, sessionId, ioRef, stateRef, onFinishedRef]);
+  }, [sessionId, ioRef, stateRef, onFinishedRef]);
 
   useEffect(() => {
     if (state.phase !== 'done' || finishStarted.current) return;

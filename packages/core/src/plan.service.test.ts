@@ -213,3 +213,73 @@ describe('PlanService.getToday', () => {
     expect(afternoon.services.plan.getToday().greeting).toBe('Good afternoon, Harry.');
   });
 });
+
+// Task 16 edge states: leaving a level mid-way keeps the session resumable (never abandoned).
+describe('PlanService.getToday · resume', () => {
+  const recordSteps = (services: Services, sessionId: string, n: number): void => {
+    const session = services.progress.getSession(sessionId);
+    const steps = session.isEar ? session.questions : session.steps;
+    steps.slice(0, n).forEach((step, ordinal) => {
+      services.progress.recordStep({
+        sessionId,
+        stepId: step.id,
+        ordinal,
+        result: 'clean',
+        hintLevel: 0,
+        chosen: step.match.type === 'choice' ? step.match.answer : null,
+      });
+    });
+  };
+
+  it('is null with no unfinished session, or one with nothing recorded yet', () => {
+    const { services } = onboarded();
+    expect(services.plan.getToday().resume).toBeNull();
+    services.progress.startLevel('c-major', 'learn');
+    expect(services.plan.getToday().resume).toBeNull();
+  });
+
+  it("offers today's unfinished chord session with progress", () => {
+    const { services } = onboarded();
+    const session = services.progress.startLevel('c-major', 'learn');
+    recordSteps(services, session.sessionId, 3);
+    expect(services.plan.getToday().resume).toEqual({
+      sessionId: session.sessionId,
+      levelId: 'c-major',
+      trackId: 'major-diatonic-chords',
+      title: 'C major',
+      isEar: false,
+      done: 3,
+      total: 7,
+    });
+  });
+
+  it('picks the most recent unfinished session, including ear levels', () => {
+    const { services, clock } = onboarded();
+    const chord = services.progress.startLevel('c-major', 'learn');
+    recordSteps(services, chord.sessionId, 2);
+    clock.advanceMinutes(5);
+    const ear = services.progress.startLevel('intervals-1', 'free');
+    recordSteps(services, ear.sessionId, 4);
+    expect(services.plan.getToday().resume).toMatchObject({
+      sessionId: ear.sessionId,
+      title: 'Intervals · Level 1',
+      isEar: true,
+      done: 4,
+      total: ear.questions.length,
+    });
+  });
+
+  it('clears once the session is finished, and does not carry over to tomorrow', () => {
+    const { services, clock } = onboarded();
+    const session = services.progress.startLevel('c-major', 'learn');
+    recordSteps(services, session.sessionId, 7);
+    services.progress.finishSession({ sessionId: session.sessionId, durationMs: 60_000 });
+    expect(services.plan.getToday().resume).toBeNull();
+
+    const other = services.progress.startLevel('g-major', 'free');
+    recordSteps(services, other.sessionId, 1);
+    expect(services.plan.getToday().resume?.levelId).toBe('g-major');
+    clock.advanceDays(1);
+    expect(services.plan.getToday().resume).toBeNull();
+  });
+});

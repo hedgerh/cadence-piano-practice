@@ -88,11 +88,11 @@
   font-weight: 800;
 }
 
-/* Not in the design (decisions.md, Task 11): the ear track's "Show me" setting, one compact
-   row tucked under the "How a level works" card (12px from it, like the card's own gap). */
+/* Not in the design (decisions.md, Task 11): the ear track's "Show me" setting. Task 16 moved
+   it below the CTA (the 44px segments no longer push "Start Level N" below the fold); the
+   column's 22px gap separates it from the button's 5px shadow. */
 .showMe {
   display: flex;
-  margin-top: -10px;
 }
 
 /* EarPath:69 */

@@ -32,3 +32,107 @@
 .inline {
   display: inline-flex;
 }
+
+/* Task 16 (not in the designs): the live MidiPill is a button that opens the device picker.
+   The reset keeps the <div> metrics exactly: content-box 40px + 2px border = 44px tap target. */
+.midiWrap {
+  position: relative;
+  display: inline-flex;
+}
+.trigger {
+  box-sizing: content-box;
+  margin: 0;
+  font-family: var(--font-body);
+  line-height: normal;
+  text-align: left;
+  cursor: pointer;
+}
+.trigger:hover {
+  border-color: var(--line-strong);
+}
+.caret {
+  display: inline-flex;
+  margin-left: -2px;
+  color: var(--muted);
+}
+
+/* Picker menu: a default card (r16, 2px line, hard card shadow) under the pill, right-aligned. */
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 260px;
+  max-width: 340px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--sh-card);
+}
+.menuTitle {
+  padding: 4px 10px 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.menuItem:hover {
+  background: var(--ground);
+}
+.menuItemOn {
+  background: var(--teal-tint);
+  color: var(--teal-deep);
+}
+.menuItemOn:hover {
+  background: var(--teal-tint);
+}
+.menuName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menuNote {
+  padding: 4px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Task 16 fidelity: long device names stay on one line ("KOMPLETE KONTROL - 1" wrapped in the
+   task header). The label ellipsizes; the task pill fits Practice:31's 220px right slot
+   (188 + 2×14 padding + 2×2 border). */
+.midi {
+  white-space: nowrap;
+  max-width: 320px;
+}
+.midi.inline {
+  max-width: 188px;
+}
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

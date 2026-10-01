@@ -1,7 +1,7 @@
 import type { Midi } from '@cadence/music';
 import { createContext, useContext, useEffect, useRef } from 'react';
 import { useStore } from 'zustand';
-import type { MidiStatus, NoteEvent } from './MidiInput';
+import type { MidiDeviceInfo, MidiStatus, NoteEvent } from './MidiInput';
 import { appMidi, type MidiHub } from './midiStore';
 
 /** Lets tests (and the gallery, if needed) swap the hub; defaults to the app hub. */
@@ -21,6 +21,11 @@ export function useHeldNotes(): ReadonlySet<Midi> {
 
 export function useKeyboardFallbackActive(): boolean {
   return useStore(useMidiHub().store, (s) => s.keyboardActive);
+}
+
+/** Task 16: connected MIDI ports (the MidiPill's picker). */
+export function useMidiDevices(): readonly MidiDeviceInfo[] {
+  return useStore(useMidiHub().store, (s) => s.devices);
 }
 
 /** Calls `listener` for every heard note event while mounted. Latest listener wins. */

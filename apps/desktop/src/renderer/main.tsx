@@ -6,6 +6,13 @@ import { queryClient } from './lib/queryClient';
 import { detectRuntimeMode } from './lib/runtimeMode';
 import { createAppRouter } from './app/router';
 import { initAppMidi } from './midi/appMidi';
+import {
+  installMidiPreferenceIo,
+  livePreferenceIo,
+  restoreMidiPreference,
+} from './midi/devicePreference';
+import { appMidi } from './midi/midiStore';
+import { api, queryKey } from './lib/api';
 import { installAudioUnlock } from './audio/useAudio';
 import { installDevHooks } from './dev/devHooks';
 import './styles/fonts.css';
@@ -21,6 +28,10 @@ async function boot(): Promise<void> {
   const mode = await detectRuntimeMode();
   const devInput = initAppMidi({ dev: mode.dev, devTools: mode.devTools });
   if (mode.devTools && devInput) installDevHooks(devInput, mode);
+  // Task 16: listen to the keyboard picked last time (me.midi), once the profile is read.
+  const midiIo = livePreferenceIo(queryClient, api, queryKey('me.get'));
+  installMidiPreferenceIo(midiIo);
+  void restoreMidiPreference(appMidi, midiIo);
   installAudioUnlock();
 
   const router = createAppRouter({ devRoutes: mode.devTools });

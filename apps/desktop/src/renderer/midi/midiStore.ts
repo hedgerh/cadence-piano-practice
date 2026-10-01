@@ -2,7 +2,14 @@
 // dev/e2e, a FakeMidiInput driven by window.__cadenceDev.midi) into one Zustand store.
 import type { Midi } from '@cadence/music';
 import { createStore, type StoreApi } from 'zustand/vanilla';
-import type { MidiInput, MidiStatus, NoteEvent } from './MidiInput';
+import {
+  isSelectable,
+  type MidiDeviceInfo,
+  type MidiDevicePreference,
+  type MidiInput,
+  type MidiStatus,
+  type NoteEvent,
+} from './MidiInput';
 import { emitter } from './signal';
 
 /**
@@ -21,6 +28,10 @@ export interface MidiState {
   events: readonly NoteEvent[];
   /** Whether the computer-keyboard fallback is currently heard. */
   keyboardActive: boolean;
+  /** Task 16: every connected port of the device input (the MidiPill's picker). */
+  devices: readonly MidiDeviceInfo[];
+  /** The learner's chosen port (restored from `me.midi` on launch); null = first connected. */
+  preference: MidiDevicePreference | null;
 }
 
 export const EVENT_HISTORY = 32;
@@ -33,6 +44,10 @@ export interface MidiHub {
   /** Note events from every heard input, as they happen. */
   subscribeEvents(listener: (e: NoteEvent) => void): () => void;
   setKeyboardAlways(on: boolean): void;
+  /** Task 16: listen to this port (when connected); forwarded to the device input. */
+  selectDevice(preference: MidiDevicePreference | null): void;
+  /** Swap the `device` input (dev/e2e: a WebMidiInput over a fake MIDIAccess). */
+  replaceDevice(input: MidiInput): void;
 }
 
 interface Attached {
@@ -42,6 +57,7 @@ interface Attached {
 }
 
 const EMPTY: ReadonlySet<Midi> = new Set();
+const NO_DEVICES: readonly MidiDeviceInfo[] = [];
 
 function sameSet(a: ReadonlySet<Midi>, b: ReadonlySet<Midi>): boolean {
   if (a.size !== b.size) return false;
@@ -60,11 +76,18 @@ export function createMidiHub(options: { keyboardAlways?: boolean } = {}): MidiH
     held: EMPTY,
     events: [],
     keyboardActive: true,
+    devices: NO_DEVICES,
+    preference: null,
   }));
 
   const deviceStatus = (): MidiStatus => {
     const device = attached.find((a) => a.role === 'device');
     return device ? device.input.status$.get() : { kind: 'no-device' };
+  };
+
+  const deviceList = (): readonly MidiDeviceInfo[] => {
+    const device = attached.find((a) => a.role === 'device');
+    return device && isSelectable(device.input) ? device.input.devices$.get() : NO_DEVICES;
   };
 
   const isHeard = (a: Attached): boolean => {
@@ -85,34 +108,41 @@ export function createMidiHub(options: { keyboardAlways?: boolean } = {}): MidiH
       status,
       held: sameSet(prev.held, held) ? prev.held : held,
       keyboardActive,
+      devices: deviceList(),
     });
+  };
+
+  const attach = (input: MidiInput, role: MidiRole): (() => void) => {
+    const entry: Attached = { input, role, unsubscribe: () => undefined };
+    const unsubs = [
+      input.status$.subscribe(recompute),
+      input.held$.subscribe(recompute),
+      input.events$.subscribe((e) => {
+        if (!isHeard(entry)) return;
+        const prev = store.getState().events;
+        store.setState({ events: [...prev, e].slice(-EVENT_HISTORY) });
+        events.emit(e);
+      }),
+    ];
+    if (isSelectable(input)) {
+      unsubs.push(input.devices$.subscribe(recompute));
+      if (role === 'device') input.select(store.getState().preference);
+    }
+    entry.unsubscribe = () => unsubs.forEach((u) => u());
+    attached.push(entry);
+    recompute();
+    if (started) void input.start();
+    return () => {
+      entry.unsubscribe();
+      const i = attached.indexOf(entry);
+      if (i >= 0) attached.splice(i, 1);
+      recompute();
+    };
   };
 
   return {
     store,
-    attach(input, role) {
-      const entry: Attached = { input, role, unsubscribe: () => undefined };
-      const unsubs = [
-        input.status$.subscribe(recompute),
-        input.held$.subscribe(recompute),
-        input.events$.subscribe((e) => {
-          if (!isHeard(entry)) return;
-          const prev = store.getState().events;
-          store.setState({ events: [...prev, e].slice(-EVENT_HISTORY) });
-          events.emit(e);
-        }),
-      ];
-      entry.unsubscribe = () => unsubs.forEach((u) => u());
-      attached.push(entry);
-      recompute();
-      if (started) void input.start();
-      return () => {
-        entry.unsubscribe();
-        const i = attached.indexOf(entry);
-        if (i >= 0) attached.splice(i, 1);
-        recompute();
-      };
-    },
+    attach,
     async start() {
       started = true;
       await Promise.all(attached.map((a) => a.input.start()));
@@ -127,6 +157,19 @@ export function createMidiHub(options: { keyboardAlways?: boolean } = {}): MidiH
     setKeyboardAlways(on) {
       keyboardAlways = on;
       recompute();
+    },
+    selectDevice(preference) {
+      store.setState({ preference });
+      const device = attached.find((a) => a.role === 'device');
+      if (device && isSelectable(device.input)) device.input.select(preference);
+    },
+    replaceDevice(input) {
+      for (const a of attached.filter((x) => x.role === 'device')) {
+        a.input.stop();
+        a.unsubscribe();
+        attached.splice(attached.indexOf(a), 1);
+      }
+      attach(input, 'device');
     },
   };
 }

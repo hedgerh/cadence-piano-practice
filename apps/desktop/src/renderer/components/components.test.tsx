@@ -1,13 +1,15 @@
-import { cleanup, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { MidiHubContext } from '../midi/hooks';
 import { createMidiHub } from '../midi/midiStore';
 import { FakeMidiInput } from '../midi/FakeMidiInput';
+import { createFakeMidiAccess } from '../midi/fakeMidiAccess';
+import { WebMidiInput } from '../midi/WebMidiInput';
 import { CircleOfFifths } from './music/CircleOfFifths/CircleOfFifths';
 import { keyStates, PianoKeyboard, resolveKeyState } from './music/PianoKeyboard/PianoKeyboard';
 import { Callout } from './ui/Callout';
-import { MidiPill, midiPillLabel } from './ui/MidiPill';
+import { MidiPill, midiMenuEmptyText, midiPillLabel } from './ui/MidiPill';
 import { RomanChip } from './ui/RomanChip';
 
 afterEach(cleanup);
@@ -99,5 +101,54 @@ describe('RomanChip / Callout', () => {
   it('renders **bold** markup', () => {
     const { container } = render(<Callout text="Start on **vi** and keep going." />);
     expect(container.querySelector('strong')?.textContent).toBe('vi');
+  });
+
+  it('fixture status renders the static pill (no picker)', () => {
+    const { getByTestId } = render(<MidiPill status={{ kind: 'no-device' }} />);
+    expect(getByTestId('midi-pill').tagName).toBe('DIV');
+  });
+
+  // Task 16: the live pill is a button that opens a device picker over access.inputs.
+  it('lists connected keyboards and switches to the picked one', async () => {
+    const hub = createMidiHub();
+    const access = createFakeMidiAccess([
+      { id: 'fp30x', name: 'Roland FP-30X' },
+      { id: 'keystep', name: 'Arturia KeyStep' },
+    ]);
+    hub.attach(new WebMidiInput(access.navigator), 'device');
+    await act(() => hub.start());
+    const { getByTestId, queryByTestId, getAllByRole } = render(
+      <MidiHubContext.Provider value={hub}>
+        <MidiPill />
+      </MidiHubContext.Provider>,
+    );
+    const pill = getByTestId('midi-pill');
+    expect(pill.tagName).toBe('BUTTON');
+    expect(pill.getAttribute('aria-expanded')).toBe('false');
+    expect(pill.textContent).toBe('Roland FP-30X connected');
+    fireEvent.click(pill);
+    const items = getAllByRole('menuitemradio');
+    expect(items.map((i) => [i.textContent, i.getAttribute('aria-checked')])).toEqual([
+      ['Roland FP-30X', 'true'],
+      ['Arturia KeyStep', 'false'],
+    ]);
+    // Arrow keys move through the items; Escape closes and returns focus to the pill.
+    expect(document.activeElement).toBe(items[0]);
+    fireEvent.keyDown(getByTestId('midi-menu'), { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(items[1]);
+    fireEvent.click(items[1] as HTMLElement);
+    expect(queryByTestId('midi-menu')).toBeNull();
+    expect(getByTestId('midi-pill').textContent).toBe('Arturia KeyStep connected');
+    expect(access.listening()).toEqual(['keystep']);
+    fireEvent.click(getByTestId('midi-pill'));
+    fireEvent.keyDown(getByTestId('midi-menu'), { key: 'Escape' });
+    expect(queryByTestId('midi-menu')).toBeNull();
+    expect(document.activeElement).toBe(getByTestId('midi-pill'));
+    hub.stop();
+  });
+
+  it('explains an empty picker per status', () => {
+    expect(midiMenuEmptyText({ kind: 'no-device' })).toMatch(/Plug one in/);
+    expect(midiMenuEmptyText({ kind: 'denied' })).toMatch(/Privacy/);
   });
 });

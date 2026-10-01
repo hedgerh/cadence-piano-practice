@@ -1,6 +1,7 @@
 // /dev/screens/today — the Today screen fed by Main.dc.html's fixture (no IPC).
 // Knobs: ?done=0|1|2|3 (blocks finished; default 1 = the design), ?midi=connected|no-device|…,
-// ?add=1 (open the "Add something to learn" dialog).
+// ?add=1 (open the "Add something to learn" dialog). Task 16: ?resume=1 (an ear level left
+// mid-way), ?state=no-tracks|all-complete (edge states).
 import type { ComponentType } from 'react';
 import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -99,7 +100,58 @@ export function fixtureToday(done: number): TodayDto {
         },
     allDone,
     tracks,
+    resume: null,
   };
+}
+
+/** Task 16 edge-state variants of the fixture. */
+export function fixtureTodayVariant(
+  done: number,
+  opts: { resume?: boolean; state?: 'no-tracks' | 'all-complete' | null },
+): TodayDto {
+  const base = fixtureToday(done);
+  const today: TodayDto = opts.resume
+    ? {
+        ...base,
+        resume: {
+          sessionId: 'fixture-session',
+          levelId: 'intervals-3',
+          trackId: 'ear-training',
+          title: 'Intervals · Level 3',
+          isEar: true,
+          done: 4,
+          total: 10,
+        },
+      }
+    : base;
+  if (opts.state === 'no-tracks') {
+    return {
+      ...today,
+      blocks: [],
+      allDone: false,
+      tracks: today.tracks.map((t) => ({ ...t, active: false })),
+    };
+  }
+  if (opts.state === 'all-complete') {
+    return {
+      ...today,
+      tracks: today.tracks.map((t) =>
+        t.active
+          ? {
+              ...t,
+              status: 'complete',
+              statusLabel: 'Complete',
+              done: t.total,
+              progressText:
+                t.map === 'ladder' ? `${t.total} of ${t.total} levels` : '12 of 12 keys',
+              nextText: null,
+              currentLabel: null,
+            }
+          : t,
+      ),
+    };
+  }
+  return today;
 }
 
 function card(
@@ -141,6 +193,10 @@ function isMidiKind(k: string | null): k is MidiStatus['kind'] {
   return k !== null && k in midiStatuses;
 }
 
+function stateKnob(v: string | null): 'no-tracks' | 'all-complete' | null {
+  return v === 'no-tracks' || v === 'all-complete' ? v : null;
+}
+
 function TodayDevScreen() {
   const [params] = useSearchParams();
   const done = Math.min(3, Math.max(0, Number(params.get('done') ?? '1') || 0));
@@ -153,7 +209,10 @@ function TodayDevScreen() {
       greeting={user.greeting}
       streakDays={user.streakDays}
       xp={user.xp}
-      today={fixtureToday(done)}
+      today={fixtureTodayVariant(done, {
+        resume: params.get('resume') === '1',
+        state: stateKnob(params.get('state')),
+      })}
       midi={midi}
       midiOverride={midi}
       onCta={() => undefined}

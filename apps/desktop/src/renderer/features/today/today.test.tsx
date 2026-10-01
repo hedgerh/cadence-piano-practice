@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { connectedMidi, midiStatuses } from '../../dev/fixtures/user';
 import { AddTrackDialog } from './AddTrackDialog';
-import { fixtureToday } from './dev';
+import { fixtureToday, fixtureTodayVariant } from './dev';
 import { Onboarding } from './Onboarding';
 import {
   addableTracks,
@@ -11,7 +11,13 @@ import {
   ctaAction,
   ctaNote,
   greetingFor,
+  ALL_COMPLETE_SUBTITLE,
+  NO_TRACKS_SUBTITLE,
   partitionTracks,
+  resumeOffer,
+  resumeProgress,
+  todayMode,
+  todaySubtitle,
   type TodayDto,
 } from './today';
 import { TodayView } from './TodayView';
@@ -214,5 +220,68 @@ describe('AddTrackDialog', () => {
   it('says so when nothing is left to add', () => {
     render(<AddTrackDialog tracks={[]} onPick={() => undefined} onClose={() => undefined} />);
     expect(screen.getByTestId('add-track-dialog').textContent).toMatch(/already learning/);
+  });
+});
+
+// Task 16 edge states.
+describe('Today edge states (Task 16)', () => {
+  it('todayMode: no active tracks / every active track complete / a plan', () => {
+    expect(todayMode(fixtureToday(1))).toBe('plan');
+    expect(todayMode(fixtureTodayVariant(1, { state: 'no-tracks' }))).toBe('no-tracks');
+    expect(todayMode(fixtureTodayVariant(1, { state: 'all-complete' }))).toBe('all-complete');
+  });
+
+  it('subtitles: no tracks, all complete with nothing planned, otherwise the engine copy', () => {
+    expect(todaySubtitle(fixtureTodayVariant(1, { state: 'no-tracks' }))).toBe(NO_TRACKS_SUBTITLE);
+    const complete = fixtureTodayVariant(1, { state: 'all-complete' });
+    expect(todaySubtitle({ ...complete, blocks: [] })).toBe(ALL_COMPLETE_SUBTITLE);
+    expect(todaySubtitle(complete)).toBe(complete.subtitle);
+    expect(todaySubtitle(fixtureToday(3))).toBe('Come back tomorrow to keep the streak.');
+  });
+
+  it('resumeOffer hides the row when the CTA already continues that level', () => {
+    const t = fixtureTodayVariant(1, { resume: true });
+    expect(resumeOffer(t)?.levelId).toBe('intervals-3');
+    expect(resumeOffer({ ...t, cta: { ...t.cta, levelId: 'intervals-3' } })).toBeNull();
+    expect(resumeOffer(fixtureToday(1))).toBeNull();
+    expect(resumeProgress({ done: 3, total: 7, isEar: false })).toBe('3 of 7 chords played');
+    expect(resumeProgress({ done: 4, total: 10, isEar: true })).toBe('4 of 10 answered');
+  });
+
+  function renderToday(today: TodayDto, onAddTrack = vi.fn()) {
+    render(
+      <MemoryRouter>
+        <TodayView
+          greeting="Good evening, Harry."
+          streakDays={8}
+          xp={1240}
+          today={today}
+          midi={connectedMidi}
+          midiOverride={connectedMidi}
+          onCta={() => undefined}
+          onAddTrack={onAddTrack}
+        />
+      </MemoryRouter>,
+    );
+    return onAddTrack;
+  }
+
+  it('renders "Resume Intervals · Level 3" linking to the session route', () => {
+    renderToday(fixtureTodayVariant(1, { resume: true }));
+    const row = screen.getByTestId('today-resume');
+    expect(row.textContent).toContain('Left mid-way4 of 10 answered');
+    const link = screen.getByTestId('today-resume-link');
+    expect(link.textContent).toBe('Resume Intervals · Level 3');
+    expect(link.getAttribute('href')).toBe('/ear/intervals-3?session=fixture-session');
+  });
+
+  it('no active tracks: no plan card, and the CTA opens "Add something to learn"', () => {
+    const onAdd = renderToday(fixtureTodayVariant(1, { state: 'no-tracks' }));
+    expect(screen.queryByTestId('today-plan')).toBeNull();
+    expect(screen.queryByTestId('today-cta-note')).toBeNull();
+    const cta = screen.getByTestId('today-cta');
+    expect(cta.textContent).toContain('Pick something to learn');
+    fireEvent.click(cta);
+    expect(onAdd).toHaveBeenCalledOnce();
   });
 });

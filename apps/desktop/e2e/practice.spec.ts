@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { go, invoke, seed } from './ipc';
+import { go, invoke, seed, fakeKeyboard } from './ipc';
 import { launchCadence } from './launch';
 import { expectSize, expectStyle } from './probes';
 
@@ -114,6 +114,7 @@ test('practice: A major via dev MIDI — auto-advance, resume, Show-me persisten
 
     // ---- reload mid-level: resumes at chord 4 with I–iii done, visibility restored ----
     await page.reload();
+    await fakeKeyboard(page);
     await expect(page.getByTestId('chord-no')).toHaveText('Chord 4 of 7');
     await expect(page.getByTestId('practice-count')).toHaveText('3 of 7 chords');
     await expect(page.getByRole('button', { name: 'Numerals only' })).toHaveAttribute(

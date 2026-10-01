@@ -156,6 +156,16 @@ const TrackCardSchema = z.object({
   currentLevelId: z.string().nullable(),
 });
 
+const ResumeSchema = z.object({
+  sessionId: z.string(),
+  levelId: z.string(),
+  trackId: z.string(),
+  title: z.string(),
+  isEar: z.boolean(),
+  done: z.number(),
+  total: z.number(),
+});
+
 export const TodaySchema = z.object({
   day: z.string(),
   greeting: z.string(),
@@ -166,6 +176,7 @@ export const TodaySchema = z.object({
   cta: CtaSchema,
   allDone: z.boolean(),
   tracks: z.array(TrackCardSchema),
+  resume: ResumeSchema.nullable(),
 });
 
 // ---------------------------------------------------------------- tracks.overview
@@ -362,7 +373,13 @@ export const CompleteSchema = z.object({
 
 // ---------------------------------------------------------------- dev.seed
 
-export const SeedScenarioSchema = z.enum(['first-run', 'day8', 'ear-unlocked', 'advance-day']);
+export const SeedScenarioSchema = z.enum([
+  'first-run',
+  'day8',
+  'ear-unlocked',
+  'all-complete',
+  'advance-day',
+]);
 
 // ---------------------------------------------------------------- the contract
 

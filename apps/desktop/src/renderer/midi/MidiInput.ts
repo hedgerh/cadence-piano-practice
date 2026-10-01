@@ -27,6 +27,33 @@ export interface MidiInput {
   stop(): void;
 }
 
+/** A connected MIDI input port, as listed in the MidiPill's device picker (Task 16). */
+export interface MidiDeviceInfo {
+  id: string;
+  name: string;
+}
+
+/**
+ * The learner's chosen keyboard (`me.update {midi}`), restored on launch. Matched by id first,
+ * then by name (port ids can change when a device moves to another USB socket).
+ */
+export interface MidiDevicePreference {
+  id: string | null;
+  name: string | null;
+}
+
+/** An input that owns several ports and listens to one of them (WebMidiInput). */
+export interface SelectableMidiInput extends MidiInput {
+  /** Every connected input port. */
+  readonly devices$: Readable<readonly MidiDeviceInfo[]>;
+  /** Listen to the preferred port when it is connected, else the first connected one. */
+  select(preference: MidiDevicePreference | null): void;
+}
+
+export function isSelectable(input: MidiInput): input is SelectableMidiInput {
+  return 'select' in input && 'devices$' in input;
+}
+
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 /**

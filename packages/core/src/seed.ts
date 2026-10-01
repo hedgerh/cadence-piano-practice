@@ -8,13 +8,18 @@
 //                   A major, review G major (vii° hinted yesterday).
 // - 'ear-unlocked': first-run + Intervals L1–L5, Scale degrees L1–L4, Chords in a key L1–L3
 //                   passed today, so every ear stage (including Find the key) is open.
+// - 'all-complete': first-run + every Major diatonic chords key and every Ear training level
+//                   passed today (Task 16 edge states: circle and ladder fully complete).
 // - 'advance-day':  moves an adjustable clock forward one day (FakeClock / SystemClock offset).
 import { FakeClock, isAdjustableClock } from './clock';
 import { addDays, localNoon, systemTimezone } from './dates';
 import type { SessionKind } from './ports';
 import { type Services, createServices } from './services';
 
-export type SeedScenario = 'first-run' | 'day8' | 'ear-unlocked' | 'advance-day';
+export type SeedScenario = 'first-run' | 'day8' | 'ear-unlocked' | 'all-complete' | 'advance-day';
+
+/** Tracks the 'all-complete' seed finishes (the default enrolment). */
+export const ALL_COMPLETE_TRACKS: readonly string[] = ['major-diatonic-chords', 'ear-training'];
 
 export interface SeedOptions {
   /** Defaults to "Harry" (the designs' learner). */
@@ -186,6 +191,15 @@ export function seed(services: Services, scenario: SeedScenario, opts: SeedOptio
       requireEmpty(services);
       services.settings.createProfile({ name, timezone });
       for (const levelId of EAR_UNLOCKED_LEVELS) playLevel(services, { levelId, kind: 'free' });
+      return;
+    case 'all-complete':
+      requireEmpty(services);
+      services.settings.createProfile({ name, timezone });
+      for (const trackId of ALL_COMPLETE_TRACKS) {
+        for (const level of services.content.levelOrder(trackId)) {
+          playLevel(services, { levelId: level.id, kind: 'free' });
+        }
+      }
       return;
     case 'advance-day':
       if (!isAdjustableClock(services.clock)) {

@@ -4,8 +4,8 @@
 import type { Level, Step } from '@cadence/content';
 import { keySignatureText } from '@cadence/music';
 import { type ServiceContext, joinAnd, timezoneOf } from './context';
-import { localHour } from './dates';
-import type { CtaDto, PlanBlockDto, TodayDto } from './dto';
+import { localDay, localHour } from './dates';
+import type { CtaDto, PlanBlockDto, ResumeDto, TodayDto } from './dto';
 import type {
   NewPlanBlock,
   PlanBlockRow,
@@ -300,6 +300,36 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
     };
   };
 
+  /**
+   * Task 16: today's latest unfinished session with at least one recorded step. Leaving
+   * Practice or an ear drill mid-level never abandons the session, so Today offers it back.
+   */
+  const resumable = (today: string): ResumeDto | null => {
+    const tz = timezoneOf(ctx);
+    const now = clock.now();
+    // A local day is at most 26 h long; narrow a 2-day window down to today's local date.
+    const candidates = repos.sessions
+      .listStartedBetween(now - 2 * 86_400_000, now + 1)
+      .filter((s) => s.finishedAt === null && localDay(s.startedAt, tz) === today)
+      .reverse();
+    for (const s of candidates) {
+      const ref = content.level(s.levelId);
+      if (!ref) continue;
+      const done = new Set(repos.sessions.listSteps(s.id).map((r) => r.ordinal)).size;
+      if (done === 0) continue;
+      return {
+        sessionId: s.id,
+        levelId: s.levelId,
+        trackId: s.trackId,
+        title: content.shortTitle(s.levelId),
+        isEar: ref.isEar,
+        done,
+        total: ref.isEar ? (s.questionOrder?.length ?? done) : ref.level.steps.length,
+      };
+    }
+    return null;
+  };
+
   const greetingFor = (name: string): string => {
     const hour = localHour(clock.now(), timezoneOf(ctx));
     const part = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
@@ -368,6 +398,7 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
       cta,
       allDone,
       tracks,
+      resume: profile ? resumable(today) : null,
     };
   };
 

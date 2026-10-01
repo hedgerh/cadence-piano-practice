@@ -75,3 +75,50 @@ export function ctaNote(opts: { allDone: boolean; streakDays: number; midi: Midi
     ? 'Your keyboard is listening — just play.'
     : 'No keyboard? You can mark each chord as played.';
 }
+
+/**
+ * Task 16 edge states. `no-tracks`: nothing enrolled and active and no plan today (a plan built
+ * before the learner paused everything still shows). `all-complete`: every active track is
+ * finished (all keys on a circle, every ear level).
+ */
+export type TodayMode = 'plan' | 'no-tracks' | 'all-complete';
+
+export function todayMode(today: Pick<TodayDto, 'tracks' | 'blocks'>): TodayMode {
+  const active = today.tracks.filter((t) => t.available && t.active);
+  if (active.length === 0) return today.blocks.length === 0 ? 'no-tracks' : 'plan';
+  if (active.every((t) => t.status === 'complete')) return 'all-complete';
+  return 'plan';
+}
+
+export const NO_TRACKS_SUBTITLE =
+  'You’re not learning anything right now. Pick a track and Cadence plans each day for you.';
+export const NO_TRACKS_CTA = 'Pick something to learn';
+export const ALL_COMPLETE_SUBTITLE =
+  'Everything you’re learning is complete. Keep it fresh with a review, or add something new.';
+
+/** The subtitle under the greeting, by mode (the engine's copy when there is a plan). */
+export function todaySubtitle(today: TodayDto): string {
+  const mode = todayMode(today);
+  if (mode === 'no-tracks') return NO_TRACKS_SUBTITLE;
+  if (today.allDone) return today.cta.subtitle ?? today.subtitle;
+  if (mode === 'all-complete' && today.blocks.length === 0) return ALL_COMPLETE_SUBTITLE;
+  return today.subtitle;
+}
+
+export type ResumeDto = NonNullable<TodayDto['resume']>;
+
+/**
+ * Task 16: "Resume A major" for a session left mid-level today. Hidden when the CTA already
+ * continues that level (its plan block is in progress and `sessions.start` resumes it).
+ */
+export function resumeOffer(today: Pick<TodayDto, 'resume' | 'cta'>): ResumeDto | null {
+  const r = today.resume;
+  if (r === null) return null;
+  if (today.cta.levelId === r.levelId) return null;
+  return r;
+}
+
+/** "3 of 7 chords played" · "4 of 10 answered". */
+export function resumeProgress(r: Pick<ResumeDto, 'done' | 'total' | 'isEar'>): string {
+  return r.isEar ? `${r.done} of ${r.total} answered` : `${r.done} of ${r.total} chords played`;
+}

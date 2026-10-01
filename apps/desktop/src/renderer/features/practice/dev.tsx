@@ -112,6 +112,7 @@ function DevPracticeScreen({ search }: { search: string }) {
       title={session.levelTitle}
       eyebrow={eyebrowFor(session)}
       midiStatus={midi}
+      headerMidiStatus={midi}
       // The design shows the Practice:112 link beside a connected keyboard.
       markPlayed={markPlayedMode(midi, true)}
       onHint={practice.hint}

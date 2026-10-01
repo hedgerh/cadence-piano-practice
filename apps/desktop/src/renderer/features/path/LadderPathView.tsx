@@ -9,6 +9,7 @@ import type { TrackOverviewDto, TrackSummary } from '../shared/hooks';
 import {
   HOW_A_LEVEL_WORKS,
   HOW_A_LEVEL_WORKS_TITLE,
+  LADDER_COMPLETE,
   stageEyebrow,
   stageRows,
   trackPills,
@@ -66,16 +67,19 @@ export function LadderPathView({
                 <NumberedList items={HOW_A_LEVEL_WORKS} />
               </div>
 
-              {/* decisions.md (Task 11): the ear track's "Show me" lives here; ear drills read it. */}
-              <div className={styles.showMe} data-testid="ladder-show-me">
-                <ShowMeControl value={overview.visibility} onChange={onVisibility} />
-              </div>
-
               {upNext && (
                 <Card variant="highlight" tone="lavender" data-testid="ladder-up-next">
                   <span className={styles.upNextEyebrow}>Up next</span>
                   <span className={styles.upNextTitle}>{upNextTitle(upNext)}</span>
                   {upNext.blurb !== '' && <span className={styles.upNextBody}>{upNext.blurb}</span>}
+                </Card>
+              )}
+
+              {!upNext && overview.available && (
+                <Card variant="highlight" tone="lavender" data-testid="ladder-complete">
+                  <span className={styles.upNextEyebrow}>Complete</span>
+                  <span className={styles.upNextTitle}>{LADDER_COMPLETE.title}</span>
+                  <span className={styles.upNextBody}>{LADDER_COMPLETE.body}</span>
                 </Card>
               )}
 
@@ -90,6 +94,12 @@ export function LadderPathView({
                   </PrimaryButton>
                 </div>
               )}
+
+              {/* decisions.md (Task 11, moved in Task 16): the ear track's "Show me" sits under
+                  the CTA so "Start Level N" stays above the fold at 1280×820; ear drills read it. */}
+              <div className={styles.showMe} data-testid="ladder-show-me">
+                <ShowMeControl value={overview.visibility} onChange={onVisibility} />
+              </div>
             </section>
 
             <section className={styles.stages} data-testid="ladder-stages">

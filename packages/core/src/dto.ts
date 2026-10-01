@@ -129,6 +129,23 @@ export interface TrackCardDto {
   currentLevelId: string | null;
 }
 
+/**
+ * Task 16: today's unfinished session the learner walked away from (left Practice or an ear
+ * drill mid-level). Leaving never abandons a session, so it stays resumable.
+ */
+export interface ResumeDto {
+  sessionId: string;
+  levelId: string;
+  trackId: string;
+  /** "A major" · "Intervals · Level 3". */
+  title: string;
+  isEar: boolean;
+  /** Steps/questions already recorded in the session. */
+  done: number;
+  /** Steps (chord level) or questions (ear level) in the session. */
+  total: number;
+}
+
 export interface TodayDto {
   day: string;
   /** "Good evening, Harry." */
@@ -142,6 +159,8 @@ export interface TodayDto {
   cta: CtaDto;
   allDone: boolean;
   tracks: TrackCardDto[];
+  /** The most recent unfinished session started today with at least one recorded step. */
+  resume: ResumeDto | null;
 }
 
 // ---------------------------------------------------------------- tracks.overview

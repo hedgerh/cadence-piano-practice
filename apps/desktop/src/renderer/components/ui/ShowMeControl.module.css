@@ -21,9 +21,10 @@
   gap: 4px;
 }
 
-/* Practice:188–190 — 36px segments (Task 16 raises to 44px). */
+/* Practice:188–190 — the design's segments are 36px; Task 16 raises them to 44px for the
+   HANDOFF §3 tap-target rule (decisions.md, Task 16). Padding, radius and type are as designed. */
 .seg {
-  height: 36px;
+  height: var(--tap-min);
   padding: 0 14px;
   border-radius: 9px;
   border: 0;

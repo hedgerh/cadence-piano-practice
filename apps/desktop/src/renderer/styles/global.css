@@ -29,3 +29,23 @@ button {
     transform: scale(0.8);
   }
 }
+
+/* Task 16 accessibility: a visible 2px ink focus ring (offset 2) on every interactive element
+   reached by keyboard. Components never remove it; inputs restate it beside their own halo. */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Task 16: prefers-reduced-motion. Components already switch their own motion off (--pulse,
+   the XP toast, Learn's chip lift); this is the safety net for anything added later. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

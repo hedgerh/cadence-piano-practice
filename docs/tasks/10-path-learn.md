@@ -44,3 +44,5 @@ Deviations / beyond the design:
 - Audio is scheduled on the synth clock after `unlock()` (chords 0.55 s apart). The highlight and disabled state run on UI timers from the click, so they finish even if the AudioContext stays suspended.
 - The header eyebrow "Lesson · about 1 minute" is a renderer constant, because `Lesson` has no duration field.
 - `sessions.start` from Path, Review and Learn passively attaches today's matching plan block id when `plan.getToday` is already cached, so Today shows the block in progress. It never fetches the plan itself.
+
+**Task 16 follow-ups.** Learn:40 gives the row label `width: 150px`, but "Major (you know this)" is about 160px at 15/800 and wrapped onto two lines. The width is now a minimum and the label does not wrap. The circle with all 12 keys done shows the existing "Complete · Every key done" card with no CTA (seed `all-complete`, screenshot `16-path-complete.png`).

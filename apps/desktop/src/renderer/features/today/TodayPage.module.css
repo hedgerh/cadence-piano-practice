@@ -83,6 +83,12 @@
   align-items: center;
   gap: 20px;
 }
+/* Task 16 fidelity: the CTA keeps its one-line label (Main:105) beside the longer
+   no-keyboard note instead of shrinking and wrapping. */
+.ctaRow > :first-child {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 
 /* Main:109 */
 .ctaNote {
@@ -118,4 +124,41 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Task 16 (not in Main.dc.html): "Resume A major" for a level left mid-way today, at the top
+   of the tracks column. A row card (Main:148: white, 2px line, r16, p 14/22) holding the copy
+   and a 48px OutlineInkButton; 8px below it before "Your tracks" (16 + 8 = Main:113's rhythm). */
+.resume {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+.resumeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+/* Main:70 eyebrow scale (13/800 uppercase, ls 1), tangerine-deep like the learn eyebrow. */
+.resumeEyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tangerine-deep);
+}
+.resumeTitle {
+  font-size: 16px;
+  font-weight: 800;
+}
+.resume > :last-child {
+  flex-shrink: 0;
+  white-space: nowrap;
 }

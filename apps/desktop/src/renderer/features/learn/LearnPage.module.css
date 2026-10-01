@@ -83,11 +83,14 @@
   gap: 12px;
 }
 
-/* Learn:40 */
+/* Learn:40 — width 150px. Task 16 fidelity: "Major (you know this)" is ~160px at 15/800, so
+   the fixed width wrapped it onto two lines; it is a minimum now and the label never wraps. */
 .rowLabel {
   font-size: 15px;
   font-weight: 800;
-  width: 150px;
+  min-width: 150px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Learn:41 */

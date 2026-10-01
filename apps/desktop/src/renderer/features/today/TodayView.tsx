@@ -4,10 +4,22 @@ import { AppHeader } from '../../components/ui/AppHeader';
 import { BlockRow } from '../../components/ui/BlockRow';
 import { Card } from '../../components/ui/Card';
 import { DashedButton } from '../../components/ui/DashedButton';
+import { OutlineInkButton } from '../../components/ui/OutlineInkButton';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
 import { SecondaryButton } from '../../components/ui/SecondaryButton';
 import type { MidiStatus } from '../../midi/MidiInput';
-import { blockStates, ctaNote, partitionTracks, type TodayDto } from './today';
+import { sessionRoute } from '../shared/routes';
+import {
+  blockStates,
+  ctaNote,
+  NO_TRACKS_CTA,
+  partitionTracks,
+  resumeOffer,
+  resumeProgress,
+  todayMode,
+  todaySubtitle,
+  type TodayDto,
+} from './today';
 import { TrackCard, TrackRow } from './TrackCard';
 import styles from './TodayPage.module.css';
 
@@ -44,7 +56,9 @@ export function TodayView({
   const states = today ? blockStates(today.blocks) : [];
   const { cards, rows } = partitionTracks(today?.tracks ?? []);
   const allDone = today?.allDone ?? false;
-  const subtitle = allDone ? (today?.cta.subtitle ?? today?.subtitle) : today?.subtitle;
+  const subtitle = today ? todaySubtitle(today) : undefined;
+  const mode = today ? todayMode(today) : 'plan';
+  const resume = today ? resumeOffer(today) : null;
 
   return (
     <div className={styles.page} data-testid="today">
@@ -86,7 +100,15 @@ export function TodayView({
             </Card>
           )}
 
-          {today && (
+          {today && mode === 'no-tracks' && (
+            <div className={styles.ctaRow}>
+              <PrimaryButton size={60} onClick={onAddTrack} data-testid="today-cta">
+                {NO_TRACKS_CTA}
+              </PrimaryButton>
+            </div>
+          )}
+
+          {today && mode !== 'no-tracks' && (
             <div className={styles.ctaRow}>
               {allDone ? (
                 <SecondaryButton to={today.cta.route} data-testid="today-extra">
@@ -105,6 +127,19 @@ export function TodayView({
         </section>
 
         <aside className={styles.tracks}>
+          {/* Task 16: a level left mid-way today stays resumable (never abandoned). It heads the
+              right column so it stays above the fold at 1280×820 with a three-block plan. */}
+          {resume && (
+            <div className={styles.resume} data-testid="today-resume">
+              <div className={styles.resumeText}>
+                <span className={styles.resumeEyebrow}>Left mid-way</span>
+                <span className={styles.resumeTitle}>{resumeProgress(resume)}</span>
+              </div>
+              <OutlineInkButton to={sessionRoute(resume)} data-testid="today-resume-link">
+                Resume {resume.title}
+              </OutlineInkButton>
+            </div>
+          )}
           <div className={styles.tracksHead}>
             <h2 className={styles.h2}>Your tracks</h2>
             <Link to="/tracks" className={styles.mapLink}>

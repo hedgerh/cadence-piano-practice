@@ -89,6 +89,12 @@ export function stageEyebrow(overview: TrackOverviewDto): string {
   return `Track · stage ${n + 1} of ${stages.length}`;
 }
 
+/** Task 16: every stage complete (not in EarPath.dc.html). */
+export const LADDER_COMPLETE = {
+  title: 'Every level done',
+  body: 'You finished the whole ladder. Misses still come back in review on Today.',
+} as const;
+
 /** EarPath:70 — "Intervals · Level 3". */
 export function upNextTitle(upNext: UpNextDto): string {
   return upNext.stageTitle !== null ? `${upNext.stageTitle} · ${upNext.title}` : upNext.title;
