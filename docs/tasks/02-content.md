@@ -1,6 +1,6 @@
 # 02 — `@cadence/content`
 
-**Status:** todo
+**Status:** done
 
 The content model (zod), the track generators, the lesson, the phrase generator, and the validator. Content is generated at runtime from code; a snapshot of all step ids guards progress rows.
 
@@ -39,3 +39,15 @@ The content model (zod), the track generators, the lesson, the phrase generator,
 ## Out of scope
 
 Persistence, services, UI. Do not hand-write the 24 key levels; generate them.
+
+## Notes
+
+- **Level blurbs** join the key-signature accidentals with `·` ("Three sharps: F♯ · C♯ · G♯. Chords: …") to match the Path.dc.html "Up next" card that Task 10 asserts; engine.md §2.2's literal `keySignatureText` would give commas. Plan-block blurbs (engine.md §4) still use `keySignatureText` directly.
+- **`LessonRow.key`** (+) added so validator rule 7 knows which key a chip row refers to. `Lesson.bridge` marks bold with `**vi**`.
+- **Key-based side tracks** (`minor-scales`, `inversions-voice-leading`) use `map: 'circle-of-fifths'`; validator rule 5's "7 steps with numeral labels" applies only to levels whose steps are all `chord` matches. Their level ids are `${keySlug}-scale` / `${keySlug}-inversions` (global uniqueness). Inversion labels are `I`, `I⁶`, `I⁶₄`; voicings place the bass with the hint rule (D3..C♯4), so all stay in C3..B4.
+- **Ear levels** have `steps: []` and everything in `pool`; titles are "Level N". Single-key ear levels (scale-degrees L1–L3, chords-in-key L1–L2) also carry `key`. A scale-degree prompt is a one-note `notes` sound with `gapMs: 0`.
+- **Phrase seed** is the step's progress key (`${levelId}/${stepId}`), not the bare step id, so the same key gets different phrases in L1/L2/L3. Phrases are rejection-sampled walks (deterministic per seed).
+- **Chord-quality spelling**: roots use the default keyboard spelling; triads needing a double accidental fall back to the enharmonic root (E♭° → D♯ F♯ A, A♭° → G♯ B D). Step ids keep the original root slug.
+- **Explain copy**: intervals "C up to F." (P1 "C, then C again.", P8 "… to the next C."); chords-in-key uses a 14-entry `CHORD_EXPLAIN` table (IV verbatim from EarChord.dc.html), `{key}` = "G" for major, "A minor" for minor.
+- `validateTracks` first zod-parses the tracks; on a schema failure it returns only the schema issues (paths in the same `tracks[i]…` format).
+- Tests are colocated in `src/` (like `@cadence/music`); `src/testUtils.ts` holds shared test helpers and is not exported.
