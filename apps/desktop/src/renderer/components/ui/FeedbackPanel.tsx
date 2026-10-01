@@ -9,8 +9,11 @@ export interface FeedbackPanelProps {
   correct: boolean;
   title: string;
   body: string;
-  /** "C then F" → "Play it back: C then F · +5 XP". */
-  playback: string;
+  /**
+   * "C then F" → "Play it back: C then F · +5 XP". `null` hides the line (Find the key: no
+   * play-back for phrases, engine.md §6.11).
+   */
+  playback: string | null;
   /** The play-back was verified on MIDI: the line confirms the +5 XP (engine.md §6.11). */
   playedBack?: boolean;
   /** One-octave keyboard lighting (correct notes teal). */
@@ -44,12 +47,24 @@ export function FeedbackPanel({
         <span className={styles.body} data-testid="feedback-body">
           {body}
         </span>
-        <div className={styles.playback} data-testid="playback-line" data-played-back={playedBack}>
-          {playedBack ? <CheckIcon size={14} strokeWidth={3.2} /> : <PulseDot size={10} pulsing />}
-          <span>
-            {playedBack ? `Played back: ${playback} · +5 XP` : `Play it back: ${playback} · +5 XP`}
-          </span>
-        </div>
+        {playback !== null && (
+          <div
+            className={styles.playback}
+            data-testid="playback-line"
+            data-played-back={playedBack}
+          >
+            {playedBack ? (
+              <CheckIcon size={14} strokeWidth={3.2} />
+            ) : (
+              <PulseDot size={10} pulsing />
+            )}
+            <span>
+              {playedBack
+                ? `Played back: ${playback} · +5 XP`
+                : `Play it back: ${playback} · +5 XP`}
+            </span>
+          </div>
+        )}
       </div>
       <PianoKeyboard variant="one-octave" states={keys} data-testid="feedback-keyboard" />
       <InkButton data-testid="feedback-next" {...(onNext ? { onClick: onNext } : {})}>

@@ -1,0 +1,110 @@
+/* EarKey.dc.html — copied from the design's inline styles; line numbers cited per rule.
+   TaskHeader, SegmentedProgress, PlayButton, StepCard, PianoKeyboard, OutlineInkButton,
+   TextButton and FeedbackPanel carry their own design CSS. */
+
+/* EarKey:20 */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* EarKey:39 */
+.bar {
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--page-x);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* EarKey:47 */
+.count {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+/* EarKey:50 */
+.main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 20px 48px 36px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* EarKey:52 */
+.playColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* EarKey:56 */
+.playLabel {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* EarKey:57 */
+.prompt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* EarKey:60 */
+.steps {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  max-width: 900px;
+}
+
+/* EarKey:79 */
+.keyboardColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* EarKey:88 */
+.caption {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* EarKey:91 */
+.answers {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Not in the design: the moment between the last Next and the results screen. */
+.done {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}

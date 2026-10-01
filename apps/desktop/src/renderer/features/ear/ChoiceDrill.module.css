@@ -120,6 +120,13 @@
   max-width: 900px;
 }
 
+/* EarChord:83 — the Show-me note under the numeral chips. */
+.caption {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
 /* EarInterval:68 */
 .greyed {
   font-size: 14px;

@@ -1,13 +1,14 @@
-// /dev/screens/ear-interval · ear-results · ear-degrees · ear-quality — the ear drill and its
-// results over real content, driven through the real reducer and hook (no IPC).
-// Knobs: ear-interval|ear-degrees|ear-quality ?phase=listen|answered ; ear-results ?result=pass|fail
+// /dev/screens/ear-interval · ear-results · ear-degrees · ear-quality · ear-chord — the ear drill
+// and its results over real content, driven through the real reducer and hook (no IPC).
+// Knobs: ear-interval|ear-degrees|ear-quality|ear-chord ?phase=listen|answered ;
+// ear-chord ?visibility=num (numerals only) ; ear-results ?result=pass|fail
 import type { ComponentType } from 'react';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import { earIntervalState } from '../../dev/fixtures/earInterval';
 import type { MidiStatus } from '../../midi/MidiInput';
 import { ChoiceDrill } from './ChoiceDrill';
-import { stageKindOf } from './choiceModel';
+import { stageKindOf, type Visibility } from './choiceModel';
 import {
   earReducer,
   initialEarState,
@@ -45,10 +46,12 @@ function DrillScreen({
   session,
   phase,
   chosen,
+  visibility = 'all',
 }: {
   session: EarSession;
   phase: string;
   chosen: string | null;
+  visibility?: Visibility;
 }) {
   const { level, stage } = levelOf(session.levelId);
   const initial = useMemo(() => stateFor(session, phase, chosen), [session, phase, chosen]);
@@ -65,6 +68,7 @@ function DrillScreen({
       activeOptions={level.activeOptions ?? null}
       backTo="/dev/screens/ear-path"
       midiStatus={CONNECTED}
+      visibility={visibility}
     />
   );
 }
@@ -125,6 +129,34 @@ function EarQualityScreen() {
   return <DrillScreen key={phase} session={qualitySession} phase={phase} chosen={null} />;
 }
 
+// EarChord:41–52 — results [right, right, missed, right, right], question 6 is IV in G major.
+const chordSession = earSessionFixture(
+  'chords-in-key-2',
+  ['I', 'V', 'iii', 'ii', 'vi', 'IV', 'viidim', 'V', 'I', 'ii'].map((n) => `g-major-${n}`),
+  [
+    { stepId: 'g-major-I', chosen: 'I' },
+    { stepId: 'g-major-V', chosen: 'V' },
+    { stepId: 'g-major-iii', chosen: 'vi' },
+    { stepId: 'g-major-ii', chosen: 'ii' },
+    { stepId: 'g-major-vi', chosen: 'vi' },
+  ],
+);
+
+function EarChordScreen() {
+  const phase = usePhase();
+  const [params] = useSearchParams();
+  const visibility: Visibility = params.get('visibility') === 'num' ? 'num' : 'all';
+  return (
+    <DrillScreen
+      key={`${phase}-${visibility}`}
+      session={chordSession}
+      phase={phase}
+      chosen={null}
+      visibility={visibility}
+    />
+  );
+}
+
 function EarResultsScreen() {
   const [params] = useSearchParams();
   const pass = params.get('result') !== 'fail';
@@ -136,4 +168,5 @@ export const devScreens: Record<string, ComponentType> = {
   'ear-results': EarResultsScreen,
   'ear-degrees': EarDegreesScreen,
   'ear-quality': EarQualityScreen,
+  'ear-chord': EarChordScreen,
 };

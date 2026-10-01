@@ -1,6 +1,6 @@
 # 15 — Ear: Find the key
 
-**Status:** todo
+**Status:** done
 
 Hear a phrase, hunt for the home note on the real keyboard (tries show faintly, home stays lit), then choose major or minor. MIDI is the answer here.
 
@@ -25,3 +25,20 @@ Hear a phrase, hunt for the home note on the real keyboard (tries show faintly, 
 ## Out of scope
 
 Polish items (Task 16).
+
+## Notes
+
+Files: `features/ear/KeyDrill.tsx` (+css; `KeyDrill` = live wrapper, `KeyDrillView` = presentational), `keyModel.ts` (copy, lighting, labels), `keyFixtures.ts`, `keyDrill.test.ts`, `features/earkey/dev.tsx` (`/dev/screens/ear-key`, knobs `?tries=G,A` (default) · `?tries=` · `?found=0` · `?phase=answered` · `?chosen=major` · `?hinted=1`), `e2e/ear-key.spec.ts`. Screenshots: `15-ear-key.png` (live), `15-ear-key-answered.png` (live), `15-ear-key-design.png` (dev screen, the design's exact E / G, A state).
+
+Reducer and hook (additive): `ROOT_NOTE` (note-on → `reduceMatch(root)`) and a new `ROOT_RELEASE`; `RootHunt.pending` holds wrong notes until release; `PICK` accepts `root.then` options once `found`. `EarResult.tries` → `recordStep.tries`. `useEarDrill` gets a second `useMidiEvents` listener for root questions and `playHint` (plays `step.hint`, dispatches `HINT`, shares the prompt's busy gate). The dev hook adds `tonicPc`, `answer` and `found`. The seed already opened Find the key (Chords in a key L1–L3), so `seed.ts` is unchanged.
+
+Deviations and new copy:
+
+- **`tries` is the try number home was found on** (1 = first try, 3 = "third try"), not the count of wrong notes.
+- **The hunt starts when the phrase starts** (`phase: listening`). Notes played before that are ignored. A wrong note still held when the tonic is hit counts as a try.
+- **The live screenshot is in C, not E.** The seeded session's 5 phrases had no E tonic. The e2e uses the first E question when there is one, otherwise question 1. It plays wrong notes a minor 3rd and a 4th above home in octave 3, then home in octave 4, to match the design's layout. `15-ear-key-design.png` shows the exact design state. The MIDI pill in the live shots shows the host machine's real device.
+- New states the design doesn't show. Step 1 while hunting: "Play any note. Home is the one the phrase wants to end on." / "Not A. Keep hunting — tries are unlimited." Step 2 before home is found uses a new `StepCard` `upcoming` state: white, `2px --line-strong`, muted numeral in a `3px --line-strong` ring, body "Find home first, then decide." After a right answer, step 2 is done: "Key: E minor" plus how it was scored ("Clean: home in two tries or fewer, no hint." / "Counted as hinted: you heard the last chord." / "Counted as hinted: home took more than two tries."). After a wrong answer, step 2 stays current.
+- Tried notes are spelled in the question's key (C major: E♭, F).
+- Answered feedback (ui.md §3): "E minor — yes." + `step.explain`, or "Not quite. That was E minor." + explain + "You said major — it will come back in review." The one-octave keyboard lights the tonic triad. `FeedbackPanel.playback` now accepts `null`, which hides the play-back line (phrases have no play-back, §6.11). The panel replaces the answer row. Once answered, the keyboard caption is hidden so the screen fits 820px (the e2e asserts no overflow).
+- The hint button is disabled while a sound from the drill is playing (the phrase or the hint chord). Otherwise it is available until the question is answered.
+- `StepCard` also gains `data-step` and the `step-title`/`step-body` test ids.

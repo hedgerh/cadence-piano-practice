@@ -2,7 +2,13 @@
 // question appears (the cadence first when its key hasn't been heard yet), answers gated until
 // that finishes (§6.10), recordStep on PICK (retried in memory), MIDI play-back detection →
 // recordPlayback once per question (§6.11), and sessions.finish after the last question.
-import { initialMatchState, noteToMidi, reduceMatch, type MatchState } from '@cadence/music';
+import {
+  initialMatchState,
+  noteToMidi,
+  pcNumber,
+  reduceMatch,
+  type MatchState,
+} from '@cadence/music';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { ChannelInput, ChannelOutput } from '@shared/ipc/contracts';
 import { useAudio } from '../../audio/useAudio';
@@ -53,6 +59,8 @@ export interface EarDrillApi {
   pick: (option: string) => void;
   next: () => void;
   hint: () => void;
+  /** Find the key: play `step.hint` (the phrase's last chord) and mark the question hinted. */
+  playHint: () => void;
   finishing: boolean;
   finishError: string | null;
   retryFinish: () => void;
@@ -185,6 +193,7 @@ export function useEarDrill(
             hintLevel: r.result === 'hinted' ? 1 : 0,
             chosen: r.chosen,
             elapsedMs: r.elapsedMs === null ? null : Math.round(r.elapsedMs),
+            ...(r.tries !== undefined ? { tries: r.tries } : {}),
           }),
         delays,
       ).then(
@@ -249,6 +258,35 @@ export function useEarDrill(
     if (match.status === 'matched') dispatch({ type: 'PLAYED_BACK', q: state.q });
   }, [held, spec, state.phase, state.playedBack, state.q]);
 
+  // ---------------------------------------------------------------- find the key: root hunt
+
+  // engine.md §1 `root` / §6.13: while home is not found, note-ons go to the root matcher and a
+  // released wrong note becomes a try (the reducer ignores events outside the hunt).
+  useMidiEvents((e) => {
+    const s = stateRef.current;
+    if (s.root.found || currentQuestion(s)?.match.type !== 'root') return;
+    dispatch(
+      e.type === 'on'
+        ? { type: 'ROOT_NOTE', midi: e.midi }
+        : { type: 'ROOT_RELEASE', midi: e.midi },
+    );
+  });
+
+  const playHint = useCallback(() => {
+    const s = stateRef.current;
+    const target = currentQuestion(s);
+    if (target?.hint === undefined || busy.current) return;
+    if (s.phase !== 'idle' && s.phase !== 'listening') return;
+    dispatch({ type: 'HINT' });
+    busy.current = true;
+    void audioRef.current
+      .play(target.hint)
+      .catch(() => undefined)
+      .finally(() => {
+        busy.current = false;
+      });
+  }, [stateRef, audioRef]);
+
   // ---------------------------------------------------------------- finish
 
   const [finishing, setFinishing] = useState(false);
@@ -312,8 +350,16 @@ export function useEarDrill(
       notes: soundNotes(question?.play).map(noteToMidi),
       q: state.q,
       phase: state.phase,
+      // Find the key: the tonic's pitch class (0–11) and the major/minor answer.
+      ...(question?.match.type === 'root'
+        ? {
+            tonicPc: pcNumber(question.match.note),
+            answer: question.match.then?.type === 'choice' ? question.match.then.answer : null,
+            found: state.root.found,
+          }
+        : {}),
     };
-  }, [question, state.q, state.phase]);
+  }, [question, state.q, state.phase, state.root.found]);
   useEffect(
     () => () => {
       if (window.__cadenceDev) delete window.__cadenceDev.ear;
@@ -348,6 +394,7 @@ export function useEarDrill(
     pick,
     next,
     hint: useCallback(() => dispatch({ type: 'HINT' }), []),
+    playHint,
     finishing,
     finishError,
     retryFinish,

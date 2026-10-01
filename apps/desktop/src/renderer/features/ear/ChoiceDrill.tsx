@@ -2,6 +2,7 @@
 // Optional `context` sound → the 72px outlined "Hear the key" button (EarChord.dc.html:57–64);
 // the 112px PlayButton plays `step.play`; chips come from `match.options` gated by the level's
 // `activeOptions`; labels, feedback copy and chip size come from the stage (choiceModel.ts).
+// Chords in a key (Task 14, EarChord.dc.html) adds the numeral chips' Show-me caption.
 import type { ReactNode } from 'react';
 import type { KeyStates } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import { AnswerChip, type AnswerChipState } from '../../components/ui/AnswerChip';
@@ -17,11 +18,14 @@ import {
   chipSize,
   contextKeyTitle,
   feedbackCopy,
+  feedbackMinWidth,
   litKeys,
+  numeralsCaption,
   optionLabel,
   playbackText,
   stageCopy,
   type EarStageKind,
+  type Visibility,
 } from './choiceModel';
 import styles from './ChoiceDrill.module.css';
 import { earSegments, progressLabel } from './earDrillReducer';
@@ -38,6 +42,8 @@ export interface ChoiceDrillProps {
   backLabel?: string;
   /** Overrides the live MIDI pill (fixtures). */
   midiStatus?: MidiStatus | undefined;
+  /** The ear track's Show-me setting (chords in a key hides chord names on `num`). */
+  visibility?: Visibility | undefined;
 }
 
 /** EarInterval:143–156 — chip state per option. */
@@ -63,6 +69,7 @@ export function ChoiceDrill({
   backTo,
   backLabel = 'Ear training',
   midiStatus,
+  visibility,
 }: ChoiceDrillProps) {
   const { state, question } = drill;
   const copy = stageCopy(kind, state.questions, question);
@@ -99,7 +106,7 @@ export function ChoiceDrill({
       {options.map((o) => {
         const active = isActive(o);
         const st = chipState(o, active, answered, answer, state.chosen);
-        const label = optionLabel(kind, o);
+        const label = optionLabel(kind, o, { question, visibility });
         const quality = st === 'correct' ? answeredQuality(kind, o) : null;
         return (
           <AnswerChip
@@ -176,6 +183,11 @@ export function ChoiceDrill({
               {copy.prompt}
             </span>
             {chips}
+            {kind === 'numerals' && (
+              <span className={styles.caption} data-testid="ear-caption">
+                {numeralsCaption(visibility)}
+              </span>
+            )}
           </div>
         ) : (
           chips
@@ -194,6 +206,7 @@ export function ChoiceDrill({
             playback={playbackText(question)}
             playedBack={state.playedBack}
             keys={keys}
+            minTextWidth={feedbackMinWidth(kind)}
             onNext={drill.next}
           />
         )}

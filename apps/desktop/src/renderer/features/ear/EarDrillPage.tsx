@@ -4,7 +4,7 @@
 import type { Level, Stage, Track } from '@cadence/content';
 import { useNavigate, useParams } from 'react-router';
 import { usePracticeLoader } from '../practice/usePracticeSession';
-import { useInvalidateProgress, useTrack } from '../shared/hooks';
+import { useInvalidateProgress, useTrack, useTrackOverview } from '../shared/hooks';
 import { ChoiceDrill } from './ChoiceDrill';
 import styles from './ChoiceDrill.module.css';
 import { stageKindOf } from './choiceModel';
@@ -88,6 +88,10 @@ function LiveChoiceDrill({
   const io = useLiveEarIo();
   const navigate = useNavigate();
   const invalidate = useInvalidateProgress();
+  // The ear track's Show-me setting (set on EarPath, docs/decisions.md); the session carries
+  // the same value from when it loaded, used until the overview arrives.
+  const overview = useTrackOverview(session.trackId);
+  const visibility = overview.data?.visibility ?? session.visibility;
   const drill = useEarDrill(session, io, {
     onFinished: (complete) => {
       void invalidate();
@@ -102,6 +106,7 @@ function LiveChoiceDrill({
       title={session.shortTitle}
       activeOptions={level.activeOptions ?? null}
       backTo={backTo}
+      visibility={visibility}
     />
   );
 }

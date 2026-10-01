@@ -22,6 +22,12 @@ export interface CadenceDevHooks {
     notes: number[];
     q: number;
     phase: string;
+    /** Find the key: the tonic's pitch class (0–11). */
+    tonicPc?: number;
+    /** Find the key: the mode answer ('major' | 'minor'). */
+    answer?: string | null;
+    /** Find the key: home has been found. */
+    found?: boolean;
   };
 }
 

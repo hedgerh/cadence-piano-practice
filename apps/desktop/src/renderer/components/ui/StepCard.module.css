@@ -17,6 +17,11 @@
   border: 2px solid var(--tangerine);
   box-shadow: var(--halo-4);
 }
+/* Not in the design: the step still ahead, styled like an upcoming BlockRow (Main:57–101). */
+.upcoming {
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+}
 
 /* EarKey:62 / 71 — 40px circle. */
 .badge {
@@ -56,5 +61,19 @@
 .body {
   font-size: 14px;
   font-weight: 600;
+  color: var(--muted);
+}
+
+/* Not in the design: upcoming badge — white, 3px --line-strong ring, muted numeral (Main:57–101). */
+.upcoming .badge {
+  box-sizing: border-box;
+  background: var(--paper);
+  border: 3px solid var(--line-strong);
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+}
+.upcoming .title {
   color: var(--muted);
 }

@@ -1,8 +1,10 @@
 // The step-driven parts of ChoiceDrill (Task 13): per-stage option labels, feedback copy,
 // the one-octave keyboard lighting, the play-back match and the prompt sounds. Pure.
-// Copy: EarInterval.dc.html:184–191 (intervals); docs/tasks/13 (degrees, quality).
+// Copy: EarInterval.dc.html:184–191 (intervals); docs/tasks/13 (degrees, quality);
+// EarChord.dc.html:59–92 (chords in a key, Task 14).
 import { DEGREE_NAMES, type Quality, type Sound } from '@cadence/content';
 import {
+  diatonicTriads,
   INTERVALS,
   keyTitle,
   midiToPc,
@@ -13,10 +15,14 @@ import {
   type Note,
   type PitchClass,
 } from '@cadence/music';
+import type { ChannelOutput } from '@shared/ipc/contracts';
 import type { EarQuestion } from './earDrillReducer';
 
 /** Which label map / copy templates a level uses, from its stage id (engine.md §2.2). */
-export type EarStageKind = 'intervals' | 'degrees' | 'quality' | 'generic';
+export type EarStageKind = 'intervals' | 'degrees' | 'quality' | 'numerals' | 'generic';
+
+/** A track's "Show me" setting (`track_settings.visibility`). */
+export type Visibility = ChannelOutput<'tracks.overview'>['visibility'];
 
 export function stageKindOf(stageId: string | null | undefined): EarStageKind {
   switch (stageId ?? '') {
@@ -26,8 +32,9 @@ export function stageKindOf(stageId: string | null | undefined): EarStageKind {
       return 'degrees';
     case 'chord-quality':
       return 'quality';
+    case 'chords-in-key':
+      return 'numerals';
     default:
-      // chords-in-key (Task 14) renders with the generic templates until it adds its own.
       return 'generic';
   }
 }
@@ -42,8 +49,48 @@ export interface OptionLabel {
   secondary: string;
 }
 
-/** EarInterval:120–133 (intervals) · task 13 label maps (degrees, quality). */
-export function optionLabel(kind: EarStageKind, option: string): OptionLabel {
+/** Per-question context for labels that depend on the key or the track setting. */
+export interface LabelContext {
+  /** The question on screen (its cadence key names the numeral chips). */
+  question?: EarQuestion | undefined;
+  /** The ear track's Show-me setting; `num` hides the chord names. */
+  visibility?: Visibility | undefined;
+}
+
+/**
+ * Chords in a key: the diatonic triad's short name for `numeral` in the question's cadence
+ * key ("IV" in G major → "C", "vii°" → "F♯°"). Empty without a cadence key.
+ */
+export function chordShort(question: EarQuestion | undefined, numeral: string): string {
+  const ctx = question?.context;
+  if (ctx?.type !== 'cadence') return '';
+  const triad = diatonicTriads({ tonic: ctx.key, mode: ctx.mode }).find(
+    (t) => t.numeral === numeral,
+  );
+  return triad?.short ?? '';
+}
+
+/** EarChord:83 — chord names show unless the ear track is set to numerals only. */
+export function chordNamesShown(visibility: Visibility | undefined): boolean {
+  return visibility !== 'num';
+}
+
+/** EarChord:83 — the line under the numeral chips (numerals-only wording is new copy). */
+export function numeralsCaption(visibility: Visibility | undefined): string {
+  return chordNamesShown(visibility)
+    ? 'Chord names shown — switch to numerals only in Show me, like in practice.'
+    : 'Numerals only — switch chord names back on in Show me, like in practice.';
+}
+
+/**
+ * EarInterval:120–133 (intervals) · task 13 label maps (degrees, quality) · EarChord:75–81
+ * (numerals: the numeral over the chord's short name, hidden when visibility is `num`).
+ */
+export function optionLabel(
+  kind: EarStageKind,
+  option: string,
+  ctx: LabelContext = {},
+): OptionLabel {
   switch (kind) {
     case 'intervals': {
       const iv = INTERVALS.find((i) => i.id === option);
@@ -55,6 +102,11 @@ export function optionLabel(kind: EarStageKind, option: string): OptionLabel {
     }
     case 'quality':
       return { primary: capital(option), secondary: QUALITY_SHAPE[option] ?? '' };
+    case 'numerals':
+      return {
+        primary: option,
+        secondary: chordNamesShown(ctx.visibility) ? chordShort(ctx.question, option) : '',
+      };
     case 'generic':
       return { primary: option, secondary: '' };
   }
@@ -67,9 +119,19 @@ const QUALITY_SHAPE: Readonly<Record<string, string>> = {
   diminished: 'm3 + m3',
 };
 
-/** AnswerChip size per stage: interval chips (118×64), wider for the quality words. */
-export function chipSize(kind: EarStageKind): 'interval' | 'wide' {
-  return kind === 'quality' ? 'wide' : 'interval';
+/**
+ * AnswerChip size per stage: interval chips (118×64), wider for the quality words, the
+ * EarChord numeral chips (104×68, EarChord:75).
+ */
+export function chipSize(kind: EarStageKind): 'interval' | 'wide' | 'chord' {
+  if (kind === 'quality') return 'wide';
+  if (kind === 'numerals') return 'chord';
+  return 'interval';
+}
+
+/** FeedbackPanel text column min-width: EarChord:87 (280) · EarInterval:73 (260). */
+export function feedbackMinWidth(kind: EarStageKind): 260 | 280 {
+  return kind === 'numerals' ? 280 : 260;
 }
 
 /** The prompt's sounding notes. */
@@ -204,6 +266,16 @@ export function feedbackCopy(
             body: `${notes} You said ${chosen} — ${REVIEW}`.trim(),
           };
     }
+    case 'numerals': {
+      // EarChord:88–89. The step's `name` is the full chord name ("C major").
+      const name = question.name;
+      return correct
+        ? { title: `${pretty(answer)} — yes, that's ${name}.`, body: explain }
+        : {
+            title: `Not quite. That was ${pretty(answer)} — ${name}.`,
+            body: `${explain} You said ${pretty(chosen)} — ${REVIEW}`.trim(),
+          };
+    }
     case 'generic':
       return correct
         ? { title: `${pretty(answer)} — yes.`, body: explain }
@@ -285,6 +357,18 @@ export function stageCopy(
         prompt: 'One chord on its own. Major, minor or diminished?',
         greyed: 'Greyed-out qualities arrive in later levels.',
       };
+    case 'numerals': {
+      // EarChord:29, 59–73.
+      const key = contextKeyTitle(current);
+      return {
+        eyebrow: key !== null ? `Key of ${key}` : 'Name the chord',
+        play: 'Hear the chord',
+        playAgain: 'Hear the chord again',
+        playAria: 'Hear the chord',
+        prompt: 'Which chord did you hear?',
+        greyed: 'Greyed-out chords arrive in later levels.',
+      };
+    }
     case 'generic': {
       const key = contextKeyTitle(current);
       return {

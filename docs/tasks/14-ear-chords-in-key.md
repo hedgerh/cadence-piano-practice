@@ -1,6 +1,6 @@
 # 14 — Ear: Chords in a key
 
-**Status:** todo
+**Status:** done
 
 Hear a cadence, then one chord; answer with the roman-numeral chips used in practice; feedback explains the chord's function.
 
@@ -25,3 +25,16 @@ Hear a cadence, then one chord; answer with the roman-numeral chips used in prac
 ## Out of scope
 
 Find the key (Task 15).
+
+## Notes
+
+No new drill component. Chords in a key is a fourth `ChoiceDrill` stage kind, `numerals` in `choiceModel.ts` (`stageKindOf('chords-in-key')`). The shell already had the two-button cluster from Task 13. Files: `choiceModel.ts` (`chordShort`, `chordNamesShown`, `numeralsCaption`, `feedbackMinWidth`, a `LabelContext` argument on `optionLabel`, the `numerals` branches of `chipSize`/`feedbackCopy`/`stageCopy`), `ChoiceDrill.tsx` (+css: `visibility` prop, caption EarChord:83, panel `minTextWidth`), `EarDrillPage.tsx` (visibility from `tracks.overview`, with the session's `visibility` as fallback), `dev.tsx` (`ear-chord`, `?phase=answered`, `?visibility=num`). Tests: `choiceModel.test.ts` (labels in G major and A minor, visibility, copy, lighting, play-back) and `e2e/ear-chord.spec.ts`. Screenshot `14-ear-chord.png`. `earDrillReducer.ts` and `useEarDrill.ts` are unchanged.
+
+Deviations and new copy:
+
+- Chip names come from `diatonicTriads(question.context key)` in `@cadence/music`, because options are plain numerals. The feedback title uses the step's `name` ("C major"). The body is `step.explain` from content.
+- Visibility: only `num` hides names. `name` and `all` show both lines, since the numeral is the answer. Numerals-only caption (new): "Numerals only — switch chord names back on in Show me, like in practice."
+- Wrong answer (not in the design): title "Not quite. That was IV — C major."; body = explain + " You said ii — it will come back in review." The chosen-wrong chip is tangerine tint with a `--tangerine-deep` border, and the correct chip is teal (state colors, no quality colors).
+- Greyed-out options (L1 has four active) add "Greyed-out chords arrive in later levels." under the caption while listening.
+- `AnswerChip` change (additive): an empty `secondary` renders no second line, so a numerals-only chip centers its numeral.
+- Session question order is random. The e2e answers 5 questions (miss at 3) to reproduce the design's progress bar, then checks the title and body against whichever step comes 6th. It checks the literal IV-in-G copy against content. The answered screenshot shows that random 6th chord. `/dev/screens/ear-chord?phase=answered` is the exact IV design state.

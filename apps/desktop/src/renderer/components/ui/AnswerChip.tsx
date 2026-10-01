@@ -11,6 +11,7 @@ export interface AnswerChipProps {
    */
   size: 'interval' | 'chord' | 'wide';
   primary: string;
+  /** Second line; empty renders none (numerals-only chord chips center the numeral). */
   secondary: string;
   state: AnswerChipState;
   onClick?: () => void;
@@ -50,7 +51,7 @@ export function AnswerChip({
       data-testid={testId}
     >
       <span className={styles.primary}>{pretty(primary)}</span>
-      <span className={styles.secondary}>{pretty(secondary)}</span>
+      {secondary !== '' && <span className={styles.secondary}>{pretty(secondary)}</span>}
     </button>
   );
 }

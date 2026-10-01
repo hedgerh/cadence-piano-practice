@@ -5,6 +5,7 @@
 //   listening  the prompt has started; answers enable once the first play finished (`played`)
 //   answered   PICK counted the answer (the segment turns teal/lavender immediately, §6.12)
 //   done       NEXT after the last question → sessions.finish → /ear/results/:id
+import { initialMatchState, reduceMatch, type MatchSpec, type MatchState } from '@cadence/music';
 import type { ChannelOutput } from '@shared/ipc/contracts';
 
 export type EarSession = ChannelOutput<'sessions.start'>;
@@ -20,13 +21,17 @@ export interface EarResult {
   correct: boolean;
   playedBack: boolean;
   elapsedMs: number | null;
+  /** Find the key: the try the home note was found on (1 = first try) → `recordStep.tries`. */
+  tries?: number | null;
 }
 
 /** Find the key (Task 15): the root hunt before the major/minor choice. */
 export interface RootHunt {
   found: boolean;
-  /** MIDI notes tried before the tonic was found. */
+  /** MIDI notes tried before the tonic was found (appended on release, §6.13). */
   tries: readonly number[];
+  /** Wrong notes pressed while hunting and not yet released (they join `tries` on release). */
+  pending?: readonly number[];
 }
 
 export interface EarDrillState {
@@ -61,8 +66,10 @@ export type EarDrillAction =
   | { type: 'PLAYED_BACK'; q: number }
   | { type: 'HINT' }
   | { type: 'NEXT' }
-  /** Task 15 placeholder: a note played while hunting for the tonic. Not implemented yet. */
-  | { type: 'ROOT_NOTE'; midi: number };
+  /** Find the key: a note-on while hunting for the tonic (`reduceMatch(root)`). */
+  | { type: 'ROOT_NOTE'; midi: number }
+  /** Find the key: a note-off; a released wrong note becomes a try. */
+  | { type: 'ROOT_RELEASE'; midi: number };
 
 /** engine.md §2.2: 8 of 10 unless the level says otherwise. */
 export const DEFAULT_PASS = { correct: 8, of: 10 } as const;
@@ -89,6 +96,7 @@ function asEarResult(r: EarSession['results'][number]): EarResult {
     correct: result !== 'wrong',
     playedBack: r.playedBack,
     elapsedMs: r.elapsedMs,
+    ...(r.tries !== null ? { tries: r.tries } : {}),
   };
 }
 
@@ -139,6 +147,7 @@ export function earReducer(state: EarDrillState, action: EarDrillAction): EarDri
     case 'PICK': {
       const question = currentQuestion(state);
       if (!answersEnabled(state) || question === undefined) return state;
+      if (question.match.type === 'root') return pickMode(state, question, action);
       if (question.match.type !== 'choice') return state;
       if (!question.match.options.includes(action.option)) return state;
       const correct = action.option === question.match.answer;
@@ -180,9 +189,102 @@ export function earReducer(state: EarDrillState, action: EarDrillAction): EarDri
       return { ...state, ...perQuestion, phase: 'idle', q };
     }
     case 'ROOT_NOTE':
-      // Task 15 (Find the key) implements the root hunt into `state.root`.
-      return state;
+      return rootNote(state, action.midi);
+    case 'ROOT_RELEASE':
+      return rootRelease(state, action.midi);
   }
+}
+
+// ---------------------------------------------------------------- find the key (Task 15)
+
+type RootSpec = Extract<MatchSpec, { type: 'root' }>;
+
+/** The current question's `root` match while the hunt is on (phrase started, home not found). */
+function huntSpec(state: EarDrillState): RootSpec | null {
+  const match = currentQuestion(state)?.match;
+  if (match?.type !== 'root' || state.root.found || state.phase !== 'listening') return null;
+  return match;
+}
+
+/** engine.md §6.13: clean only if home was found within 2 tries and no hint was used. */
+export const CLEAN_WITHIN_TRIES = 2;
+
+/** The try the home note was found (or will be found) on: wrong notes so far + 1. */
+export function rootTryNumber(root: RootHunt): number {
+  return root.tries.length + 1;
+}
+
+/**
+ * engine.md §1 `root` match: a note-on whose pitch class is the tonic (any octave) finds home;
+ * a wrong note shows as held and becomes a try when released (unlimited tries, §6.13).
+ */
+function rootNote(state: EarDrillState, midi: number): EarDrillState {
+  const spec = huntSpec(state);
+  if (spec === null) return state;
+  const before: MatchState = { ...initialMatchState(spec), tries: state.root.tries };
+  const after = reduceMatch(spec, before, { type: 'noteOn', midi });
+  const pending = state.root.pending ?? [];
+  // Wrong notes still held when home is hit were tries too.
+  if (after.found) return { ...state, root: { found: true, tries: [...after.tries, ...pending] } };
+  if (pending.includes(midi)) return state;
+  return { ...state, root: { ...state.root, pending: [...pending, midi] } };
+}
+
+function rootRelease(state: EarDrillState, midi: number): EarDrillState {
+  if (huntSpec(state) === null) return state;
+  const pending = state.root.pending ?? [];
+  if (!pending.includes(midi)) return state;
+  return {
+    ...state,
+    root: {
+      found: false,
+      tries: [...state.root.tries, midi],
+      pending: pending.filter((m) => m !== midi),
+    },
+  };
+}
+
+/**
+ * Step 2 (`root.then`, major/minor), only once home is found. `clean` iff home was found within
+ * {@link CLEAN_WITHIN_TRIES} tries with no hint; `hinted` if right otherwise; `wrong` if the mode
+ * is wrong (engine.md §6.13). The try number goes to `recordStep.tries`.
+ */
+function pickMode(
+  state: EarDrillState,
+  question: EarQuestion,
+  action: { option: string; at: number },
+): EarDrillState {
+  const match = question.match;
+  if (match.type !== 'root' || !state.root.found) return state;
+  const then = match.then;
+  if (then?.type !== 'choice' || !then.options.includes(action.option)) return state;
+  const picked = reduceMatch(then, initialMatchState(then), {
+    type: 'choose',
+    option: action.option,
+  });
+  const correct = picked.status === 'matched';
+  const tries = rootTryNumber(state.root);
+  const clean = !state.hinted && tries <= CLEAN_WITHIN_TRIES;
+  const result: EarResultKind = correct ? (clean ? 'clean' : 'hinted') : 'wrong';
+  return {
+    ...state,
+    phase: 'answered',
+    chosen: action.option,
+    correct,
+    results: [
+      ...state.results,
+      {
+        ordinal: question.ordinal,
+        stepId: question.id,
+        result,
+        chosen: action.option,
+        correct,
+        playedBack: false,
+        elapsedMs: state.shownAt === null ? null : Math.max(0, action.at - state.shownAt),
+        tries,
+      },
+    ],
+  };
 }
 
 // ---------------------------------------------------------------- selectors

@@ -134,7 +134,7 @@ test('ear intervals L3 (seed day8): gating, feedback, play-back, a miss, pass sc
     await expect(drill).toHaveAttribute('data-phase', 'answered');
     await expect(page.getByTestId('feedback-panel')).toHaveAttribute('data-correct', 'true');
     await expect(page.getByTestId('feedback-title')).toHaveText(`${NAMES[first] ?? ''} — yes.`);
-    await expect(page.getByTestId('feedback-body')).toHaveText(/^C .*\. Nice ears\.$/);
+    await expect(page.getByTestId('feedback-body')).toHaveText(/^C.*\. Nice ears\.$/);
     await expect(page.getByTestId(`answer-${first}`)).toHaveAttribute('data-state', 'correct');
     await expect(segs.first()).toHaveAttribute('data-state', 'done');
     // The one-octave keyboard lights the sounding notes teal (C and the target).

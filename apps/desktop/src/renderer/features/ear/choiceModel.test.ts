@@ -5,9 +5,14 @@ import { describe, expect, it } from 'vitest';
 import { NullSynth } from '../../audio/NullSynth';
 import {
   autoPlaySounds,
+  chipSize,
+  chordNamesShown,
+  chordShort,
   contextId,
   feedbackCopy,
+  feedbackMinWidth,
   litKeys,
+  numeralsCaption,
   optionLabel,
   playbackSpec,
   playbackText,
@@ -40,7 +45,8 @@ describe('stage kinds and labels', () => {
     expect(stageKindOf('intervals')).toBe('intervals');
     expect(stageKindOf('scale-degrees')).toBe('degrees');
     expect(stageKindOf('chord-quality')).toBe('quality');
-    expect(stageKindOf('chords-in-key')).toBe('generic');
+    expect(stageKindOf('chords-in-key')).toBe('numerals');
+    expect(stageKindOf('find-the-key')).toBe('generic');
   });
 
   it('intervals: short id + INTERVALS name (EarInterval:120–133)', () => {
@@ -236,5 +242,74 @@ describe('ear results view (ui.md §3)', () => {
       levelId: 'intervals-3',
     });
     expect(v.chips.filter((c) => c.tone === 'lavender')).toHaveLength(4);
+  });
+});
+
+// Task 14 — Chords in a key (EarChord.dc.html; engine.md §2.2 `chords-in-key`).
+describe('chords in a key (numerals)', () => {
+  const iv = q('chords-in-key-2', 'g-major-IV');
+
+  it('chips: numeral over the short chord name in the cadence key (EarChord:75–81)', () => {
+    const labels = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'].map((n) =>
+      optionLabel('numerals', n, { question: iv, visibility: 'all' }),
+    );
+    expect(labels.map((l) => l.secondary)).toEqual(['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F♯°']);
+    expect(labels.map((l) => l.primary)).toEqual(['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°']);
+    expect(chipSize('numerals')).toBe('chord');
+    expect(feedbackMinWidth('numerals')).toBe(280);
+    expect(feedbackMinWidth('intervals')).toBe(260);
+  });
+
+  it('minor keys name their own triads', () => {
+    const am = q('chords-in-key-4', 'a-minor-i');
+    expect(['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'].map((n) => chordShort(am, n))).toEqual([
+      'Am',
+      'B°',
+      'C',
+      'Dm',
+      'Em',
+      'F',
+      'G',
+    ]);
+  });
+
+  it('visibility `num` hides the names; the caption says which (EarChord:83)', () => {
+    expect(optionLabel('numerals', 'IV', { question: iv, visibility: 'num' })).toEqual({
+      primary: 'IV',
+      secondary: '',
+    });
+    expect(optionLabel('numerals', 'IV', { question: iv, visibility: 'name' }).secondary).toBe('C');
+    expect(chordNamesShown('all')).toBe(true);
+    expect(chordNamesShown('num')).toBe(false);
+    expect(numeralsCaption('all')).toBe(
+      'Chord names shown — switch to numerals only in Show me, like in practice.',
+    );
+    expect(numeralsCaption('num')).toMatch(/^Numerals only/);
+  });
+
+  it('feedback: numeral + chord name, body from content `explain` (EarChord:88–89)', () => {
+    expect(feedbackCopy('numerals', iv, 'IV', true)).toEqual({
+      title: "IV — yes, that's C major.",
+      body: "The IV chord pulls gently away from home. In G, that's C · E · G.",
+    });
+    expect(feedbackCopy('numerals', iv, 'ii', false)).toEqual({
+      title: 'Not quite. That was IV — C major.',
+      body: "The IV chord pulls gently away from home. In G, that's C · E · G. You said ii — it will come back in review.",
+    });
+  });
+
+  it('copy, keyboard lighting and chord play-back', () => {
+    const copy = stageCopy('numerals', [iv], iv);
+    expect(copy).toMatchObject({
+      eyebrow: 'Key of G major',
+      play: 'Hear the chord',
+      playAgain: 'Hear the chord again',
+      playAria: 'Hear the chord',
+      prompt: 'Which chord did you hear?',
+    });
+    // EarChord:116 — C · E · G lit on the C4–B4 octave.
+    expect(litKeys(iv)).toEqual([60, 64, 67]);
+    expect(playbackText(iv)).toBe('C · E · G');
+    expect(playsBack(iv, [48, 52, 55], true)).toBe(true);
   });
 });
