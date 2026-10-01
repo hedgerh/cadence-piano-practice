@@ -1,23 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
-import type { Channel, ChannelInput, ChannelOutput } from '../src/shared/ipc/contracts';
+import { expect, test } from '@playwright/test';
+import { invoke } from './ipc';
 import { launchCadence } from './launch';
-
-type Bridge = { cadence: { invoke(channel: string, payload: unknown): Promise<unknown> } };
-
-/** Calls main through the real preload bridge (window.cadence.invoke), exactly as lib/api.ts does. */
-async function invoke<C extends Channel>(
-  page: Page,
-  channel: C,
-  input?: ChannelInput<C>,
-): Promise<ChannelOutput<C>> {
-  const result = await page.evaluate(
-    ([c, i]) => (window as unknown as Bridge).cadence.invoke(c, i),
-    [channel, input] as const,
-  );
-  return result as ChannelOutput<C>;
-}
 
 // Task 05: the engine end to end over IPC, against a real SQLite file in a temp userData.
 test('day8 plan, A major session and Complete numbers persist across a relaunch', async () => {

@@ -1,11 +1,13 @@
 import { expect, test } from '@playwright/test';
+import { invoke } from './ipc';
 import { launchCadence } from './launch';
 
 test('app boots, IPC answers, Web MIDI is permitted, fonts are local', async () => {
   const { app, page } = await launchCadence();
   try {
-    await expect(page.getByTestId('shell')).toBeVisible();
-    await expect(page.getByTestId('ping')).toContainText('IPC ok');
+    // The root route renders whatever the Today feature currently is (stub or real screen).
+    await expect(page.locator('main')).toBeVisible();
+    expect(await invoke(page, 'app.ping')).toMatchObject({ ok: true });
 
     // Permission handlers must allow MIDI or this rejects with SecurityError.
     const inputs = await page.evaluate(async () => {

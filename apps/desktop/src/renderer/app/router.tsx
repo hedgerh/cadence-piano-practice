@@ -1,6 +1,12 @@
-import { createHashRouter, type RouteObject } from 'react-router';
+import { createHashRouter, Navigate, type RouteObject } from 'react-router';
 import { devRoutes } from '../dev/routes';
-import { Shell } from './Shell';
+import { TodayPage } from '../features/today/TodayPage';
+import { TracksRoute } from '../features/path/TracksRoute';
+import { LearnPage } from '../features/learn/LearnPage';
+import { PracticePage } from '../features/practice/PracticePage';
+import { CompletePage } from '../features/complete/CompletePage';
+import { EarDrillPage } from '../features/ear/EarDrillPage';
+import { EarResultsPage } from '../features/ear/EarResultsPage';
 
 export interface RouterOptions {
   /** Register /dev/components and /dev/screens/:name (dev and e2e only). */
@@ -9,14 +15,19 @@ export interface RouterOptions {
 
 /**
  * HashRouter: production loads from file://, where BrowserRouter breaks on reload.
- * Routes per docs/ui.md §3. Screens are added task by task (07–15).
+ * Routes per docs/ui.md §3. Each feature owns its page component; this table is fixed.
  */
 export function createAppRouter(opts: RouterOptions) {
   const routes: RouteObject[] = [
-    {
-      path: '/',
-      element: <Shell />,
-    },
+    { path: '/', element: <TodayPage /> },
+    { path: '/tracks', element: <TracksRoute /> },
+    { path: '/tracks/:trackId', element: <TracksRoute /> },
+    { path: '/tracks/:trackId/lesson', element: <LearnPage /> },
+    { path: '/practice/:levelId', element: <PracticePage /> },
+    { path: '/complete/:sessionId', element: <CompletePage /> },
+    { path: '/ear/results/:sessionId', element: <EarResultsPage /> },
+    { path: '/ear/:levelId', element: <EarDrillPage /> },
+    { path: '*', element: <Navigate to="/" replace /> },
   ];
   if (opts.devRoutes) routes.push(...devRoutes);
   return createHashRouter(routes);

@@ -17,7 +17,7 @@ const noHostImports = [
     message: 'packages/* must not depend on React.',
   },
   {
-    group: ['node:*', 'fs', 'path', 'os', 'child_process', 'crypto'],
+    group: ['node:*', '/fs', '/path', '/os', '/child_process', '/crypto'],
     message: 'packages/* must stay platform-neutral; inject ports instead.',
   },
 ];
@@ -133,7 +133,7 @@ export default tseslint.config(
               message: 'Renderer talks to the engine over IPC (shared/ipc/contracts.ts).',
             },
             {
-              group: ['node:*', 'fs', 'path', 'os', 'child_process'],
+              group: ['node:*', '/fs', '/path', '/os', '/child_process'],
               message: 'Renderer is sandboxed; no Node APIs.',
             },
           ],
