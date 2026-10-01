@@ -56,3 +56,37 @@ export function addDays(day: string, n: number): string {
 export function daysBetween(a: string, b: string): number {
   return Math.round((toUtcMs(b) - toUtcMs(a)) / MS_PER_DAY);
 }
+
+const hourFormatters = new Map<string, Intl.DateTimeFormat>();
+
+/** The local hour (0..23) of `epochMs` in the IANA `timezone`. */
+export function localHour(epochMs: number, timezone: string): number {
+  let f = hourFormatters.get(timezone);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hourCycle: 'h23' });
+    hourFormatters.set(timezone, f);
+  }
+  const hour = f.formatToParts(new Date(epochMs)).find((p) => p.type === 'hour')?.value ?? '0';
+  return Number(hour) % 24;
+}
+
+/** The host's IANA timezone (falls back to UTC). */
+export function systemTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+}
+
+const HOUR_MS = 3_600_000;
+
+/**
+ * An instant at local noon on `day` in `timezone`, searched hour by hour around `near`
+ * (DST-safe; used by the seed to place past sessions on exact local days).
+ */
+export function localNoon(day: string, timezone: string, near: number): number {
+  for (let h = 0; h <= 72; h++) {
+    for (const sign of [1, -1]) {
+      const t = near + sign * h * HOUR_MS;
+      if (localDay(t, timezone) === day && localHour(t, timezone) === 12) return t;
+    }
+  }
+  throw new Error(`No local noon found for ${day} in ${timezone}`);
+}
