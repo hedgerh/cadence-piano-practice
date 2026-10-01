@@ -1,0 +1,17 @@
+{
+  "name": "@cadence/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Engine services: plan, review scheduling, XP, streak, sessions (pure TS, ports injected)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cadence/music": "workspace:*",
+    "@cadence/content": "workspace:*"
+  }
+}

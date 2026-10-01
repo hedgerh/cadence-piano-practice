@@ -1,0 +1,77 @@
+/* Design tokens — every hex value that appears in docs/handoff/design/*.dc.html.
+   Components use ONLY these variables. See docs/ui.md §7.1 for the mapping. */
+:root {
+  /* Surfaces & ink */
+  --ground: #faf7f2;
+  --paper: #ffffff;
+  --ink: #211b16;
+  --muted: #6b615a;
+  --key-label: #7a6f66;
+
+  /* Lines & neutrals */
+  --line: #efe8df;
+  --line-strong: #e6ded4;
+  --shadow-card: #e9e0d5;
+  --sand: #f1ebe3;
+  --sand-deep: #ede5db;
+  --dune: #d9cfc3;
+
+  /* Tangerine — primary action, current item, major chords */
+  --tangerine: #ff8a4c;
+  --tangerine-deep: #c44a1b;
+  --tangerine-deeper: #8f3412;
+  --tangerine-tint: #ffe3d3;
+  --tangerine-tint-soft: #fff4ec;
+  --tangerine-line: #ffd2b8;
+  --tangerine-shadow-soft: #f2c9b2;
+
+  /* Teal — done, correct, minor chords */
+  --teal: #5bd6b8;
+  --teal-deep: #0f7a66;
+  --teal-tint: #e8f8f3;
+  --teal-halo: #ddf6ef;
+
+  /* Lavender — review, XP, diminished chords, missed answers */
+  --lavender: #cdbfff;
+  --lavender-deep: #5b45b5;
+  --lavender-tint: #f3efff;
+
+  /* Sun — streak; also the currently-held MIDI keys (decision, not in designs) */
+  --sun: #ffd55f;
+  --key-held: var(--sun);
+
+  /* Type */
+  --font-display: 'Fredoka Variable', system-ui, sans-serif;
+  --font-body: 'Nunito Variable', system-ui, sans-serif;
+
+  /* Shadows (all hard, no blur) */
+  --sh-card: 0 4px 0 var(--shadow-card);
+  --sh-card-lg: 0 6px 0 var(--shadow-card);
+  --sh-primary: 0 5px 0 var(--tangerine-deep);
+  --sh-play: 0 6px 0 var(--tangerine-deep);
+  --sh-ink: 0 4px 0 var(--ink);
+  --sh-keyboard: 0 6px 0 var(--dune);
+  --sh-seg-on: 0 1px 0 var(--line-strong);
+  --sh-node-done: 0 4px 0 var(--teal-deep);
+  --sh-node-current: 0 0 0 8px var(--tangerine-tint), 0 5px 0 8px var(--tangerine-shadow-soft);
+  --halo-4: 0 0 0 4px var(--tangerine-tint);
+  --halo-6: 0 0 0 6px var(--tangerine-tint);
+  --halo-check: 0 0 0 10px var(--teal-halo);
+  --ring-ink-3: 0 0 0 3px var(--ink);
+
+  /* Layout */
+  --header-h: 76px;
+  --page-x: 48px;
+  --content-max: 1184px;
+  --content-max-narrow: 880px;
+  --tap-min: 44px;
+
+  /* Motion */
+  --pulse: cad-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pulse: none;
+  }
+}

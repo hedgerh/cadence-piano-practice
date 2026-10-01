@@ -1,0 +1,24 @@
+{
+  "name": "@cadence/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Drizzle schema, migrations and repositories implementing @cadence/core ports",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@cadence/core": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "better-sqlite3": "^13.0.3",
+    "nanoid": "^6.0.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.11",
+    "@types/better-sqlite3": "^9.6.0"
+  }
+}

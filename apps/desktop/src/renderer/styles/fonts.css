@@ -1,0 +1,4 @@
+/* Fonts are bundled so the app works offline. Fredoka 600/700 for headings and
+   numerals; Nunito 600–800 for everything else (HANDOFF §3). */
+@import '@fontsource-variable/fredoka';
+@import '@fontsource-variable/nunito';

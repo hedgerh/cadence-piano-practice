@@ -1,0 +1,41 @@
+{
+  "name": "cadence",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Cadence — daily music-theory practice for a beginner pianist with a MIDI keyboard",
+  "type": "module",
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @cadence/desktop dev",
+    "build": "pnpm --filter @cadence/desktop build",
+    "dist": "pnpm --filter @cadence/desktop dist",
+    "e2e": "pnpm --filter @cadence/desktop e2e",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "db:generate": "pnpm --filter @cadence/db generate",
+    "rebuild:native": "pnpm --filter @cadence/desktop rebuild:native",
+    "postinstall": "pnpm --filter @cadence/desktop exec electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^16.0.0",
+    "jsdom": "^30.1.1",
+    "prettier": "^3.9.9",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^7.3.6",
+    "vitest": "^5.0.3"
+  }
+}

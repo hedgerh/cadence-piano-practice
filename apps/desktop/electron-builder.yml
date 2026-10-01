@@ -1,0 +1,37 @@
+appId: com.harry.cadence
+productName: Cadence
+copyright: Copyright © 2026 Harry
+
+directories:
+  output: dist
+  buildResources: resources
+
+files:
+  - out/**
+  - package.json
+
+# Native modules must live outside the asar archive.
+asarUnpack:
+  - '**/*.node'
+
+# Drizzle migrations are read from disk at startup, so ship them beside the app.
+extraResources:
+  - from: ../../packages/db/drizzle
+    to: drizzle
+    filter:
+      - '**/*'
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  shortcutName: Cadence
+
+# No code signing for local use; Windows SmartScreen will warn on first run.
+# See README "Installing".

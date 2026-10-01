@@ -1,0 +1,31 @@
+/* Matches the global rules every design file carries. Do NOT add a global
+   box-sizing reset: the designs mix content-box and border-box per element. */
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+a {
+  color: var(--tangerine-deep);
+}
+a:hover {
+  color: var(--tangerine-deeper);
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+@keyframes cad-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}

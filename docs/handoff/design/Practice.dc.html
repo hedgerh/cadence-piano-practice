@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Practice — A major diatonic chords</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C44A1B}a:hover{color:#8F3412}
+@keyframes cad-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.cad-dot{animation:cad-pulse 1.4s ease-in-out infinite}
+</style>
+</helmet>
+<div style="min-height: 100vh; width: 100%; box-sizing: border-box; background: #FAF7F2; color: #211B16; font-family: 'Nunito', system-ui, sans-serif; display: flex; flex-direction: column">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; height: 76px; padding: 0 48px; box-sizing: border-box">
+    <a href="Main.dc.html" style="display: inline-flex; align-items: center; gap: 8px; color: #6B615A; font-weight: 800; font-size: 15px; text-decoration: none; width: 220px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B615A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+      <span>Today</span>
+    </a>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 22px">A major</span>
+      <span style="font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #C44A1B">Learn · diatonic chords</span>
+    </div>
+    <div style="display: flex; justify-content: flex-end; width: 220px">
+      <div style="display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; border: 2px solid #EFE8DF; font-weight: 700; font-size: 14px; color: #6B615A">
+        <span class="cad-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #0F7A66; display: inline-block"></span>
+        <span>Roland FP-30X</span>
+      </div>
+    </div>
+  </header>
+
+  <div style="max-width: 1184px; width: 100%; margin: 0 auto; padding: 0 48px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 24px">
+    <div style="display: flex; align-items: center; gap: 14px; flex-grow: 1">
+      <div style="display: flex; gap: 6px; flex-grow: 1; max-width: 420px">
+        <sc-for list="{{segs}}" as="seg" hint-placeholder-count="7">
+          <span style="{{seg.style}}"></span>
+        </sc-for>
+      </div>
+      <span style="font-size: 14px; font-weight: 800; color: #6B615A">{{doneCount}} of {{total}} chords</span>
+    </div>
+    <div style="display: inline-flex; align-items: center; gap: 10px">
+      <span style="font-size: 13px; font-weight: 800; color: #6B615A">Show me</span>
+      <div style="display: inline-flex; background: #F1EBE3; border-radius: 12px; padding: 4px; gap: 4px">
+        <button type="button" onClick="{{visNum}}" style="{{numStyle}}">Numerals only</button>
+        <button type="button" onClick="{{visName}}" style="{{nameStyle}}">Chord names</button>
+        <button type="button" onClick="{{visAll}}" style="{{allStyle}}">All 7 chords</button>
+      </div>
+    </div>
+  </div>
+
+  <main style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px 48px 20px; box-sizing: border-box; text-align: center">
+
+    <sc-if value="{{playing}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+        <span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #6B615A">Chord {{chordNo}} of {{total}}</span>
+        <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 700; font-size: 104px; line-height: 1; letter-spacing: -2px">{{numeral}}</span>
+        <sc-if value="{{showName}}" hint-placeholder-val="{{true}}">
+          <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 34px; line-height: 1.1">{{chordName}}</span>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{showNotes}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <sc-for list="{{noteChips}}" as="n" hint-placeholder-count="3">
+            <span style="min-width: 52px; height: 44px; padding: 0 14px; box-sizing: border-box; border-radius: 12px; background: #FFE3D3; border: 2px solid #FF8A4C; display: inline-flex; align-items: center; justify-content: center; font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 22px">{{n.t}}</span>
+          </sc-for>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{finished}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+        <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 700; font-size: 56px; line-height: 1.05">All seven. Nice.</span>
+        <span style="font-size: 18px; font-weight: 600; color: #6B615A">A major is in your hands now.</span>
+        <a href="Complete.dc.html" style="margin-top: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; padding: 0 28px; border-radius: 16px; background: #FF8A4C; color: #211B16; font-weight: 800; font-size: 17px; text-decoration: none; box-shadow: 0 5px 0 #C44A1B">
+          <span>Finish the key</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#211B16" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </a>
+      </div>
+    </sc-if>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+      <div style="position: relative; display: flex; gap: 3px; padding: 3px; background: #211B16; border-radius: 10px; width: 661px; box-sizing: border-box; box-shadow: 0 6px 0 #D9CFC3">
+        <sc-for list="{{whites}}" as="k" hint-placeholder-count="14">
+          <span style="{{k.style}}">{{k.label}}</span>
+        </sc-for>
+        <sc-for list="{{blacks}}" as="b" hint-placeholder-count="10">
+          <span style="{{b.style}}"></span>
+        </sc-for>
+      </div>
+      <span style="font-size: 13px; font-weight: 700; color: #6B615A">Keys light up as you play. Hints light up the target.</span>
+    </div>
+
+    <sc-if value="{{playing}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 800; color: #0F7A66">
+        <span class="cad-dot" style="width: 12px; height: 12px; border-radius: 50%; background: #0F7A66; display: inline-block"></span>
+        <span>Listening — play it whenever you're ready</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px">
+        <button type="button" onClick="{{hint}}" disabled="{{hintDisabled}}" style="{{hintStyle}}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.3 1 2.1h5c0-.8.4-1.6 1-2.1A6 6 0 0 0 12 3z"></path></svg>
+          <span>{{hintLabel}}</span>
+        </button>
+        <button type="button" onClick="{{played}}" style="display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 18px; border-radius: 14px; background: transparent; border: 0; color: #6B615A; font-family: 'Nunito', system-ui, sans-serif; font-weight: 800; font-size: 15px; cursor: pointer; text-decoration: underline; text-underline-offset: 4px">No keyboard? Mark as played</button>
+        <button type="button" onClick="{{skip}}" style="display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 18px; border-radius: 14px; background: transparent; border: 0; color: #6B615A; font-family: 'Nunito', system-ui, sans-serif; font-weight: 800; font-size: 15px; cursor: pointer">Skip for now</button>
+      </div>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{showAll}}" hint-placeholder-val="{{true}}">
+    <footer style="max-width: 1184px; width: 100%; margin: 0 auto; padding: 0 48px 36px; box-sizing: border-box">
+      <div style="display: flex; gap: 10px">
+        <sc-for list="{{chords}}" as="c" hint-placeholder-count="7">
+          <div style="{{c.style}}">
+            <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 22px; line-height: 1">{{c.numeral}}</span>
+            <span style="font-size: 14px; font-weight: 800; line-height: 1.1">{{c.short}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </footer>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { vis: 'all', hint: 0, current: 2, done: [0, 1], skipped: [] };
+  }
+  renderVals() {
+    var CHORDS = [
+      { numeral: 'I',    name: 'A major',          short: 'A',   notes: ['A', 'C♯', 'E'],       keys: ['A3', 'C#4', 'E4'] },
+      { numeral: 'ii',   name: 'B minor',          short: 'Bm',  notes: ['B', 'D', 'F♯'],       keys: ['B3', 'D4', 'F#4'] },
+      { numeral: 'iii',  name: 'C♯ minor',    short: 'C♯m', notes: ['C♯', 'E', 'G♯'], keys: ['C#4', 'E4', 'G#4'] },
+      { numeral: 'IV',   name: 'D major',          short: 'D',   notes: ['D', 'F♯', 'A'],       keys: ['D3', 'F#3', 'A3'] },
+      { numeral: 'V',    name: 'E major',          short: 'E',   notes: ['E', 'G♯', 'B'],       keys: ['E3', 'G#3', 'B3'] },
+      { numeral: 'vi',   name: 'F♯ minor',    short: 'F♯m', notes: ['F♯', 'A', 'C♯'], keys: ['F#3', 'A3', 'C#4'] },
+      { numeral: 'vii°', name: 'G♯ diminished', short: 'G♯°', notes: ['G♯', 'B', 'D'], keys: ['G#3', 'B3', 'D4'] }
+    ];
+    var WHITES = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'];
+    var BLACKS = [
+      { n: 'C#3', l: 34.5 }, { n: 'D#3', l: 81.5 }, { n: 'F#3', l: 175.5 }, { n: 'G#3', l: 222.5 }, { n: 'A#3', l: 269.5 },
+      { n: 'C#4', l: 363.5 }, { n: 'D#4', l: 410.5 }, { n: 'F#4', l: 504.5 }, { n: 'G#4', l: 551.5 }, { n: 'A#4', l: 598.5 }
+    ];
+    var s = this.state;
+    var total = CHORDS.length;
+    var finished = s.current >= total;
+    var cur = finished ? CHORDS[total - 1] : CHORDS[s.current];
+    var showName = s.vis !== 'num';
+    var showAll = s.vis === 'all';
+    var showNotes = !finished && s.hint >= 1;
+    var showKeys = !finished && s.hint >= 2;
+    var hl = showKeys ? cur.keys : [];
+
+    var whiteBase = 'position:relative;width:44px;height:150px;border-radius:0 0 7px 7px;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:11px;font-weight:800;';
+    var whites = WHITES.map(function (n) {
+      var on = hl.indexOf(n) >= 0;
+      return { label: n.replace(/\d/, ''), style: whiteBase + (on ? 'background:#FF8A4C;color:#211B16;' : 'background:#FFFFFF;color:#7A6F66;') };
+    });
+    var blacks = BLACKS.map(function (k) {
+      var on = hl.indexOf(k.n) >= 0;
+      return { style: 'position:absolute;top:0;left:' + k.l + 'px;width:28px;height:95px;border-radius:0 0 5px 5px;' + (on ? 'background:#FF8A4C;box-shadow:inset 0 0 0 3px #211B16;' : 'background:#211B16;') };
+    });
+
+    var chipBase = 'flex:1 1 0;height:64px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-sizing:border-box;';
+    var chords = CHORDS.map(function (c, i) {
+      var st;
+      if (s.done.indexOf(i) >= 0) st = 'background:#5BD6B8;border:2px solid #5BD6B8;color:#211B16;';
+      else if (s.skipped.indexOf(i) >= 0) st = 'background:#FFFFFF;border:2px dashed #D9CFC3;color:#6B615A;';
+      else if (i === s.current) st = 'background:#FF8A4C;border:2px solid #FF8A4C;color:#211B16;box-shadow:0 0 0 4px #FFE3D3;';
+      else st = 'background:#FFFFFF;border:2px solid #E6DED4;color:#6B615A;';
+      return { numeral: c.numeral, short: c.short, style: chipBase + st };
+    });
+
+    var segs = CHORDS.map(function (c, i) {
+      var bg = s.done.indexOf(i) >= 0 ? '#5BD6B8' : (i === s.current ? '#FF8A4C' : '#EDE5DB');
+      return { style: 'flex:1 1 0;height:10px;border-radius:999px;background:' + bg + ';' };
+    });
+
+    var segBase = 'height:36px;padding:0 14px;border-radius:9px;border:0;font-family:Nunito,system-ui,sans-serif;font-weight:800;font-size:14px;cursor:pointer;';
+    var segOn = segBase + 'background:#FFFFFF;color:#211B16;box-shadow:0 1px 0 #E6DED4;';
+    var segOff = segBase + 'background:transparent;color:#6B615A;';
+
+    var hintLabels = ['Give me a hint', 'Show it on the keys', 'That is all the hints'];
+    var hintDisabled = s.hint >= 2;
+    var hintStyle = 'display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;font-family:Nunito,system-ui,sans-serif;font-weight:800;font-size:15px;cursor:pointer;box-sizing:border-box;'
+      + (hintDisabled ? 'background:#F1EBE3;border:2px solid #F1EBE3;color:#6B615A;cursor:default;' : 'background:#FFFFFF;border:2px solid #211B16;color:#211B16;box-shadow:0 4px 0 #211B16;');
+
+    var self = this;
+    return {
+      total: total,
+      doneCount: s.done.length,
+      chordNo: finished ? total : s.current + 1,
+      numeral: cur.numeral,
+      chordName: cur.name,
+      playing: !finished,
+      finished: finished,
+      showName: showName,
+      showAll: showAll,
+      showNotes: showNotes,
+      noteChips: cur.notes.map(function (t) { return { t: t }; }),
+      whites: whites,
+      blacks: blacks,
+      chords: chords,
+      segs: segs,
+      numStyle: s.vis === 'num' ? segOn : segOff,
+      nameStyle: s.vis === 'name' ? segOn : segOff,
+      allStyle: s.vis === 'all' ? segOn : segOff,
+      hintLabel: hintLabels[s.hint],
+      hintDisabled: hintDisabled,
+      hintStyle: hintStyle,
+      visNum: function () { self.setState({ vis: 'num' }); },
+      visName: function () { self.setState({ vis: 'name' }); },
+      visAll: function () { self.setState({ vis: 'all' }); },
+      hint: function () { if (!finished) self.setState({ hint: Math.min(2, s.hint + 1) }); },
+      played: function () { if (!finished) self.setState({ done: s.done.concat([s.current]), current: s.current + 1, hint: 0 }); },
+      skip: function () { if (!finished) self.setState({ skipped: s.skipped.concat([s.current]), current: s.current + 1, hint: 0 }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

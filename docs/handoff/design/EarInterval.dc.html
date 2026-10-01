@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ear training — Intervals, Level 3</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C44A1B}a:hover{color:#8F3412}
+@keyframes cad-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.cad-dot{animation:cad-pulse 1.4s ease-in-out infinite}
+</style>
+</helmet>
+<div style="min-height: 100vh; width: 100%; box-sizing: border-box; background: #FAF7F2; color: #211B16; font-family: 'Nunito', system-ui, sans-serif; display: flex; flex-direction: column">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; height: 76px; padding: 0 48px; box-sizing: border-box">
+    <a href="EarPath.dc.html" style="display: inline-flex; align-items: center; gap: 8px; color: #6B615A; font-weight: 800; font-size: 15px; text-decoration: none; width: 220px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B615A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+      <span>Ear training</span>
+    </a>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 22px">Intervals · Level 3</span>
+      <span style="font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #5B45B5">Name it, then play it back</span>
+    </div>
+    <div style="display: flex; justify-content: flex-end; width: 220px">
+      <div style="display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; border: 2px solid #EFE8DF; font-weight: 700; font-size: 14px; color: #6B615A">
+        <span class="cad-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #0F7A66; display: inline-block"></span>
+        <span>Roland FP-30X</span>
+      </div>
+    </div>
+  </header>
+
+  <div style="max-width: 1184px; width: 100%; margin: 0 auto; padding: 0 48px; box-sizing: border-box; display: flex; align-items: center; gap: 14px">
+    <div style="display: flex; gap: 6px; flex-grow: 1; max-width: 520px">
+      <sc-for list="{{segs}}" as="seg" hint-placeholder-count="10">
+        <span style="{{seg.style}}"></span>
+      </sc-for>
+    </div>
+    <span style="font-size: 14px; font-weight: 800; color: #6B615A">{{right}} right · question {{qNo}} of 10</span>
+  </div>
+
+  <main style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 20px 48px 36px; box-sizing: border-box; text-align: center">
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+      <button type="button" onClick="{{play}}" aria-label="Play the interval" style="width: 112px; height: 112px; border-radius: 50%; border: 0; background: #FF8A4C; box-shadow: 0 6px 0 #C44A1B; cursor: pointer; display: flex; align-items: center; justify-content: center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#211B16" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 6.5a8 8 0 0 1 0 11"></path></svg>
+      </button>
+      <span style="font-size: 16px; font-weight: 800">{{playLabel}}</span>
+      <span style="font-size: 14px; font-weight: 600; color: #6B615A">Two notes, going up. The first one is always C.</span>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 900px">
+      <sc-for list="{{answers}}" as="a" hint-placeholder-count="13">
+        <button type="button" onClick="{{a.pick}}" disabled="{{a.disabled}}" style="{{a.style}}">
+          <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 20px; line-height: 1">{{a.short}}</span>
+          <span style="font-size: 12px; font-weight: 800; line-height: 1.1">{{a.name}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{listening}}" hint-placeholder-val="{{true}}">
+      <span style="font-size: 14px; font-weight: 700; color: #6B615A">Greyed-out intervals arrive in later levels.</span>
+    </sc-if>
+
+    <sc-if value="{{answered}}" hint-placeholder-val="{{false}}">
+      <div style="{{feedbackStyle}}">
+        <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; min-width: 260px">
+          <span style="font-family: 'Fredoka', system-ui, sans-serif; font-weight: 600; font-size: 24px; line-height: 1.1">{{feedbackTitle}}</span>
+          <span style="font-size: 15px; font-weight: 600; color: #6B615A">{{feedbackBody}}</span>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; font-weight: 800; color: #0F7A66">
+            <span class="cad-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #0F7A66; display: inline-block"></span>
+            <span>Play it back: {{playback}} · +5 XP</span>
+          </div>
+        </div>
+        <div style="position: relative; display: flex; gap: 3px; padding: 3px; background: #211B16; border-radius: 8px; width: 332px; box-sizing: border-box">
+          <sc-for list="{{whites}}" as="k" hint-placeholder-count="7">
+            <span style="{{k.style}}">{{k.label}}</span>
+          </sc-for>
+          <sc-for list="{{blacks}}" as="b" hint-placeholder-count="5">
+            <span style="{{b.style}}"></span>
+          </sc-for>
+        </div>
+        <button type="button" onClick="{{next}}" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 52px; padding: 0 22px; border-radius: 14px; background: #211B16; border: 0; color: #FFFFFF; font-family: 'Nunito', system-ui, sans-serif; font-weight: 800; font-size: 16px; cursor: pointer; white-space: nowrap">
+          <span>Next</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </button>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"start":{"editor":"enum","options":["listen","answered"],"default":"listen","section":"Prototype"},"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var answered = (props && props.start) === 'answered';
+    this.state = { phase: answered ? 'answered' : 'listen', chosen: answered ? 'M3' : null, target: 'P4', q: 3, results: [true, true, false], played: false };
+  }
+  tone(ctx, f, t, d) {
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.type = 'triangle';
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start(t);
+    o.stop(t + d + 0.05);
+  }
+  renderVals() {
+    var INTERVALS = [
+      { id: 'P1', short: 'P1', name: 'Unison', semis: 0, note: 'C' },
+      { id: 'm2', short: 'm2', name: 'Minor 2nd', semis: 1, note: 'C♯' },
+      { id: 'M2', short: 'M2', name: 'Major 2nd', semis: 2, note: 'D' },
+      { id: 'm3', short: 'm3', name: 'Minor 3rd', semis: 3, note: 'E♭' },
+      { id: 'M3', short: 'M3', name: 'Major 3rd', semis: 4, note: 'E' },
+      { id: 'P4', short: 'P4', name: 'Perfect 4th', semis: 5, note: 'F' },
+      { id: 'TT', short: 'TT', name: 'Tritone', semis: 6, note: 'F♯' },
+      { id: 'P5', short: 'P5', name: 'Perfect 5th', semis: 7, note: 'G' },
+      { id: 'm6', short: 'm6', name: 'Minor 6th', semis: 8, note: 'A♭' },
+      { id: 'M6', short: 'M6', name: 'Major 6th', semis: 9, note: 'A' },
+      { id: 'm7', short: 'm7', name: 'Minor 7th', semis: 10, note: 'B♭' },
+      { id: 'M7', short: 'M7', name: 'Major 7th', semis: 11, note: 'B' },
+      { id: 'P8', short: 'P8', name: 'Octave', semis: 12, note: 'C' }
+    ];
+    var ACTIVE = ['P1', 'M2', 'm3', 'M3', 'P4', 'P5', 'P8'];
+    var s = this.state;
+    var self = this;
+    var answered = s.phase === 'answered';
+    var target = INTERVALS.filter(function (i) { return i.id === s.target; })[0];
+    var chosen = INTERVALS.filter(function (i) { return i.id === s.chosen; })[0];
+    var correct = answered && s.chosen === s.target;
+
+    var base = 'width:118px;height:64px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-sizing:border-box;font-family:Nunito,system-ui,sans-serif;';
+    var answers = INTERVALS.map(function (iv) {
+      var active = ACTIVE.indexOf(iv.id) >= 0;
+      var st;
+      if (!active) st = base + 'background:#F1EBE3;border:2px solid #F1EBE3;color:#6B615A;cursor:default;';
+      else if (answered && iv.id === s.target) st = base + 'background:#5BD6B8;border:2px solid #5BD6B8;color:#211B16;cursor:default;';
+      else if (answered && iv.id === s.chosen) st = base + 'background:#FFE3D3;border:2px solid #C44A1B;color:#211B16;cursor:default;';
+      else if (answered) st = base + 'background:#FFFFFF;border:2px solid #EFE8DF;color:#6B615A;cursor:default;';
+      else st = base + 'background:#FFFFFF;border:2px solid #211B16;color:#211B16;box-shadow:0 4px 0 #211B16;cursor:pointer;';
+      return {
+        short: iv.short, name: iv.name, style: st,
+        disabled: !active || answered,
+        pick: function () { if (!answered && active) self.setState({ phase: 'answered', chosen: iv.id }); }
+      };
+    });
+
+    var segs = [];
+    for (var i = 0; i < 10; i++) {
+      var bg = '#EDE5DB';
+      if (i < s.results.length) bg = s.results[i] ? '#5BD6B8' : '#CDBFFF';
+      else if (i === s.q) bg = '#FF8A4C';
+      segs.push({ style: 'flex:1 1 0;height:10px;border-radius:999px;background:' + bg + ';' });
+    }
+
+    var WHITES = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    var BLACKS = [{ n: 'C♯', l: 34.5 }, { n: 'E♭', l: 81.5 }, { n: 'F♯', l: 175.5 }, { n: 'A♭', l: 222.5 }, { n: 'B♭', l: 269.5 }];
+    var lit = answered ? ['C', target.note] : [];
+    var whites = WHITES.map(function (n) {
+      var on = lit.indexOf(n) >= 0;
+      return { label: n, style: 'position:relative;width:44px;height:120px;border-radius:0 0 6px 6px;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:11px;font-weight:800;' + (on ? 'background:#5BD6B8;color:#211B16;' : 'background:#FFFFFF;color:#7A6F66;') };
+    });
+    var blacks = BLACKS.map(function (k) {
+      var on = lit.indexOf(k.n) >= 0;
+      return { style: 'position:absolute;top:0;left:' + k.l + 'px;width:28px;height:76px;border-radius:0 0 5px 5px;' + (on ? 'background:#5BD6B8;box-shadow:inset 0 0 0 3px #211B16;' : 'background:#211B16;') };
+    });
+
+    var feedbackStyle = 'display:flex;align-items:center;gap:28px;padding:20px 24px;border-radius:20px;border:2px solid ' + (correct ? '#5BD6B8' : '#FFD2B8') + ';background:' + (correct ? '#E8F8F3' : '#FFF4EC') + ';';
+
+    return {
+      segs: segs,
+      right: s.results.filter(function (r) { return r; }).length,
+      qNo: s.q + 1,
+      playLabel: s.played ? 'Hear it again' : 'Play',
+      answers: answers,
+      listening: !answered,
+      answered: answered,
+      feedbackStyle: feedbackStyle,
+      feedbackTitle: correct ? (target.name + ' — yes.') : ('Not quite. That was a ' + target.name.toLowerCase() + '.'),
+      feedbackBody: correct ? ('C up to ' + target.note + '. Nice ears.') : ('C up to ' + target.note + '. You said ' + (chosen ? chosen.name.toLowerCase() : '') + ' — it will come back in review.'),
+      playback: 'C then ' + target.note,
+      play: function () {
+        self.setState({ played: true });
+        try {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!self.audio) self.audio = new AC();
+          var ctx = self.audio;
+          var t = ctx.currentTime + 0.05;
+          self.tone(ctx, 261.63, t, 0.7);
+          self.tone(ctx, 261.63 * Math.pow(2, target.semis / 12), t + 0.8, 0.9);
+        } catch (e) {}
+      },
+      next: function () {
+        var pool = ACTIVE.filter(function (id) { return id !== s.target; });
+        var nextTarget = pool[Math.floor(Math.random() * pool.length)];
+        self.setState({ phase: 'listen', chosen: null, target: nextTarget, q: Math.min(9, s.q + 1), results: s.results.concat([correct]), played: false });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

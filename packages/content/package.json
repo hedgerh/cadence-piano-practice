@@ -1,0 +1,17 @@
+{
+  "name": "@cadence/content",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Track content model (zod), generators, validator",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cadence/music": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

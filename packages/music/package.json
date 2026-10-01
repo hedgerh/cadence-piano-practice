@@ -1,0 +1,14 @@
+{
+  "name": "@cadence/music",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure music theory: pitch math, keys, diatonic triads, intervals, voicing placement, match evaluators",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {}
+}

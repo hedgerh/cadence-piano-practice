@@ -1,0 +1,14 @@
+node_modules/
+dist/
+out/
+*.log
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+.vite/
+apps/desktop/e2e/test-results/
+apps/desktop/e2e/playwright-report/
+apps/desktop/e2e/.userdata/
+coverage/
+.env
+.env.local

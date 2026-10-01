@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Complete.dc.html": {"expand": "fill", "h": 820, "is_interactive": true, "radius": 16, "title": "5 · Key complete", "w": 1280, "x": 5440, "y": 0},
+    "Learn.dc.html": {"expand": "fill", "h": 820, "is_interactive": true, "radius": 16, "title": "3 · Learn the pattern", "w": 1280, "x": 2720, "y": 0},
+    "Main.dc.html": {"expand": "fill", "h": 820, "is_interactive": true, "radius": 16, "title": "1 · Today", "w": 1280, "x": 0, "y": 0},
+    "Path.dc.html": {"expand": "fill", "h": 820, "is_interactive": true, "radius": 16, "title": "2 · Track path (circle of fifths)", "w": 1280, "x": 1360, "y": 0},
+    "Practice.dc.html": {"expand": "fill", "h": 820, "is_interactive": true, "radius": 16, "title": "4 · Practice a key (interactive)", "w": 1280, "x": 4080, "y": 0},
+    "EarPath.dc.html": {"expand": "fill", "h": 860, "is_interactive": true, "radius": 16, "title": "6 · Ear training path (ladder)", "w": 1280, "x": 0, "y": 1200},
+    "EarInterval.dc.html": {"expand": "fill", "h": 860, "is_interactive": true, "radius": 16, "title": "7 · Intervals drill (interactive, plays sound)", "w": 1280, "x": 1360, "y": 1200},
+    "EarChord.dc.html": {"expand": "fill", "h": 860, "is_interactive": true, "radius": 16, "title": "8 · Chords in a key, by ear", "w": 1280, "x": 2720, "y": 1200},
+    "EarKey.dc.html": {"expand": "fill", "h": 860, "is_interactive": true, "radius": 16, "title": "9 · Find the key (MIDI)", "w": 1280, "x": 4080, "y": 1200}
+  },
+  "createdOnFiles": {"at": "2026-10-01T18:05:00Z", "v": 1},
+  "designSystems": [],
+  "launch": {"view": "canvas"},
+  "notes": {
+    "flow": {"kind": "title1", "maxW": 6720, "text": "Cadence · a daily practice flow: Today → Track path → Learn → Practice → Complete", "w": 240, "x": 0, "y": -300},
+    "ear": {"kind": "title1", "maxW": 5360, "text": "Ear training track · intervals → scale degrees → chord quality → chords in a key → find the key", "w": 240, "x": 0, "y": 920}
+  },
+  "order": ["Main.dc.html", "Path.dc.html", "Learn.dc.html", "Practice.dc.html", "Complete.dc.html", "EarPath.dc.html", "EarInterval.dc.html", "EarChord.dc.html", "EarKey.dc.html"],
+  "pages": [],
+  "title": "Cadence — daily music theory practice"
+}
