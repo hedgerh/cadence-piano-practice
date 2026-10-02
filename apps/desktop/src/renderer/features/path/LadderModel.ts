@@ -89,6 +89,41 @@ export function stageEyebrow(overview: TrackOverviewDto): string {
   return `Track · stage ${n + 1} of ${stages.length}`;
 }
 
+/** A passed level the learner can replay (docs/decisions.md "Ear level replay"). */
+export interface ReplayLevel {
+  levelId: string;
+  /** 0-based position in the stage (its segment). */
+  index: number;
+  /** Pill text: "Level 1 · Unison, perfect 5th and octave, going up from C". */
+  label: string;
+  /** Segment button name: "Replay Level 1". */
+  ariaLabel: string;
+}
+
+/**
+ * Passed levels of an open or complete stage, in order. Replaying one starts a `review` session
+ * (`sessions.start({ levelId, kind: 'review' })`); unlocks and the current level never change.
+ * Locked stages offer nothing (their levels cannot be passed).
+ */
+export function replayLevels(stage: StageDto): ReplayLevel[] {
+  if (stage.state === 'locked') return [];
+  return stage.levels.flatMap((l, index): ReplayLevel[] => {
+    if (l.state !== 'done') return [];
+    const blurb = l.blurb.replace(/\.$/, '');
+    return [
+      {
+        levelId: l.levelId,
+        index,
+        label: blurb !== '' ? `${l.title} · ${blurb}` : l.title,
+        ariaLabel: `Replay ${l.title}`,
+      },
+    ];
+  });
+}
+
+export const REPLAY_TOGGLE = 'Replay a level';
+export const REPLAY_LIST_TITLE = 'Pick a level to replay';
+
 /** Task 16: every stage complete (not in EarPath.dc.html). */
 export const LADDER_COMPLETE = {
   title: 'Every level done',

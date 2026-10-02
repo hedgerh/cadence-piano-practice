@@ -184,6 +184,8 @@ export interface CircleNodeDto {
 export interface LadderLevelDto {
   levelId: string;
   title: string;
+  /** Content level blurb ("Unison, perfect 5th and octave, going up from C."); '' when none. */
+  blurb: string;
   /** 1-based within the stage. */
   number: number;
   state: LadderLevelState;

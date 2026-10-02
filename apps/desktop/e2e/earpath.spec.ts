@@ -135,6 +135,48 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
       'true',
     );
 
+    // ---- Replay a passed level (decisions.md "Ear level replay"): a review session ----
+    const intervals = overview.stages?.[0];
+    const l2 = intervals?.levels[1]?.levelId ?? '';
+    expect(intervals?.levels.slice(0, 2).map((l) => l.state)).toEqual(['done', 'done']);
+    const replaySegs = current.getByRole('button', { name: /^Replay Level/ });
+    await expect(replaySegs).toHaveCount(2);
+    // The visible bar stays 10px; the button is a 44px tap target.
+    await expectSize(replaySegs.nth(1), { height: 44 });
+    await expectStyle(replaySegs.nth(1).locator('span'), { height: '10px' });
+    const toggle = page.getByTestId('replay-toggle-intervals');
+    await expect(page.getByRole('button', { name: 'Replay a level' })).toHaveCount(1);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    const list = page.getByTestId('replay-list-intervals');
+    await expect(list.getByRole('button')).toHaveCount(2);
+    await expect(list.getByRole('button')).toHaveText([
+      /^Level 1 · Unison, perfect 5th and octave/,
+      /^Level 2 · Adds the major and minor 3rd/,
+    ]);
+    // ≥ 44px: a pill grows if its blurb wraps in the stage column.
+    for (const pill of await list.getByRole('button').all()) {
+      expect((await pill.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+    await page.screenshot({ path: 'e2e/screenshots/11-earpath-replay.png' });
+
+    await current.getByRole('button', { name: 'Replay Level 2' }).click();
+    await expect(page).toHaveURL(new RegExp(`#/ear/${l2}\\?session=[^&]+$`));
+    const replayId = /session=([^&]+)$/.exec(page.url())?.[1] ?? '';
+    const replay = await invoke(page, 'sessions.get', { sessionId: replayId });
+    expect(replay).toMatchObject({ levelId: l2, kind: 'review' });
+
+    // The current level does not move.
+    await go(page, '/tracks/ear-training');
+    await expect(rows.nth(0).locator(':scope > :nth-child(2) > :first-child > span')).toHaveText([
+      'Intervals',
+      'Level 3 of 6',
+    ]);
+    await expect(start).toHaveText('Start Level 3');
+    expect(
+      (await invoke(page, 'tracks.overview', { trackId: 'ear-training' })).upNext?.levelId,
+    ).toBe(overview.upNext?.levelId);
+
     // ---- Start Level 3 → sessions.start → /ear/:levelId?session= ----
     const levelId = overview.upNext?.levelId ?? '';
     expect(levelId).not.toBe('');
@@ -151,9 +193,15 @@ test('dev screen /dev/screens/ear-path renders the fixture ladder', async () => 
     await go(page, '/dev/screens/ear-path');
     await expect(page.getByTestId('stage-row')).toHaveCount(5);
     await expect(page.getByTestId('ladder-start')).toHaveText('Start Level 3');
+    await expect(page.getByRole('button', { name: /^Replay Level/ })).toHaveCount(2);
+    await go(page, '/dev/screens/ear-path?replay=intervals');
+    await expect(page.getByTestId('replay-list-intervals').getByRole('button')).toHaveCount(2);
     await go(page, '/dev/screens/ear-path?stage1=done');
     await expect(page.getByTestId('stage-row').first()).toHaveAttribute('data-state', 'done');
     await expect(page.getByTestId('stage-row').first()).toContainText('Complete');
+    await expect(page.getByTestId('replay-toggle-intervals')).toBeVisible();
+    await page.getByTestId('replay-toggle-intervals').click();
+    await expect(page.getByTestId('replay-list-intervals').getByRole('button')).toHaveCount(6);
   } finally {
     await app.close();
   }

@@ -11,7 +11,8 @@ import { LadderPathView } from './LadderPathView';
 
 /**
  * `/tracks/:trackId` for `map:'ladder'` (docs/ui.md §3, EarPath.dc.html): stages from
- * `tracks.overview`, "Start Level N" → `sessions.start` → `/ear/:levelId?session=`.
+ * `tracks.overview`, "Start Level N" → `sessions.start` → `/ear/:levelId?session=`; a passed
+ * level's segment or "Replay a level" pill starts a `review` session the same way.
  */
 export function LadderPathPage({ trackId }: { trackId: string }) {
   const navigate = useNavigate();
@@ -23,6 +24,16 @@ export function LadderPathPage({ trackId }: { trackId: string }) {
 
   if (overview.isError) throw overview.error;
 
+  // A replay is a `review` session on a passed level (decisions.md "Ear level replay"); the
+  // engine claims today's plan block only if one is for that level.
+  const startLevel = (levelId: string, kind: 'learn' | 'review') => {
+    if (start.isPending) return;
+    start.mutate(
+      { levelId, kind },
+      { onSuccess: (session) => void navigate(sessionRoute(session)) },
+    );
+  };
+
   return (
     <LadderPathView
       streakDays={me.data?.streak.days ?? 0}
@@ -31,13 +42,8 @@ export function LadderPathPage({ trackId }: { trackId: string }) {
       overview={overview.data}
       trackId={trackId}
       starting={start.isPending}
-      onStart={(levelId) => {
-        if (start.isPending) return;
-        start.mutate(
-          { levelId, kind: 'learn' },
-          { onSuccess: (session) => void navigate(sessionRoute(session)) },
-        );
-      }}
+      onStart={(levelId) => startLevel(levelId, 'learn')}
+      onReplay={(levelId) => startLevel(levelId, 'review')}
       onVisibility={(visibility) => settings.mutate({ trackId, visibility })}
     />
   );

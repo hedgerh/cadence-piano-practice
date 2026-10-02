@@ -1,0 +1,40 @@
+/* Path:58 flat card, stretched to the stage card's width. */
+.card {
+  align-self: stretch;
+}
+
+/* Path:60 — card title 15/800. */
+.title {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Path:41 — pill row; level blurbs are sentences, so the pills stack and wrap. */
+.levels {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* Path:43 — outlined pill: ≥44px, white, 2px line-strong, 15/800 (a <button> here). Radius 22
+   reads as a pill on one line and stays rounded if a long blurb wraps. */
+.level {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 18px;
+  border-radius: 22px;
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 15px;
+  text-align: left;
+  justify-content: flex-start;
+}
+.level:hover:not(:disabled) {
+  border-color: var(--teal);
+}
+.level:disabled {
+  color: var(--muted);
+}

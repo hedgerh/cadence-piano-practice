@@ -6,6 +6,7 @@ import { CheckIcon, NoteIcon } from '../../components/ui/icons';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
 import { SecondaryButton } from '../../components/ui/SecondaryButton';
 import { StatTile } from '../../components/ui/StatTile';
+import { TextButton } from '../../components/ui/TextButton';
 import { cx } from '../../lib/cx';
 import { earResultsView, type EarResultsAction } from './earResults';
 import styles from './EarResultsPage.module.css';
@@ -21,6 +22,8 @@ export interface EarResultsViewProps {
 const TEST_ID: Record<EarResultsAction['kind'], string> = {
   next: 'ear-results-next',
   retry: 'ear-results-retry',
+  practice: 'ear-results-practice',
+  map: 'ear-results-map',
   drill: 'ear-results-drill',
   back: 'ear-results-back',
   done: 'ear-results-done',
@@ -35,7 +38,7 @@ export function EarResultsView({
   const view = earResultsView(complete);
   const props = (action: EarResultsAction) => ({
     onClick: () => onAction(action),
-    disabled: busy && action.kind !== 'done',
+    disabled: busy && action.kind !== 'done' && action.kind !== 'map',
     'data-testid': TEST_ID[action.kind],
     children: action.label,
   });
@@ -88,6 +91,7 @@ export function EarResultsView({
 
         <div className={styles.actions}>
           <PrimaryButton {...props(view.primary)} />
+          {view.extra !== null && <TextButton {...props(view.extra)} />}
           {view.drill !== null && <SecondaryButton {...props(view.drill)} />}
           <SecondaryButton {...props(view.secondary)} />
         </div>

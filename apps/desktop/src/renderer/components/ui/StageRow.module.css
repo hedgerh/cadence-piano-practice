@@ -1,11 +1,14 @@
-/* EarPath:82 */
+/* EarPath:82 — rail + card, 18px apart. A grid (not the design's flex row) so an optional
+   footer can sit under the card while the rail runs down beside both. */
 .row {
-  display: flex;
-  gap: 18px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  column-gap: 18px;
 }
 
 /* EarPath:83 */
 .rail {
+  grid-row: 1 / span 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -54,6 +57,32 @@
   margin-bottom: 16px;
 }
 .lastCard {
+  margin-bottom: 0;
+}
+
+/* Cover link for the up-next card (EarPath:87 — the whole card is the tap target). */
+.linked {
+  position: relative;
+}
+.cover {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* Not in the design (decisions.md "Ear level replay"): "Replay a level" under the card. */
+.cardWithFooter {
+  margin-bottom: 4px;
+}
+.footer {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.lastFooter {
   margin-bottom: 0;
 }
 

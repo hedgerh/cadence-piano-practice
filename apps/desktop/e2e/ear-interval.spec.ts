@@ -218,6 +218,21 @@ test('ear intervals L3 (seed day8): gating, feedback, play-back, a miss, pass sc
     await expect(page.getByTestId('ear-results-retry')).toHaveCount(0);
     await page.screenshot({ path: 'e2e/screenshots/12-ear-results.png' });
 
+    // ---- "Practice Level 3 again" (decisions.md "Ear level replay"): a new review session on
+    // the same level; the level stays passed (checked on the map below). ----
+    const practice = page.getByTestId('ear-results-practice');
+    await expect(practice).toHaveText('Practice Level 3 again');
+    const passedId = /results\/([^/?]+)$/.exec(page.url())?.[1] ?? '';
+    await practice.click();
+    await expect(page).toHaveURL(/#\/ear\/intervals-3\?session=[^&]+$/);
+    const practiceId = /session=([^&]+)$/.exec(page.url())?.[1] ?? '';
+    expect(practiceId).not.toBe(passedId);
+    expect(await invoke(page, 'sessions.get', { sessionId: practiceId })).toMatchObject({
+      levelId: 'intervals-3',
+      kind: 'review',
+      finishedAt: null,
+    });
+
     // ---- EarPath: Level 3 done. engine.md §6.9: {intervals, 4} is satisfied once L3 is
     // passed, so Scale degrees opens now (Task 13 acceptance); Chord quality stays locked. ----
     await go(page, '/tracks/ear-training');

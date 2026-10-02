@@ -213,6 +213,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         const levels = stage.levels.map((l, i): LadderLevelDto => ({
           levelId: l.id,
           title: l.title,
+          blurb: l.blurb ?? '',
           number: i + 1,
           state: st.completed.has(l.id)
             ? 'done'

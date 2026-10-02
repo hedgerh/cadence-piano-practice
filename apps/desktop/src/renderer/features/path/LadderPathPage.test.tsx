@@ -5,6 +5,7 @@ import { FIXTURE_TRACKS, fixtureLadderOverview } from '../earpath/dev';
 import {
   HOW_A_LEVEL_WORKS,
   levelSegment,
+  replayLevels,
   stageEyebrow,
   stageRows,
   trackPills,
@@ -88,9 +89,60 @@ describe('ladder helpers', () => {
   });
 });
 
+// docs/decisions.md "Ear level replay".
+describe('replayLevels (which levels can be replayed)', () => {
+  it('open stage: only the passed levels, with content blurbs and segment names', () => {
+    const intervals = fixtureLadderOverview().stages?.[0];
+    expect(intervals && replayLevels(intervals)).toEqual([
+      {
+        levelId: 'intervals-1',
+        index: 0,
+        label: 'Level 1 · Unison, perfect 5th and octave, going up from C',
+        ariaLabel: 'Replay Level 1',
+      },
+      {
+        levelId: 'intervals-2',
+        index: 1,
+        label: 'Level 2 · Adds the major and minor 3rd to unison, 5th and octave',
+        ariaLabel: 'Replay Level 2',
+      },
+    ]);
+  });
+
+  it('complete stages replay every level; locked and untouched stages offer none', () => {
+    const stages = fixtureLadderOverview('all', true).stages ?? [];
+    expect(stages.map((s) => replayLevels(s).map((l) => l.levelId))).toEqual([
+      ['intervals-1', 'intervals-2', 'intervals-3', 'intervals-4', 'intervals-5', 'intervals-6'],
+      [],
+      [],
+      [],
+      [],
+    ]);
+    const locked = stages[3];
+    // Even a (malformed) done level in a locked stage is not offered.
+    expect(
+      locked &&
+        replayLevels({
+          ...locked,
+          levels: locked.levels.map((l) => ({ ...l, state: 'done' as const })),
+        }),
+    ).toEqual([]);
+  });
+
+  it('a level without a blurb is labelled by its title', () => {
+    const intervals = fixtureLadderOverview().stages?.[0];
+    const bare = intervals && {
+      ...intervals,
+      levels: intervals.levels.map((l) => ({ ...l, blurb: '' })),
+    };
+    expect(bare && replayLevels(bare)[0]?.label).toBe('Level 1');
+  });
+});
+
 describe('LadderPathView', () => {
   function renderView(overrides: Partial<Parameters<typeof LadderPathView>[0]> = {}) {
     const onStart = vi.fn();
+    const onReplay = vi.fn();
     const onVisibility = vi.fn();
     render(
       <MemoryRouter>
@@ -101,12 +153,13 @@ describe('LadderPathView', () => {
           overview={fixtureLadderOverview()}
           trackId="ear-training"
           onStart={onStart}
+          onReplay={onReplay}
           onVisibility={onVisibility}
           {...overrides}
         />
       </MemoryRouter>,
     );
-    return { onStart, onVisibility };
+    return { onStart, onReplay, onVisibility };
   }
 
   it('renders the design copy and starts the up-next level', () => {
@@ -125,6 +178,57 @@ describe('LadderPathView', () => {
     const { onVisibility } = renderView();
     fireEvent.click(screen.getByRole('button', { name: 'Numerals only' }));
     expect(onVisibility).toHaveBeenCalledWith('num');
+  });
+
+  it('passed segments are replay buttons; the current and later levels are not', () => {
+    const { onReplay, onStart } = renderView();
+    const current = screen.getAllByTestId('stage-row')[0];
+    if (!current) throw new Error('no stage row');
+    const buttons = within(current).getAllByRole('button', { name: /^Replay Level/ });
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Replay Level 1',
+      'Replay Level 2',
+    ]);
+    expect(current.querySelectorAll('span[data-state]')).toHaveLength(6);
+    fireEvent.click(screen.getByRole('button', { name: 'Replay Level 2' }));
+    expect(onReplay).toHaveBeenCalledWith('intervals-2');
+    expect(onStart).not.toHaveBeenCalled();
+    // The card still links to the up-next level, without wrapping the buttons in an <a>.
+    expect(within(current).getByRole('link').getAttribute('href')).toBe('/ear/intervals-3');
+    expect(current.querySelector('a button')).toBeNull();
+    expect(screen.getByTestId('ladder-start').textContent).toBe('Start Level 3');
+  });
+
+  it('"Replay a level" toggles a list of the passed levels; locked stages have none', () => {
+    const { onReplay } = renderView();
+    expect(screen.getAllByRole('button', { name: 'Replay a level' })).toHaveLength(1);
+    const toggle = screen.getByTestId('replay-toggle-intervals');
+    expect(screen.queryByTestId('replay-list-intervals')).toBeNull();
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    const list = within(screen.getByTestId('replay-list-intervals'));
+    expect(list.getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'Level 1 · Unison, perfect 5th and octave, going up from C',
+      'Level 2 · Adds the major and minor 3rd to unison, 5th and octave',
+    ]);
+    fireEvent.click(screen.getByTestId('replay-level-intervals-1'));
+    expect(onReplay).toHaveBeenCalledWith('intervals-1');
+    fireEvent.click(toggle);
+    expect(screen.queryByTestId('replay-list-intervals')).toBeNull();
+  });
+
+  it('a complete stage gets the same affordance; busy disables the replay buttons', () => {
+    renderView({
+      overview: fixtureLadderOverview('all', true),
+      initialReplayStage: 'intervals',
+      starting: true,
+    });
+    const list = within(screen.getByTestId('replay-list-intervals'));
+    expect(list.getAllByRole('button')).toHaveLength(6);
+    for (const b of list.getAllByRole('button'))
+      expect((b as HTMLButtonElement).disabled).toBe(true);
+    // Scale degrees is open but nothing is passed yet: no toggle.
+    expect(screen.queryByTestId('replay-toggle-scale-degrees')).toBeNull();
   });
 
   it('while the overview loads only the header and pills render', () => {

@@ -108,14 +108,22 @@ function LiveResults({ complete }: { complete: CompleteDto }) {
       void navigate('/');
       return;
     }
+    if (action.kind === 'map') {
+      void navigate(action.to);
+      return;
+    }
     // "Try Level 3 again" starts a new session on the same level (the old one is finished).
-    // "Back to Level 3" (from a focus round) starts a normal session on the level.
+    // "Practice Level 3 again" (after a pass) is the same, as a review: the level stays passed
+    // (decisions.md "Ear level replay"). "Back to Level 3" (from a focus round) starts a normal
+    // session on the level.
     const run =
       action.kind === 'drill'
         ? startFocus(action.levelId)
         : action.kind === 'next' || action.kind === 'back'
           ? startLevel(action.levelId, 'learn')
-          : startLevel(action.levelId, complete.kind);
+          : action.kind === 'practice'
+            ? startLevel(action.levelId, 'review')
+            : startLevel(action.levelId, complete.kind);
     run.catch(() => setError('Couldn’t start that drill. Try again.'));
   };
 

@@ -25,3 +25,31 @@
 .empty {
   background: var(--sand-deep);
 }
+
+/* Not in the design (docs/decisions.md "Ear level replay"): a passed level's segment is a button.
+   17px padding above and below makes a 44px hit area (--tap-min); the negative margin keeps the
+   10px bar and the card's layout exactly as designed. */
+.hit {
+  flex: 1 1 0;
+  display: flex;
+  align-items: stretch;
+  padding: 17px 0;
+  margin: -17px 0;
+  background: transparent;
+  border-radius: 999px;
+  position: relative;
+  z-index: 1;
+}
+.hit > .seg {
+  flex: 1 1 auto;
+}
+.hit:hover:not(:disabled) > .seg {
+  box-shadow: 0 0 0 3px var(--teal-halo);
+}
+.hit:focus-visible {
+  outline: none;
+}
+.hit:focus-visible > .seg {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 2px;
+}

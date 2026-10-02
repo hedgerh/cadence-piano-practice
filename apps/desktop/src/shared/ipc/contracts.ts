@@ -199,6 +199,7 @@ const CircleNodeSchema = z.object({
 const LadderLevelSchema = z.object({
   levelId: z.string(),
   title: z.string(),
+  blurb: z.string(),
   number: z.number(),
   state: z.enum(['done', 'current', 'upcoming', 'locked']),
 });

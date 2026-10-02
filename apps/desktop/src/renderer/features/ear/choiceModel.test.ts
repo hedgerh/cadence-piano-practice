@@ -234,6 +234,38 @@ describe('ear results view (ui.md §3)', () => {
     });
   });
 
+  // docs/decisions.md "Ear level replay".
+  it('pass with a next level: "Practice Level 3 again" beside the primary, Done secondary', () => {
+    const v = earResultsView(earCompleteFixture(true));
+    expect(v.extra).toEqual({
+      kind: 'practice',
+      label: 'Practice Level 3 again',
+      levelId: 'intervals-3',
+    });
+    expect(v.secondary).toEqual({ kind: 'done', label: 'Done for today' });
+  });
+
+  it('pass with nothing next: primary "Practice Level 3 again", secondary "Back to the map"', () => {
+    const v = earResultsView(earCompleteFixture(true, { last: true }));
+    expect(v.result).toBe('pass');
+    expect(v.primary).toEqual({
+      kind: 'practice',
+      label: 'Practice Level 3 again',
+      levelId: 'intervals-3',
+    });
+    expect(v.secondary).toEqual({
+      kind: 'map',
+      label: 'Back to the map',
+      to: '/tracks/ear-training',
+    });
+    expect(v.extra).toBeNull();
+  });
+
+  it('fail and focus results have no "Practice again" extra', () => {
+    expect(earResultsView(earCompleteFixture(false)).extra).toBeNull();
+    expect(earResultsView(earCompleteFixture(true, { focus: true })).extra).toBeNull();
+  });
+
   it('fail: "Not yet — 6 of 10" and "Try Level 3 again" on the same level', () => {
     const v = earResultsView(earCompleteFixture(false));
     expect(v.passed).toBe(false);

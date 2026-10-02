@@ -426,6 +426,108 @@ describe('nextLevel and overview', () => {
   });
 });
 
+// docs/decisions.md "Ear level replay" (HANDOFF §5 review scheduling): a `review` session on a
+// passed ladder level records XP and reschedules steps like any session, but the level stays
+// passed, the ladder's current level does not move, and only a same-level plan block is touched.
+describe('ear level replay (review kind)', () => {
+  function answerAll(
+    services: ReturnType<typeof onboarded>['services'],
+    sessionId: string,
+    questions: readonly { id: string; ordinal: number }[],
+    result: 'clean' | 'wrong',
+  ): void {
+    for (const q of questions) {
+      services.progress.recordStep({
+        sessionId,
+        stepId: q.id,
+        ordinal: q.ordinal,
+        result,
+        hintLevel: 0,
+      });
+    }
+  }
+
+  it('overview levels carry ids, titles, blurbs and done state for replay', () => {
+    const { services } = onboarded();
+    for (const id of ['intervals-1', 'intervals-2'])
+      playLevel(services, { levelId: id, kind: 'learn' });
+    const intervals = services.progress.trackOverview('ear-training').stages?.[0];
+    expect(intervals?.levels.slice(0, 3)).toEqual([
+      {
+        levelId: 'intervals-1',
+        title: 'Level 1',
+        blurb: 'Unison, perfect 5th and octave, going up from C.',
+        number: 1,
+        state: 'done',
+      },
+      expect.objectContaining({ levelId: 'intervals-2', state: 'done' }),
+      expect.objectContaining({ levelId: 'intervals-3', state: 'current' }),
+    ]);
+  });
+
+  it('a failed replay records XP and reschedules, but the level stays passed', () => {
+    const { services, clock } = onboarded();
+    for (const id of ['intervals-1', 'intervals-2'])
+      playLevel(services, { levelId: id, kind: 'learn' });
+    const plan = services.plan.getToday().blocks.map((b) => [b.id, b.status]);
+    const before = services.repos.levelProgress.get('intervals-1');
+    const xpBefore = services.xp.total();
+    clock.advanceMinutes(30);
+
+    const s = services.progress.startLevel('intervals-1', 'review');
+    expect(services.repos.sessions.get(s.sessionId)).toMatchObject({
+      kind: 'review',
+      planBlockId: null,
+    });
+    answerAll(services, s.sessionId, s.questions, 'wrong');
+    const done = services.progress.finishSession({ sessionId: s.sessionId, durationMs: 60_000 });
+
+    expect(done).toMatchObject({ kind: 'review', passed: false, xp: { level: 0 } });
+    expect(services.xp.total()).toBeGreaterThanOrEqual(xpBefore);
+    expect(services.repos.levelProgress.get('intervals-1')).toMatchObject({
+      status: 'completed',
+      firstCompletedAt: before?.firstCompletedAt,
+      lastCompletedAt: before?.lastCompletedAt,
+      attempts: (before?.attempts ?? 0) + 1,
+    });
+    // Misses come back tomorrow (engine.md §4 ReviewService).
+    const today = services.clock.today(TZ);
+    const rows = services.repos.stepProgress.listByLevel('intervals-1');
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.lastResult).toBe('wrong');
+      expect(row.intervalDays).toBe(1);
+      expect((row.dueOn ?? '') > today).toBe(true);
+    }
+    // Unrelated plan blocks are untouched; the current level does not move.
+    expect(services.plan.getToday().blocks.map((b) => [b.id, b.status])).toEqual(plan);
+    expect(services.progress.currentLevel('ear-training')?.id).toBe('intervals-3');
+    expect(services.progress.trackOverview('ear-training').stages?.[0]?.progressText).toBe(
+      'Level 3 of 6',
+    );
+  });
+
+  it('a passed replay earns step + level XP and offers the current level next', () => {
+    const { services, clock } = onboarded();
+    for (const id of ['intervals-1', 'intervals-2'])
+      playLevel(services, { levelId: id, kind: 'learn' });
+    clock.advanceMinutes(30);
+    const s = services.progress.startLevel('intervals-1', 'review');
+    answerAll(services, s.sessionId, s.questions, 'clean');
+    const done = services.progress.finishSession({ sessionId: s.sessionId, durationMs: 60_000 });
+    expect(done).toMatchObject({
+      kind: 'review',
+      passed: true,
+      firstCompletion: false,
+      track: { done: 2 },
+      next: { levelId: 'intervals-3', label: 'Keep going — Level 3' },
+    });
+    expect(done.xp.steps).toBeGreaterThan(0);
+    expect(services.repos.levelProgress.get('intervals-1')?.status).toBe('completed');
+    expect(services.progress.currentLevel('ear-training')?.id).toBe('intervals-3');
+  });
+});
+
 // engine.md §4 focus rounds ("Drill what you missed").
 describe('focus rounds', () => {
   type Svc = ReturnType<typeof onboarded>['services'];

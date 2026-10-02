@@ -4,6 +4,9 @@
 // Either, with a miss: "Drill what you missed" starts a focus round (engine.md §4 focus rounds).
 // Focus round results: "Focus round", "n of 10 right", no judgement and no +40 tile; "Drill
 // again" / "Back to Level 3" (docs/decisions.md "Adaptive ear selection and focus rounds").
+// A pass also offers "Practice Level 3 again" (a review session on the same level); with nothing
+// next, that becomes the primary and "Back to the map" the secondary (decisions.md "Ear level
+// replay").
 import { pretty } from '@cadence/music';
 import { formatDuration } from '../complete/complete';
 import type { CompleteDto } from './useEarDrill';
@@ -11,6 +14,10 @@ import type { CompleteDto } from './useEarDrill';
 export type EarResultsAction =
   | { kind: 'next'; label: string; levelId: string }
   | { kind: 'retry'; label: string; levelId: string }
+  /** After a pass: a `review` session on the same level (the level stays passed). */
+  | { kind: 'practice'; label: string; levelId: string }
+  /** The track map: `/tracks/:trackId`. */
+  | { kind: 'map'; label: string; to: string }
   /** Start a focus round on the level (`sessions.start` with `focus: 'misses'`). */
   | { kind: 'drill'; label: string; levelId: string }
   /** From a focus round: a normal session on the level. */
@@ -36,6 +43,8 @@ export interface EarResultsView {
   reviewNote: string;
   primary: EarResultsAction;
   secondary: EarResultsAction;
+  /** TextButton beside the primary: "Practice Level 3 again" after a pass with a next level. */
+  extra: EarResultsAction | null;
   /** "Drill what you missed" — only when a normal session had a wrong or hinted answer. */
   drill: EarResultsAction | null;
 }
@@ -92,21 +101,36 @@ export function earResultsView(dto: CompleteDto): EarResultsView {
       reviewNote: dto.reviewNote,
       primary: { kind: 'drill', label: 'Drill again', levelId: dto.levelId },
       secondary: { kind: 'back', label: `Back to ${dto.levelTitle}`, levelId: dto.levelId },
+      extra: null,
       drill: null,
     };
   }
 
   const need = dto.pass?.correct ?? 8;
   const passed = dto.passed;
-  const primary: EarResultsAction = passed
-    ? dto.next
-      ? { kind: 'next', label: dto.next.label, levelId: dto.next.levelId }
-      : DONE
-    : { kind: 'retry', label: `Try ${dto.levelTitle} again`, levelId: dto.levelId };
-  const secondary: EarResultsAction =
-    primary.kind === 'done'
-      ? { kind: 'retry', label: 'Play it again', levelId: dto.levelId }
-      : DONE;
+  const practice: EarResultsAction = {
+    kind: 'practice',
+    label: `Practice ${dto.levelTitle} again`,
+    levelId: dto.levelId,
+  };
+  const map: EarResultsAction = {
+    kind: 'map',
+    label: 'Back to the map',
+    to: `/tracks/${dto.trackId}`,
+  };
+  let primary: EarResultsAction;
+  let secondary: EarResultsAction = DONE;
+  let extra: EarResultsAction | null = null;
+  if (!passed) {
+    primary = { kind: 'retry', label: `Try ${dto.levelTitle} again`, levelId: dto.levelId };
+  } else if (dto.next) {
+    primary = { kind: 'next', label: dto.next.label, levelId: dto.next.levelId };
+    extra = practice;
+  } else {
+    // Stage finished with the next stage locked, or nothing left: stay on this level.
+    primary = practice;
+    secondary = map;
+  }
 
   return {
     result: passed ? 'pass' : 'fail',
@@ -131,6 +155,7 @@ export function earResultsView(dto: CompleteDto): EarResultsView {
     reviewNote: dto.reviewNote,
     primary,
     secondary,
+    extra,
     drill: dto.chips.some((c) => isMiss(c.result))
       ? { kind: 'drill', label: 'Drill what you missed', levelId: dto.levelId }
       : null,

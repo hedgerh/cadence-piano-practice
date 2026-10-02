@@ -1,7 +1,9 @@
 // /dev/screens/ear-path — the ladder map (Task 11) fed by EarPath.dc.html's fixture (no IPC).
 // Knobs: ?vis=num|name|all (initial "Show me"), ?stage1=done (Intervals complete, so Scale
-// degrees and Chord quality are open — exercises `done` rows and two open stages).
+// degrees and Chord quality are open — exercises `done` rows and two open stages),
+// ?replay=<stageId> (that stage's "Replay a level" list starts open, e.g. ?replay=intervals).
 // Lives in its own feature folder because features/path/dev.tsx belongs to Task 10.
+import { earTraining } from '@cadence/content';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -45,11 +47,21 @@ export const FIXTURE_TRACKS: TrackSummary[] = [
   { id: 'ear-training', title: 'Ear training', map: 'ladder', available: true },
 ];
 
+let blurbs: ReadonlyMap<string, string> | null = null;
+/** Level blurbs from content (engine.md §4 trackOverview passes them through). */
+function blurbOf(levelId: string): string {
+  blurbs ??= new Map(
+    (earTraining().stages ?? []).flatMap((s) => s.levels.map((l) => [l.id, l.blurb ?? ''])),
+  );
+  return blurbs.get(levelId) ?? '';
+}
+
 function levels(stageIdx: number, doneCount: number, open: boolean): LadderLevelDto[] {
   const id = STAGE_IDS[stageIdx] ?? 'stage';
   return Array.from({ length: LEVEL_COUNTS[stageIdx] ?? 1 }, (_, i) => ({
     levelId: `${id}-${i + 1}`,
     title: `Level ${i + 1}`,
+    blurb: blurbOf(`${id}-${i + 1}`),
     number: i + 1,
     state: i < doneCount ? 'done' : !open ? 'locked' : i === doneCount ? 'current' : 'upcoming',
   }));
@@ -146,12 +158,16 @@ function EarPathDevScreen() {
   const [visibility, setVisibility] = useState<ShowMe>(isShowMe(vis) ? vis : 'all');
   return (
     <LadderPathView
+      // Re-key so ?replay= applies when only the query string changes.
+      key={params.get('replay') ?? ''}
       streakDays={user.streakDays}
       xp={user.xp}
       tracks={FIXTURE_TRACKS}
       overview={fixtureLadderOverview(visibility, params.get('stage1') === 'done')}
       trackId="ear-training"
       onStart={() => undefined}
+      onReplay={() => undefined}
+      initialReplayStage={params.get('replay')}
       onVisibility={setVisibility}
     />
   );

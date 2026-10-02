@@ -74,7 +74,8 @@ export function earSessionFixture(
  */
 export function earCompleteFixture(
   passArg: boolean,
-  opts: { missed?: readonly number[]; focus?: boolean } = {},
+  /** `last`: a pass with nothing next (stage finished, next stage locked). */
+  opts: { missed?: readonly number[]; focus?: boolean; last?: boolean } = {},
 ): CompleteDto {
   const order = INTERVAL_ORDER;
   const focus = opts.focus ?? false;
@@ -142,9 +143,10 @@ export function earCompleteFixture(
     reviewNote: pass
       ? "Minor 3rd will come back in tomorrow's review until it's clean."
       : 'Major 3rd, Minor 3rd, Octave and Perfect 5th come back tomorrow.',
-    next: pass
-      ? { levelId: 'intervals-4', label: 'Keep going — Level 4', route: '/ear/intervals-4' }
-      : null,
+    next:
+      pass && opts.last !== true
+        ? { levelId: 'intervals-4', label: 'Keep going — Level 4', route: '/ear/intervals-4' }
+        : null,
     levelStatus: pass ? 'completed' : 'in_progress',
   };
 }
