@@ -21,6 +21,8 @@ export interface EarResultsViewProps {
 const TEST_ID: Record<EarResultsAction['kind'], string> = {
   next: 'ear-results-next',
   retry: 'ear-results-retry',
+  drill: 'ear-results-drill',
+  back: 'ear-results-back',
   done: 'ear-results-done',
 };
 
@@ -39,19 +41,12 @@ export function EarResultsView({
   });
 
   return (
-    <div
-      className={styles.page}
-      data-testid="ear-results"
-      data-result={view.passed ? 'pass' : 'fail'}
-    >
-      {view.passed && <Confetti />}
+    <div className={styles.page} data-testid="ear-results" data-result={view.result}>
+      {view.result === 'pass' && <Confetti />}
       <Card variant="hero" as="section" data-testid="ear-results-card">
         <div className={styles.head}>
-          <div
-            className={cx(styles.badge, view.passed ? styles.pass : styles.fail)}
-            data-testid="ear-results-badge"
-          >
-            {view.passed ? (
+          <div className={cx(styles.badge, styles[view.result])} data-testid="ear-results-badge">
+            {view.result === 'pass' ? (
               // Complete:32 — 40px check, stroke 3.2
               <CheckIcon size={40} strokeWidth={3.2} />
             ) : (
@@ -93,6 +88,7 @@ export function EarResultsView({
 
         <div className={styles.actions}>
           <PrimaryButton {...props(view.primary)} />
+          {view.drill !== null && <SecondaryButton {...props(view.drill)} />}
           <SecondaryButton {...props(view.secondary)} />
         </div>
         {error !== null && (

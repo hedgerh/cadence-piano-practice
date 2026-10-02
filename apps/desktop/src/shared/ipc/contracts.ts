@@ -38,6 +38,7 @@ import { z } from 'zod';
 const VisibilitySchema = z.enum(['num', 'name', 'all']);
 const LevelStatusSchema = z.enum(['available', 'in_progress', 'completed']);
 const SessionKindSchema = z.enum(['warmup', 'learn', 'review', 'free']);
+const SessionFocusSchema = z.enum(['misses']);
 const StepResultSchema = z.enum(['clean', 'hinted', 'skipped', 'marked', 'wrong']);
 const PlanBlockTypeSchema = z.enum(['warmup', 'learn', 'review']);
 const PlanBlockStatusSchema = z.enum(['pending', 'in_progress', 'done']);
@@ -245,6 +246,7 @@ export const SessionStartInputSchema = z.object({
   levelId: id,
   kind: SessionKindSchema,
   planBlockId: id.exactOptional(),
+  focus: SessionFocusSchema.exactOptional(),
 });
 
 const SessionIdInputSchema = z.object({ sessionId: id });
@@ -287,6 +289,7 @@ export const SessionSchema = z.object({
   steps: z.array(SessionStepSchema),
   questions: z.array(SessionQuestionSchema),
   results: z.array(SessionResultSchema),
+  focus: SessionFocusSchema.nullable(),
 });
 
 export const RecordStepInputSchema = z.object({
@@ -374,6 +377,7 @@ export const CompleteSchema = z.object({
   reviewNote: z.string(),
   next: z.object({ levelId: z.string(), label: z.string(), route: z.string() }).nullable(),
   levelStatus: LevelStatusSchema,
+  focus: SessionFocusSchema.nullable(),
 });
 
 // ---------------------------------------------------------------- dev.seed

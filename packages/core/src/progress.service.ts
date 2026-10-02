@@ -26,11 +26,12 @@ import type {
 import type {
   LevelProgressRow,
   PlanBlockRow,
+  SessionFocus,
   SessionKind,
   SessionRow,
   SessionStepRow,
 } from './ports';
-import { createRng, hashString, selectQuestions } from './questions';
+import { createRng, focusPool, hashString, selectQuestions } from './questions';
 import { type ReviewService, stepShort } from './review.service';
 import type { SettingsService } from './settings.service';
 import type { StreakService } from './streak.service';
@@ -50,7 +51,13 @@ export interface ProgressService {
   routeFor(levelId: string): string;
   trackOverview(trackId: string): TrackOverviewDto;
   trackCard(trackId: string): TrackCardDto;
-  startLevel(levelId: string, kind: SessionKind, planBlockId?: string): SessionDto;
+  /** `focus: 'misses'` starts a focus round (engine.md §4): no plan block, no completion. */
+  startLevel(
+    levelId: string,
+    kind: SessionKind,
+    planBlockId?: string,
+    focus?: SessionFocus,
+  ): SessionDto;
   getSession(sessionId: string): SessionDto;
   recordStep(input: RecordStepInput): RecordStepResult;
   recordPlayback(input: RecordPlaybackInput): RecordPlaybackResult;
@@ -384,6 +391,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         playedBack: r.playedBack,
         elapsedMs: r.elapsedMs,
       })),
+      focus: session.focus,
     };
   };
 
@@ -392,15 +400,24 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
     repos.plans.get(today)?.blocks.find((b) => b.levelId === levelId && b.status !== 'done') ??
     null;
 
-  const startLevel = (levelId: string, kind: SessionKind, planBlockId?: string): SessionDto => {
+  const startLevel = (
+    levelId: string,
+    kind: SessionKind,
+    planBlockId?: string,
+    focus?: SessionFocus,
+  ): SessionDto => {
     const ref = content.requireLevel(levelId);
+    // engine.md §4 focus rounds are ear-only; a chord level ignores the flag.
+    const focusMode: SessionFocus | null = focus !== undefined && ref.isEar ? focus : null;
     const tz = requireProfileTz();
     const now = clock.now();
     const today = clock.today(tz);
 
     return repos.transaction(() => {
       let block: PlanBlockRow | null = null;
-      if (planBlockId !== undefined) {
+      if (focusMode !== null) {
+        // A focus round never claims or completes a plan block.
+      } else if (planBlockId !== undefined) {
         block = repos.plans.getBlock(planBlockId);
         if (!block) throw new Error(`Unknown plan block "${planBlockId}"`);
         if (block.levelId !== levelId) {
@@ -418,7 +435,10 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       // Resume an unfinished session for this level from today instead of starting another.
       const open = repos.sessions
         .listByLevel(levelId)
-        .filter((s) => s.finishedAt === null && localDay(s.startedAt, tz) === today);
+        .filter(
+          (s) =>
+            s.finishedAt === null && localDay(s.startedAt, tz) === today && s.focus === focusMode,
+        );
       let resumed = open[open.length - 1];
       if (resumed) {
         if (block && resumed.planBlockId === null) {
@@ -434,9 +454,11 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       let questionOrder: string[] | null = null;
       if (ref.isEar) {
         const rng = createRng(hashString(`${levelId}:${now}`));
+        const progressRows = repos.stepProgress.listByLevel(levelId);
+        const pool = ref.level.pool ?? [];
         questionOrder = selectQuestions(
-          ref.level.pool ?? [],
-          repos.stepProgress.listByLevel(levelId),
+          focusMode === 'misses' ? focusPool(pool, progressRows, ref.level.activeOptions) : pool,
+          progressRows,
           today,
           content.passOf(ref.level).of,
           rng,
@@ -450,6 +472,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         planBlockId: block?.id ?? null,
         startedAt: now,
         questionOrder,
+        focus: focusMode,
       });
       claim(session.id);
 
@@ -621,7 +644,10 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
 
     let title: string;
     let subtitle: string;
-    if (ref.isEar) {
+    if (ref.isEar && session.focus !== null) {
+      title = 'Focus round';
+      subtitle = `${correct} of ${total} right.`;
+    } else if (ref.isEar) {
       title = success ? `${shortTitle}, passed` : `Not yet — ${correct} of ${total}`;
       subtitle = `${correct} of ${total} correct.`;
     } else if (success) {
@@ -682,6 +708,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
           ? { levelId: next.id, label: `Keep going — ${nextShort}`, route: routeFor(next.id) }
           : null,
       levelStatus: lp?.status ?? 'available',
+      focus: session.focus,
     };
   };
 
@@ -721,6 +748,9 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         score = Math.round((counts.clean / Math.max(1, total)) * 100);
       }
       if (abandoned) success = false;
+      // engine.md §4 focus rounds: step XP only; never passes, completes or touches the plan.
+      const isFocus = session.focus !== null;
+      if (isFocus) success = false;
 
       if (success) xp.award(LEVEL_XP, 'level', { sessionId: session.id });
       const breakdown = xp.sessionBreakdown(session.id);
@@ -735,7 +765,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         stepsMarked: counts.marked,
         stepsWrong: counts.wrong,
         correct,
-        passed: success,
+        passed: isFocus ? null : success,
         xpSteps: breakdown.steps,
         xpLevel: breakdown.level,
         xpPlayback: breakdown.playback,
@@ -748,7 +778,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         emptyLevelProgress(ref.level.id, ref.track.id, now);
       const mastered = review.mastered(ref.level.id);
       const masteredAt = mastered ? (prev.mastered ? prev.masteredAt : now) : null;
-      if (abandoned) {
+      if (abandoned || isFocus) {
         repos.levelProgress.upsert({ ...prev, mastered, masteredAt, updatedAt: now });
       } else {
         repos.levelProgress.upsert({
@@ -770,7 +800,9 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
 
       // Plan block: done by id, else any not-done block today for the same level.
       const linked = session.planBlockId ? repos.plans.getBlock(session.planBlockId) : null;
-      if (success) {
+      if (isFocus) {
+        // Focus rounds never hold a plan block.
+      } else if (success) {
         const block = linked ?? openBlockFor(ref.level.id, today);
         if (block && block.status !== 'done') {
           repos.plans.updateBlock(block.id, {
@@ -813,7 +845,10 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
     currentLevel: (trackId) => currentIn(trackState(trackId)),
     nextLevel: (trackId, levelId) => nextIn(trackState(trackId), levelId),
     lastFinishedSession(levelId) {
-      const done = repos.sessions.listByLevel(levelId).filter((s) => s.finishedAt !== null);
+      // Focus rounds are a side drill, not an attempt at the level (plan blurbs ignore them).
+      const done = repos.sessions
+        .listByLevel(levelId)
+        .filter((s) => s.finishedAt !== null && s.focus === null);
       return done[done.length - 1] ?? null;
     },
     routeFor,

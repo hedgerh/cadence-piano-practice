@@ -22,6 +22,8 @@ export interface Clock {
 export type Visibility = 'num' | 'name' | 'all';
 export type LevelStatus = 'available' | 'in_progress' | 'completed';
 export type SessionKind = 'warmup' | 'learn' | 'review' | 'free';
+/** engine.md §4 focus rounds: `misses` = "Drill what you missed" (no pass, no completion). */
+export type SessionFocus = 'misses';
 export type StepResult = 'clean' | 'hinted' | 'skipped' | 'marked' | 'wrong';
 export type XpReason = 'step' | 'level' | 'playback';
 export type PlanBlockType = 'warmup' | 'learn' | 'review';
@@ -111,6 +113,8 @@ export interface SessionRow {
   xpPlayback: number;
   /** Ear sessions: the step ids in question order. */
   questionOrder: string[] | null;
+  /** Focus round (engine.md §4); null for a normal session. */
+  focus: SessionFocus | null;
 }
 
 export interface SessionStepRow {
@@ -204,6 +208,7 @@ export interface NewSession {
   planBlockId?: string | null;
   startedAt: number;
   questionOrder?: string[] | null;
+  focus?: SessionFocus | null;
 }
 
 export type SessionPatch = Partial<Omit<SessionRow, 'id'>>;

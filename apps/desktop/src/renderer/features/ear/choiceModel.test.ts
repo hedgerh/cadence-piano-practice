@@ -9,6 +9,8 @@ import {
   chordNamesShown,
   chordShort,
   contextId,
+  drillEyebrow,
+  FOCUS_EYEBROW,
   feedbackCopy,
   feedbackMinWidth,
   litKeys,
@@ -84,11 +86,11 @@ describe('feedback copy', () => {
   it('intervals: EarInterval:189–190', () => {
     expect(feedbackCopy('intervals', p4, 'P4', true)).toEqual({
       title: 'Perfect 4th — yes.',
-      body: 'C up to F. Nice ears.',
+      body: "C up to F. 'Here Comes the Bride' — the first two notes. Nice ears.",
     });
     expect(feedbackCopy('intervals', p4, 'M3', false)).toEqual({
       title: 'Not quite. That was a perfect 4th.',
-      body: 'C up to F. You said major 3rd — it will come back in review.',
+      body: "C up to F. 'Here Comes the Bride' — the first two notes. You said major 3rd — it will come back in review.",
     });
     expect(feedbackCopy('intervals', q('intervals-3', 'up-C4-P8'), 'P5', false).title).toBe(
       'Not quite. That was an octave.',
@@ -242,6 +244,42 @@ describe('ear results view (ui.md §3)', () => {
       levelId: 'intervals-3',
     });
     expect(v.chips.filter((c) => c.tone === 'lavender')).toHaveLength(4);
+    expect(v.drill).toEqual({
+      kind: 'drill',
+      label: 'Drill what you missed',
+      levelId: 'intervals-3',
+    });
+  });
+
+  // engine.md §4 focus rounds.
+  it('pass with a miss offers "Drill what you missed"; a clean sweep does not', () => {
+    expect(earResultsView(earCompleteFixture(true)).drill?.label).toBe('Drill what you missed');
+    expect(earResultsView(earCompleteFixture(true, { missed: [] })).drill).toBeNull();
+  });
+
+  it('a hinted answer counts as a miss for the drill', () => {
+    const dto = earCompleteFixture(true, { missed: [] });
+    const chips = dto.chips.map((c, i) => (i === 3 ? { ...c, result: 'hinted' as const } : c));
+    expect(earResultsView({ ...dto, chips }).drill?.kind).toBe('drill');
+  });
+
+  it('focus round: "Focus round", n of 10 right, no judgement, no +40, Drill again / Back', () => {
+    const v = earResultsView(earCompleteFixture(true, { focus: true, missed: [4] }));
+    expect(v.result).toBe('focus');
+    expect(v.passed).toBe(false);
+    expect(v.title).toBe('Focus round');
+    expect(v.subtitle).toMatch(/^9 of 10 right\./);
+    expect(v.stats.map((s) => s.value)).not.toContain('+40 XP');
+    expect(v.stats.map((s) => s.label)).not.toContain('8 needed to pass');
+    expect(v.primary).toEqual({ kind: 'drill', label: 'Drill again', levelId: 'intervals-3' });
+    expect(v.secondary).toEqual({ kind: 'back', label: 'Back to Level 3', levelId: 'intervals-3' });
+    expect(v.drill).toBeNull();
+  });
+
+  it('drill eyebrow: "Focus · the ones you missed" only for a focus round', () => {
+    expect(drillEyebrow('misses', 'Name it, then play it back')).toBe(FOCUS_EYEBROW);
+    expect(FOCUS_EYEBROW).toBe('Focus · the ones you missed');
+    expect(drillEyebrow(null, 'Name it, then play it back')).toBe('Name it, then play it back');
   });
 });
 

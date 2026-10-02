@@ -63,12 +63,12 @@ export const earIntervalFixture = {
   /** EarInterval:189–191, chosen M3 vs target P4. */
   feedbackWrong: {
     title: 'Not quite. That was a perfect 4th.',
-    body: 'C up to F. You said major 3rd — it will come back in review.',
+    body: "C up to F. 'Here Comes the Bride' — the first two notes. You said major 3rd — it will come back in review.",
     playback: 'C then F',
   },
   feedbackRight: {
     title: 'Perfect 4th — yes.',
-    body: 'C up to F. Nice ears.',
+    body: "C up to F. 'Here Comes the Bride' — the first two notes. Nice ears.",
     playback: 'C then F',
   },
   /** Lit keys for C → F on the one-octave keyboard (C4, F4). */

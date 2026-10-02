@@ -259,6 +259,7 @@ describe('SessionRepo', () => {
       xpLevel: 0,
       xpPlayback: 0,
       questionOrder: null,
+      focus: null,
     });
     expect(t.repos.sessions.get(s.id)).toEqual(s);
     expect(t.repos.sessions.get('missing')).toBeNull();
@@ -271,11 +272,13 @@ describe('SessionRepo', () => {
       kind: 'review',
       planBlockId: 'blk-1',
       questionOrder: ['P5', 'M3', 'P5'],
+      focus: 'misses',
     });
     expect(t.repos.sessions.get('sess-1')).toMatchObject({
       id: 'sess-1',
       planBlockId: 'blk-1',
       questionOrder: ['P5', 'M3', 'P5'],
+      focus: 'misses',
     });
     expect(s.kind).toBe('review');
   });

@@ -135,7 +135,11 @@ export function createReviewService(ctx: ServiceContext): ReviewService {
       if (names.length === 0) {
         const when = nextReviewDays <= 1 ? 'tomorrow' : `in ${nextReviewDays} days`;
         const subject =
-          seen.length === 1 ? `${name(seen[0] ?? '')} is` : `All ${numberWord(seen.length)} are`;
+          seen.length === 1
+            ? `${name(seen[0] ?? '')} is`
+            : seen.length === 2
+              ? 'Both are'
+              : `All ${numberWord(seen.length)} are`;
         return `${subject} clean — next review ${when}.`;
       }
       if (names.length === 1) {

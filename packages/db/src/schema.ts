@@ -13,6 +13,7 @@ import type {
   LevelStatus,
   PlanBlockStatus,
   PlanBlockType,
+  SessionFocus,
   SessionKind,
   StepResult,
   Visibility,
@@ -31,6 +32,7 @@ const SESSION_KIND = [
   'review',
   'free',
 ] as const satisfies readonly SessionKind[];
+const SESSION_FOCUS = ['misses'] as const satisfies readonly SessionFocus[];
 const STEP_RESULT = [
   'clean',
   'hinted',
@@ -141,6 +143,8 @@ export const sessions = sqliteTable(
     xpLevel: integer('xp_level').notNull().default(0),
     xpPlayback: integer('xp_playback').notNull().default(0),
     questionOrder: text('question_order', { mode: 'json' }).$type<string[]>(),
+    /** engine.md §4 focus rounds: 'misses' or null. */
+    focus: text('focus', { enum: SESSION_FOCUS }),
   },
   (t) => [
     index('sessions_started_at_idx').on(t.startedAt),

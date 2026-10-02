@@ -1,7 +1,7 @@
 // /dev/screens/ear-interval · ear-results · ear-degrees · ear-quality · ear-chord — the ear drill
 // and its results over real content, driven through the real reducer and hook (no IPC).
 // Knobs: ear-interval|ear-degrees|ear-quality|ear-chord ?phase=listen|answered ;
-// ear-chord ?visibility=num (numerals only) ; ear-results ?result=pass|fail
+// ear-chord ?visibility=num (numerals only) ; ear-results ?result=pass|fail|focus
 import type { ComponentType } from 'react';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router';
@@ -159,8 +159,12 @@ function EarChordScreen() {
 
 function EarResultsScreen() {
   const [params] = useSearchParams();
-  const pass = params.get('result') !== 'fail';
-  return <EarResultsView complete={earCompleteFixture(pass)} onAction={() => undefined} />;
+  const result = params.get('result');
+  const complete =
+    result === 'focus'
+      ? earCompleteFixture(true, { focus: true, missed: [3] })
+      : earCompleteFixture(result !== 'fail');
+  return <EarResultsView complete={complete} onAction={() => undefined} />;
 }
 
 export const devScreens: Record<string, ComponentType> = {

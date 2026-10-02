@@ -2,7 +2,7 @@
 // designs (Practice.dc.html 140–146, Path.dc.html, Learn.dc.html, EarPath/EarInterval/EarChord).
 import { type MatchSpec, hintFor, noteToMidi, pcNumber, scale } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
-import { spellTriad } from './generators/earTrack';
+import { intervalAnchor, spellTriad } from './generators/earTrack';
 import { numeralAscii, stepKey } from './ids';
 import { buildTracks } from './index';
 import { allLevels, allSteps, at, stageById, trackById } from './testUtils';
@@ -297,13 +297,35 @@ describe('ear-training', () => {
       name: 'Perfect 4th',
       play: { type: 'notes', notes: ['C4', 'F4'], gapMs: 800 },
       match: { type: 'choice', answer: 'P4' },
-      explain: 'C up to F.',
+      explain: "C up to F. 'Here Comes the Bride' — the first two notes.",
     });
     if (p4?.match.type !== 'choice') throw new Error('expected choice');
     expect(p4.match.options).toHaveLength(13);
     const down = at(at(levels, 5).pool, 3);
     expect(down.play).toEqual({ type: 'notes', notes: ['C5', 'A4'], gapMs: 800 });
-    expect(down.explain).toBe('C down to A.');
+    expect(down.explain).toBe("C down to A. 'Hey Jude' — the first two notes.");
+  });
+
+  it('intervals: every step names an anchor tune after the where-sentence', () => {
+    const levels = stageById(ear, 'intervals').levels;
+    for (const level of levels) {
+      const dir = level.id === 'intervals-6' ? 'down' : 'up';
+      for (const step of level.pool ?? []) {
+        if (step.match.type !== 'choice') throw new Error('expected choice');
+        const anchor = intervalAnchor(
+          step.match.answer as Parameters<typeof intervalAnchor>[0],
+          dir,
+        );
+        expect(step.explain).toMatch(/^[A-G][♯♭]?( up| down|, then)/);
+        expect(step.explain?.endsWith(` ${anchor}`)).toBe(true);
+      }
+    }
+    const up = at(levels, 4).pool ?? [];
+    expect(new Set(up.slice(0, 13).map((s) => intervalAnchor(s.label as 'P1', 'up'))).size).toBe(
+      13,
+    );
+    expect(at(at(levels, 0).pool, 0).explain).toBe('C, then C again. Same note twice.');
+    expect(intervalAnchor('TT', 'down')).toBe('Hear it, then sing it back before you answer.');
   });
 
   it('scale degrees: cadence context, one note in C4..B4, choice 1..7', () => {

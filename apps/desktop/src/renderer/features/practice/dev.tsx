@@ -28,6 +28,7 @@ export function practiceSessionFixture(opts: {
   const steps = level.steps.map((s) => ({ ...s, lastResult: null, dueOn: null, intervalDays: 0 }));
   return {
     sessionId: 'dev-practice',
+    focus: null,
     trackId: 'major-diatonic-chords',
     trackTitle: 'Major diatonic chords',
     levelId: level.id,

@@ -287,7 +287,7 @@ test('dev screens: ear-interval listen/answered and ear-results pass/fail', asyn
       'Not quite. That was a perfect 4th.',
     );
     await expect(page.getByTestId('feedback-body')).toHaveText(
-      'C up to F. You said major 3rd — it will come back in review.',
+      "C up to F. 'Here Comes the Bride' — the first two notes. You said major 3rd — it will come back in review.",
     );
     await expect(page.getByTestId('answer-M3')).toHaveAttribute('data-state', 'chosen-wrong');
     await go(page, '/dev/screens/ear-results?result=fail');

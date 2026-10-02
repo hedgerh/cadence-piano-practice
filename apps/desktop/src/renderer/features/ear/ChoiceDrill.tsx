@@ -17,6 +17,7 @@ import {
   answeredQuality,
   chipSize,
   contextKeyTitle,
+  drillEyebrow,
   feedbackCopy,
   feedbackMinWidth,
   litKeys,
@@ -44,6 +45,8 @@ export interface ChoiceDrillProps {
   midiStatus?: MidiStatus | undefined;
   /** The ear track's Show-me setting (chords in a key hides chord names on `num`). */
   visibility?: Visibility | undefined;
+  /** The session's focus (`'misses'` → "Focus · the ones you missed" eyebrow). */
+  focus?: string | null;
 }
 
 /** EarInterval:143–156 — chip state per option. */
@@ -70,6 +73,7 @@ export function ChoiceDrill({
   backLabel = 'Ear training',
   midiStatus,
   visibility,
+  focus = null,
 }: ChoiceDrillProps) {
   const { state, question } = drill;
   const copy = stageCopy(kind, state.questions, question);
@@ -143,7 +147,7 @@ export function ChoiceDrill({
         backTo={backTo}
         backLabel={backLabel}
         title={title}
-        eyebrow={copy.eyebrow}
+        eyebrow={drillEyebrow(focus, copy.eyebrow)}
         eyebrowTone="lavender"
         midiStatus={midiStatus}
       />

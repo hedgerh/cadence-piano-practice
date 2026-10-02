@@ -12,6 +12,7 @@ import { TaskHeader } from '../../components/ui/TaskHeader';
 import { TextButton } from '../../components/ui/TextButton';
 import type { MidiStatus } from '../../midi/MidiInput';
 import { useInvalidateProgress } from '../shared/hooks';
+import { drillEyebrow } from './choiceModel';
 import { earSegments, type EarSession } from './earDrillReducer';
 import styles from './KeyDrill.module.css';
 import {
@@ -53,7 +54,9 @@ function LiveKeyDrill({ session, backTo }: KeyDrillProps) {
       void navigate(`/ear/results/${encodeURIComponent(complete.sessionId)}`, { state });
     },
   });
-  return <KeyDrillView drill={drill} title={session.shortTitle} backTo={backTo} />;
+  return (
+    <KeyDrillView drill={drill} title={session.shortTitle} backTo={backTo} focus={session.focus} />
+  );
 }
 
 export interface KeyDrillViewProps {
@@ -64,6 +67,8 @@ export interface KeyDrillViewProps {
   backLabel?: string;
   /** Overrides the live MIDI pill (fixtures). */
   midiStatus?: MidiStatus | undefined;
+  /** The session's focus (`'misses'` → "Focus · the ones you missed" eyebrow). */
+  focus?: string | null;
 }
 
 export function KeyDrillView({
@@ -72,6 +77,7 @@ export function KeyDrillView({
   backTo,
   backLabel = 'Ear training',
   midiStatus,
+  focus = null,
 }: KeyDrillViewProps) {
   const { state, question } = drill;
   const key = questionKey(question);
@@ -98,7 +104,7 @@ export function KeyDrillView({
         backTo={backTo}
         backLabel={backLabel}
         title={title}
-        eyebrow="Hunt for home on your keyboard"
+        eyebrow={drillEyebrow(focus, 'Hunt for home on your keyboard')}
         eyebrowTone="lavender"
         midiStatus={midiStatus}
       />

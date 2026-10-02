@@ -107,6 +107,7 @@ function LiveChoiceDrill({
       activeOptions={level.activeOptions ?? null}
       backTo={backTo}
       visibility={visibility}
+      focus={session.focus}
     />
   );
 }

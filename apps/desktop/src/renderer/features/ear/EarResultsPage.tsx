@@ -76,6 +76,12 @@ function LiveResults({ complete }: { complete: CompleteDto }) {
   const start = useStartSession();
   const [error, setError] = useState<string | null>(null);
 
+  /** engine.md §4 focus rounds: no plan block, kind free. */
+  const startFocus = async (levelId: string) => {
+    const session = await start.mutateAsync({ levelId, kind: 'free', focus: 'misses' });
+    await navigate(sessionRoute(session));
+  };
+
   /** engine.md §6.8: reuse today's open plan block for the level when there is one. */
   const startLevel = async (levelId: string, fallbackKind: SessionDto['kind']) => {
     let block: ChannelOutput<'plan.getToday'>['blocks'][number] | undefined;
@@ -103,10 +109,13 @@ function LiveResults({ complete }: { complete: CompleteDto }) {
       return;
     }
     // "Try Level 3 again" starts a new session on the same level (the old one is finished).
+    // "Back to Level 3" (from a focus round) starts a normal session on the level.
     const run =
-      action.kind === 'next'
-        ? startLevel(action.levelId, 'learn')
-        : startLevel(action.levelId, complete.kind);
+      action.kind === 'drill'
+        ? startFocus(action.levelId)
+        : action.kind === 'next' || action.kind === 'back'
+          ? startLevel(action.levelId, 'learn')
+          : startLevel(action.levelId, complete.kind);
     run.catch(() => setError('Couldn’t start that drill. Try again.'));
   };
 

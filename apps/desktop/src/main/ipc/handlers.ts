@@ -48,8 +48,8 @@ export function buildHandlers(ctx: HandlerContext): Handlers {
       settings.markLessonSeen(trackId);
     },
 
-    'sessions.start': ({ levelId, kind, planBlockId }) =>
-      progress.startLevel(levelId, kind, planBlockId),
+    'sessions.start': ({ levelId, kind, planBlockId, focus }) =>
+      progress.startLevel(levelId, kind, planBlockId, focus),
     'sessions.get': ({ sessionId }) => progress.getSession(sessionId),
     'sessions.recordStep': (input) => progress.recordStep(input),
     'sessions.recordPlayback': (input) => progress.recordPlayback(input),

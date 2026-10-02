@@ -292,6 +292,14 @@ export function answeredQuality(kind: EarStageKind, option: string): Quality | n
   return option === 'major' || option === 'minor' || option === 'diminished' ? option : null;
 }
 
+/** TaskHeader eyebrow of a focus round ("Drill what you missed", engine.md §4 focus rounds). */
+export const FOCUS_EYEBROW = 'Focus · the ones you missed';
+
+/** The drill eyebrow: the focus line for a focus round, else the stage's own. */
+export function drillEyebrow(focus: string | null, stageEyebrow: string): string {
+  return focus !== null ? FOCUS_EYEBROW : stageEyebrow;
+}
+
 export interface StageCopy {
   /** TaskHeader eyebrow (EarInterval:29 "Name it, then play it back"; EarChord:29 key). */
   eyebrow: string;

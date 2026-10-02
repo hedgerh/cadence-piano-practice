@@ -425,3 +425,77 @@ describe('nextLevel and overview', () => {
     expect(h.services.xp.total()).toBe(h.services.repos.xp.sumByDay(today));
   });
 });
+
+// engine.md §4 focus rounds ("Drill what you missed").
+describe('focus rounds', () => {
+  type Svc = ReturnType<typeof onboarded>['services'];
+  const answerAll = (svc: Svc, sessionId: string, wrong: (label: string) => boolean): void => {
+    const s = svc.progress.getSession(sessionId);
+    for (const q of s.questions) {
+      svc.progress.recordStep({
+        sessionId,
+        stepId: q.id,
+        ordinal: q.ordinal,
+        result: wrong(q.label) ? 'wrong' : 'clean',
+        hintLevel: 0,
+      });
+    }
+  };
+
+  it('drills the misses and their interval neighbours; never passes or completes', () => {
+    const { services } = onboarded();
+    const first = services.progress.startLevel('intervals-3', 'learn');
+    const missedLabels = new Set(first.questions.map((q) => q.label).filter((l) => l === 'P4'));
+    answerAll(services, first.sessionId, (l) => l === 'P4');
+    services.progress.finishSession({ sessionId: first.sessionId, durationMs: 1 });
+    const before = services.repos.levelProgress.get('intervals-3');
+    expect(missedLabels.size).toBe(1); // the L3 pool always shows P4 (unseen → once)
+
+    const focus = services.progress.startLevel('intervals-3', 'free', undefined, 'misses');
+    expect(focus.focus).toBe('misses');
+    expect(focus.resumed).toBe(false);
+    expect(focus.questions).toHaveLength(10);
+    // P4 (5 semitones) ± 1–2 among L3's options: m3, M3, P5.
+    for (const q of focus.questions) expect(['m3', 'M3', 'P4', 'P5']).toContain(q.label);
+    expect(focus.questions.filter((q) => q.label === 'P4').length).toBeGreaterThanOrEqual(3);
+
+    answerAll(services, focus.sessionId, () => false);
+    const done = services.progress.finishSession({ sessionId: focus.sessionId, durationMs: 1 });
+    expect(done).toMatchObject({
+      focus: 'misses',
+      title: 'Focus round',
+      subtitle: '10 of 10 right.',
+      completed: false,
+      passed: false,
+      next: null,
+      correct: 10,
+    });
+    expect(done.xp.level).toBe(0);
+    expect(done.xp.steps).toBe(50);
+    expect(services.repos.sessions.get(focus.sessionId)?.passed).toBeNull();
+    expect(services.repos.levelProgress.get('intervals-3')).toEqual(before);
+    expect(services.progress.lastFinishedSession('intervals-3')?.id).toBe(first.sessionId);
+  });
+
+  it('a failed level stays unpassed after a perfect focus round', () => {
+    const { services } = onboarded();
+    const first = services.progress.startLevel('intervals-2', 'learn');
+    answerAll(services, first.sessionId, () => true);
+    services.progress.finishSession({ sessionId: first.sessionId, durationMs: 1 });
+    const focus = services.progress.startLevel('intervals-2', 'free', undefined, 'misses');
+    answerAll(services, focus.sessionId, () => false);
+    services.progress.finishSession({ sessionId: focus.sessionId, durationMs: 1 });
+    expect(services.progress.isCompleted('intervals-2')).toBe(false);
+    expect(services.repos.levelProgress.get('intervals-2')?.status).toBe('in_progress');
+  });
+
+  it('an open focus round is not resumed by a normal start (and vice versa)', () => {
+    const { services } = onboarded();
+    const focus = services.progress.startLevel('intervals-1', 'free', undefined, 'misses');
+    const normal = services.progress.startLevel('intervals-1', 'learn');
+    expect(normal.sessionId).not.toBe(focus.sessionId);
+    expect(normal.focus).toBeNull();
+    const again = services.progress.startLevel('intervals-1', 'free', undefined, 'misses');
+    expect(again.sessionId).toBe(focus.sessionId);
+  });
+});

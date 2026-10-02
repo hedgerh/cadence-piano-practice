@@ -15,6 +15,13 @@
       "when": 1790879530701,
       "tag": "0001_smooth_revanche",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790924076582,
+      "tag": "0002_heavy_khan",
+      "breakpoints": true
     }
   ]
 }

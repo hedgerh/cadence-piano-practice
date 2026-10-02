@@ -7,6 +7,7 @@ import type {
   LevelStatus,
   PlanBlockStatus,
   PlanBlockType,
+  SessionFocus,
   SessionKind,
   StepResult,
   Visibility,
@@ -237,6 +238,8 @@ export interface SessionStartInput {
   levelId: string;
   kind: SessionKind;
   planBlockId?: string;
+  /** engine.md §4 focus rounds: drill the last misses (+ interval neighbours); never passes. */
+  focus?: SessionFocus;
 }
 
 /** A chord-level step with its last scheduled result. */
@@ -285,6 +288,8 @@ export interface SessionDto {
   questions: SessionQuestionDto[];
   /** Recorded results so far, by ordinal. */
   results: SessionResultDto[];
+  /** Focus round ("Drill what you missed"); null for a normal session. */
+  focus: SessionFocus | null;
 }
 
 export interface RecordStepInput {
@@ -387,4 +392,6 @@ export interface CompleteDto {
   /** "Keep going — E major" / "Keep going — Level 4"; null when nothing is next or not passed. */
   next: { levelId: string; label: string; route: string } | null;
   levelStatus: LevelStatus;
+  /** Focus round: no pass/fail judgement, no level XP, the level's state is untouched. */
+  focus: SessionFocus | null;
 }

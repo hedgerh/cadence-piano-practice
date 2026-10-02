@@ -43,6 +43,7 @@ export function completeDtoFixture(skipped: readonly number[] = []): CompleteDto
       : `${joinAnd(missed)} come back tomorrow.`;
   return {
     sessionId: 'dev-complete',
+    focus: null,
     kind: 'learn',
     trackId: 'major-diatonic-chords',
     levelId: 'a-major',

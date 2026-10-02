@@ -95,13 +95,63 @@ const INTERVAL_LEVELS: readonly IntervalLevelDef[] = [
   },
 ];
 
-/** "C up to F." · "C, then C again." · "C up to the next C." (EarInterval.dc.html feedback). */
+/**
+ * Reference tunes for each interval (docs/decisions.md "Adaptive ear selection and focus
+ * rounds"): a well-known opening that starts with the interval, ascending and descending.
+ */
+const ANCHOR_UP: Readonly<Record<IntervalId, string>> = {
+  P1: 'Same note twice.',
+  m2: 'The Jaws theme — two notes a half step apart.',
+  M2: "'Happy Birthday' — the step up to 'birth'.",
+  m3: "The first two notes of 'Greensleeves'.",
+  M3: "'Oh When the Saints' — the first two notes.",
+  P4: "'Here Comes the Bride' — the first two notes.",
+  TT: "'The Simpsons' theme — the first two notes.",
+  P5: "'Twinkle, Twinkle' — the first two notes.",
+  m6: "The 'Love Story' theme — the first two notes.",
+  M6: "'My Bonnie Lies Over the Ocean' — the first two notes.",
+  m7: "'Somewhere' from West Side Story — the first two notes.",
+  M7: "'Take On Me' — the chorus leap.",
+  P8: "'Somewhere Over the Rainbow' — the first two notes.",
+};
+
+const SING_IT = 'Hear it, then sing it back before you answer.';
+
+const ANCHOR_DOWN: Readonly<Record<IntervalId, string>> = {
+  P1: ANCHOR_UP.P1,
+  m2: SING_IT,
+  M2: "'Mary Had a Little Lamb' — the first two notes.",
+  m3: "'Hey Jude' — the first two notes.",
+  M3: "'Swing Low, Sweet Chariot' — the first two notes.",
+  P4: "'I've Been Working on the Railroad' — the first two notes.",
+  TT: SING_IT,
+  P5: "'The Flintstones' theme — the first two notes.",
+  m6: SING_IT,
+  M6: SING_IT,
+  m7: SING_IT,
+  M7: SING_IT,
+  P8: "'Somewhere Over the Rainbow' — the first two notes, turned around.",
+};
+
+/** The anchor tune for an interval in a direction. */
+export function intervalAnchor(id: IntervalId, dir: 'up' | 'down'): string {
+  return (dir === 'up' ? ANCHOR_UP : ANCHOR_DOWN)[id];
+}
+
+/**
+ * "C up to F. 'Here Comes the Bride' — the first two notes." — the EarInterval.dc.html feedback
+ * sentence ("C up to F." · "C, then C again." · "C up to the next C.") plus the anchor tune.
+ */
 export function intervalExplain(from: Note, to: Note, iv: Interval, dir: 'up' | 'down'): string {
   const a = pretty(pcOfNote(from));
   const b = pretty(pcOfNote(to));
-  if (iv.id === 'P1') return `${a}, then ${a} again.`;
-  if (iv.id === 'P8') return `${a} ${dir} to the next ${b}.`;
-  return `${a} ${dir} to ${b}.`;
+  const where =
+    iv.id === 'P1'
+      ? `${a}, then ${a} again.`
+      : iv.id === 'P8'
+        ? `${a} ${dir} to the next ${b}.`
+        : `${a} ${dir} to ${b}.`;
+  return `${where} ${intervalAnchor(iv.id, dir)}`;
 }
 
 function intervalStep(root: Note, iv: Interval, dir: 'up' | 'down'): Step {

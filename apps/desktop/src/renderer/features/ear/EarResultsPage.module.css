@@ -45,6 +45,11 @@
   background: var(--lavender);
   box-shadow: 0 0 0 10px var(--lavender-tint);
 }
+/* Not in the design: a focus round is not judged — sun note on a sand halo. */
+.focus {
+  background: var(--sun);
+  box-shadow: 0 0 0 10px var(--sand);
+}
 
 /* Complete:34 */
 .title {
@@ -114,6 +119,9 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  /* Not in the design: a third button ("Drill what you missed") may wrap to a second row. */
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .actions > * {
   white-space: nowrap;

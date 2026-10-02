@@ -34,6 +34,7 @@ export function earSessionFixture(
   });
   return {
     sessionId: `dev-${levelId}`,
+    focus: null,
     trackId: 'ear-training',
     trackTitle: 'Ear training',
     levelId,
@@ -67,10 +68,18 @@ export function earSessionFixture(
   };
 }
 
-/** Intervals L3 finished: 9 of 10 (pass, Level 4 next) or 6 of 10 (fail). */
-export function earCompleteFixture(pass: boolean): CompleteDto {
+/**
+ * Intervals L3 finished: 9 of 10 (pass, Level 4 next) or 6 of 10 (fail). `missed` overrides the
+ * missed ordinals; `focus` makes it a focus round (engine.md §4: never passed, no level XP).
+ */
+export function earCompleteFixture(
+  passArg: boolean,
+  opts: { missed?: readonly number[]; focus?: boolean } = {},
+): CompleteDto {
   const order = INTERVAL_ORDER;
-  const missed = pass ? new Set([2]) : new Set([1, 2, 5, 8]);
+  const focus = opts.focus ?? false;
+  const pass = passArg && !focus;
+  const missed = new Set(opts.missed ?? (passArg ? [2] : [1, 2, 5, 8]));
   const { level } = levelOf('intervals-3');
   const chips: CompleteDto['chips'] = order.map((iv, ordinal) => {
     const step = (level.pool ?? []).find((s) => s.id === `up-C4-${iv}`);
@@ -87,14 +96,19 @@ export function earCompleteFixture(pass: boolean): CompleteDto {
   const steps = 5 * correct;
   return {
     sessionId: 'dev-ear-results',
-    kind: 'learn',
+    focus: focus ? 'misses' : null,
+    kind: focus ? 'free' : 'learn',
     trackId: 'ear-training',
     levelId: 'intervals-3',
     levelTitle: 'Level 3',
     shortTitle: 'Intervals · Level 3',
     isEar: true,
-    title: pass ? 'Intervals · Level 3, passed' : `Not yet — ${correct} of 10`,
-    subtitle: `${correct} of 10 correct.`,
+    title: focus
+      ? 'Focus round'
+      : pass
+        ? 'Intervals · Level 3, passed'
+        : `Not yet — ${correct} of 10`,
+    subtitle: focus ? `${correct} of 10 right.` : `${correct} of 10 correct.`,
     completed: pass,
     passed: pass,
     firstCompletion: pass,

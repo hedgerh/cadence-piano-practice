@@ -181,5 +181,8 @@ describe('ReviewService', () => {
     expect(services.review.reviewNote(a, results([]), 1)).toBe(
       'All seven are clean — next review tomorrow.',
     );
+    // Focus rounds often drill two steps.
+    const two = results([]).slice(0, 2);
+    expect(services.review.reviewNote(a, two, 1)).toBe('Both are clean — next review tomorrow.');
   });
 });
