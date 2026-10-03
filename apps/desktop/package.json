@@ -7,7 +7,7 @@
   "main": "./out/main/index.js",
   "author": "Harry",
   "scripts": {
-    "dev": "electron-vite dev",
+    "dev": "electron-vite dev --watch",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "dist": "electron-vite build && electron-builder --win",
