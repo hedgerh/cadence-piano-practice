@@ -95,7 +95,11 @@ function LiveComplete({ complete }: { complete: CompleteDto }) {
   };
 
   /** engine.md §6.8: reuse today's open plan block for the level when there is one. */
-  const startLevel = async (levelId: string, fallbackKind: 'learn' | 'review') => {
+  const startLevel = async (
+    levelId: string,
+    fallbackKind: 'learn' | 'review',
+    run: 'circle' | null = null,
+  ) => {
     let block: ChannelOutput<'plan.getToday'>['blocks'][number] | undefined;
     try {
       const today = await qc.fetchQuery({
@@ -110,6 +114,8 @@ function LiveComplete({ complete }: { complete: CompleteDto }) {
       levelId,
       kind: block?.kind ?? fallbackKind,
       ...(block ? { planBlockId: block.id } : {}),
+      // decisions.md 2026-10-03: the circle run continues (the engine picks the kind).
+      ...(run !== null ? { run } : {}),
     });
     await navigate(sessionRoute(session));
   };
@@ -120,12 +126,17 @@ function LiveComplete({ complete }: { complete: CompleteDto }) {
       void navigate('/');
       return;
     }
-    // "Play the two you skipped" replays this level (the engine has no per-step sessions).
-    const run =
+    if (action.kind === 'map') {
+      void navigate(`/tracks/${complete.trackId}`);
+      return;
+    }
+    // "Play the two you skipped" replays this level (the engine has no per-step sessions);
+    // a replay inside a circle run stays in the run.
+    const started =
       action.kind === 'next'
-        ? startLevel(action.levelId, 'learn')
-        : startLevel(complete.levelId, 'review');
-    run.catch(() => setError('Couldn’t start that practice. Try again.'));
+        ? startLevel(action.levelId, 'learn', action.run)
+        : startLevel(complete.levelId, 'review', complete.run);
+    started.catch(() => setError('Couldn’t start that practice. Try again.'));
   };
 
   return (

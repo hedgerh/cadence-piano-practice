@@ -7,13 +7,18 @@ import { MidiHubContext } from '../../midi/hooks';
 import { createMidiHub } from '../../midi/midiStore';
 import { completeView } from './complete';
 import { CompleteView, type CompleteViewProps } from './CompleteView';
-import { completeDtoFixture } from './dev';
+import { circleRunFixture, completeDtoFixture } from './dev';
 import { COUNTDOWN_TICK_MS } from './useHandsFreeNext';
 
 // decisions.md 2026-10-01 "Hands-free key loop": Complete counts down to "Keep going" when the
 // profile's autoContinue is on, and any MIDI note-on keeps going regardless of the setting.
 
-const NEXT = { kind: 'next', label: 'Keep going — E major', levelId: 'e-major' } as const;
+const NEXT = {
+  kind: 'next',
+  label: 'Keep going — E major',
+  levelId: 'e-major',
+  run: null,
+} as const;
 
 let device: FakeMidiInput;
 let hub: ReturnType<typeof createMidiHub>;
@@ -82,6 +87,14 @@ describe('CompleteView hands-free countdown', () => {
     expect(countdown()).toBeNull();
     tick(5);
     expect(onAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('in a circle run the countdown keeps the run going (decisions.md 2026-10-03)', () => {
+    const { onAction } = renderView({ autoContinue: true, complete: circleRunFixture('mid') });
+    tick();
+    tick();
+    tick();
+    expect(onAction).toHaveBeenCalledWith({ ...NEXT, run: 'circle' });
   });
 
   it('"Stay here" cancels the countdown for this screen', () => {

@@ -108,6 +108,29 @@ export const finishedKeys = (o: TrackOverviewDto): FinishedKey[] =>
 
 /** The track must be (re-)activated before it can be practiced (engine.md §6.15). */
 const needsEnroll = (o: TrackOverviewDto) => !o.enrolled || !o.active;
+
+export interface CircleRunStart {
+  /** The first key in circle order (C major / A minor). */
+  levelId: string;
+  /** Informational: the engine picks the run session's kind itself. */
+  kind: 'learn' | 'review';
+  enroll: boolean;
+}
+
+/**
+ * "Play the whole circle" (decisions.md 2026-10-03): once any key is done, start a circle run at
+ * the first key in circle order; Complete then chains every key clockwise regardless of completion.
+ */
+export function circleRunStart(o: TrackOverviewDto): CircleRunStart | null {
+  const nodes = o.nodes ?? [];
+  const first = nodes[0];
+  if (!first || !nodes.some((n) => n.state === 'done')) return null;
+  return {
+    levelId: first.levelId,
+    kind: first.state === 'done' ? 'review' : 'learn',
+    enroll: needsEnroll(o),
+  };
+}
 /** engine.md §4 lesson-seen: the lesson comes first until it has been seen once. */
 const lessonFirst = (o: TrackOverviewDto) => o.hasLesson && !o.lessonSeen;
 

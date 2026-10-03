@@ -249,6 +249,7 @@ export function createMemoryRepos(): Repos {
         xpPlayback: 0,
         questionOrder: input.questionOrder ? [...input.questionOrder] : null,
         focus: input.focus ?? null,
+        run: input.run ?? null,
       };
       if (s.sessions.has(row.id)) throw new Error(`Session ${row.id} already exists`);
       s.sessions.set(row.id, row);

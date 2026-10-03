@@ -134,6 +134,7 @@ describe('finishing A major with G♯° hinted (Complete.dc.html)', () => {
       levelId: 'e-major',
       label: 'Keep going — E major',
       route: '/practice/e-major',
+      run: null,
     });
     expect(done.chips.map((c) => `${c.label} ${c.short} ${c.result}`)).toEqual([
       'I A clean',

@@ -30,6 +30,7 @@ export interface CompleteViewProps {
 const TEST_ID: Record<CompleteAction['kind'], string> = {
   next: 'complete-next',
   replay: 'complete-replay',
+  map: 'complete-map',
   done: 'complete-done',
 };
 
@@ -55,7 +56,7 @@ export function CompleteView({
     if (action === null) return null;
     const props = {
       onClick: () => onAction(action),
-      disabled: busy && action.kind !== 'done',
+      disabled: busy && action.kind !== 'done' && action.kind !== 'map',
       'data-testid': TEST_ID[action.kind],
       children: action.label,
     };
@@ -73,6 +74,11 @@ export function CompleteView({
             {/* Complete:32 — 40px check, stroke 3.2 */}
             <CheckIcon size={40} strokeWidth={3.2} />
           </div>
+          {view.runCaption !== null && (
+            <span className={styles.runCaption} data-testid="complete-run">
+              {view.runCaption}
+            </span>
+          )}
           <h1 className={styles.title} data-testid="complete-title">
             {view.title}
           </h1>

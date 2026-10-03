@@ -32,6 +32,8 @@ export interface PathViewProps {
   onToggleReview: () => void;
   /** The ReviewFinishedKey card, rendered under the actions while open. */
   review?: ReactNode;
+  /** "Play the whole circle" (decisions.md 2026-10-03); omitted hides the button. */
+  onPlayCircle?: (() => void) | undefined;
   circle: {
     keys: readonly CircleKey[];
     minors: readonly string[];
@@ -58,6 +60,7 @@ export function PathView({
   reviewOpen,
   onToggleReview,
   review,
+  onPlayCircle,
   circle,
 }: PathViewProps) {
   return (
@@ -116,7 +119,7 @@ export function PathView({
               )}
             </Card>
 
-            {(ctaLabel !== null || canReview) && (
+            {(ctaLabel !== null || canReview || onPlayCircle !== undefined) && (
               <div className={styles.actions}>
                 {ctaLabel !== null && (
                   <PrimaryButton onClick={onCta} disabled={ctaBusy} data-testid="path-cta">
@@ -130,6 +133,15 @@ export function PathView({
                     data-testid="review-toggle"
                   >
                     Review a finished key
+                  </SecondaryButton>
+                )}
+                {onPlayCircle !== undefined && (
+                  <SecondaryButton
+                    onClick={onPlayCircle}
+                    disabled={ctaBusy}
+                    data-testid="circle-run"
+                  >
+                    Play the whole circle
                   </SecondaryButton>
                 )}
               </div>

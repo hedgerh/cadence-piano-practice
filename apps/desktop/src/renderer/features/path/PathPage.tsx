@@ -18,6 +18,7 @@ import {
 } from '../shared/hooks';
 import {
   circleKeys,
+  circleRunStart,
   ctaLabel,
   finishedKeys,
   innerRing,
@@ -95,6 +96,19 @@ function TrackPath({
   const ring = innerRing(track);
   const done = finishedKeys(overview);
 
+  // decisions.md 2026-10-03 circle run: C → G → … → F regardless of completion.
+  const run = circleRunStart(overview);
+  const onPlayCircle = () => {
+    if (busy || !run) return;
+    const go = () =>
+      start.mutate(
+        { levelId: run.levelId, kind: run.kind, run: 'circle' },
+        { onSuccess: (session) => void navigate(sessionRoute(session)) },
+      );
+    if (run.enroll) settings.mutate({ trackId, active: true }, { onSuccess: go });
+    else go();
+  };
+
   return (
     <PathView
       streakDays={me.data?.streak.days ?? 0}
@@ -112,6 +126,7 @@ function TrackPath({
       reviewOpen={reviewOpen}
       onToggleReview={() => setReviewOpen((o) => !o)}
       review={<ReviewFinishedKey keys={done} onPick={review} busy={busy} />}
+      onPlayCircle={run ? onPlayCircle : undefined}
       circle={{
         keys: circleKeys(overview, { onCurrent: onCta, onDone: review }),
         minors: ring.labels,

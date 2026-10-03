@@ -29,6 +29,7 @@ export function practiceSessionFixture(opts: {
   return {
     sessionId: 'dev-practice',
     focus: null,
+    run: null,
     trackId: 'major-diatonic-chords',
     trackTitle: 'Major diatonic chords',
     levelId: level.id,

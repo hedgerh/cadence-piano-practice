@@ -29,6 +29,7 @@ import type {
   SessionFocus,
   SessionKind,
   SessionRow,
+  SessionRun,
   SessionStepRow,
 } from './ports';
 import { createRng, focusPool, hashString, selectQuestions } from './questions';
@@ -51,12 +52,17 @@ export interface ProgressService {
   routeFor(levelId: string): string;
   trackOverview(trackId: string): TrackOverviewDto;
   trackCard(trackId: string): TrackCardDto;
-  /** `focus: 'misses'` starts a focus round (engine.md §4): no plan block, no completion. */
+  /**
+   * `focus: 'misses'` starts a focus round (engine.md §4): no plan block, no completion.
+   * `run: 'circle'` starts a circle-run session (decisions.md 2026-10-03): the kind is chosen
+   * here (`review` for a completed key, else `learn`) and Complete's next ignores completion.
+   */
   startLevel(
     levelId: string,
     kind: SessionKind,
     planBlockId?: string,
     focus?: SessionFocus,
+    run?: SessionRun,
   ): SessionDto;
   getSession(sessionId: string): SessionDto;
   recordStep(input: RecordStepInput): RecordStepResult;
@@ -393,6 +399,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         elapsedMs: r.elapsedMs,
       })),
       focus: session.focus,
+      run: session.run,
     };
   };
 
@@ -403,13 +410,23 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
 
   const startLevel = (
     levelId: string,
-    kind: SessionKind,
+    requestedKind: SessionKind,
     planBlockId?: string,
     focus?: SessionFocus,
+    run?: SessionRun,
   ): SessionDto => {
     const ref = content.requireLevel(levelId);
     // engine.md §4 focus rounds are ear-only; a chord level ignores the flag.
     const focusMode: SessionFocus | null = focus !== undefined && ref.isEar ? focus : null;
+    // decisions.md 2026-10-03 circle run: circle tracks only, never a focus round.
+    const runMode: SessionRun | null =
+      run !== undefined && ref.track.map === 'circle-of-fifths' && focusMode === null ? run : null;
+    const kind: SessionKind =
+      runMode === null
+        ? requestedKind
+        : repos.levelProgress.get(levelId)?.status === 'completed'
+          ? 'review'
+          : 'learn';
     const tz = requireProfileTz();
     const now = clock.now();
     const today = clock.today(tz);
@@ -445,6 +462,11 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         if (block && resumed.planBlockId === null) {
           resumed = repos.sessions.update(resumed.id, { planBlockId: block.id }) ?? resumed;
         }
+        // A resumed session joins (or leaves) the circle run the learner just asked for.
+        if (resumed.run !== runMode) {
+          const patch = runMode === null ? { run: null } : { run: runMode, kind };
+          resumed = repos.sessions.update(resumed.id, patch) ?? resumed;
+        }
         claim(resumed.id);
         return toSessionDto(resumed, true);
       }
@@ -474,6 +496,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
         startedAt: now,
         questionOrder,
         focus: focusMode,
+        run: runMode,
       });
       claim(session.id);
 
@@ -635,7 +658,10 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
     );
 
     const breakdown = xp.sessionBreakdown(session.id);
-    const next = nextIn(st, ref.level.id);
+    // decisions.md 2026-10-03 circle run: the next key clockwise regardless of completion,
+    // ending after the last key in circle order (F major / D minor).
+    const run = session.run;
+    const next = run === 'circle' ? (st.order[ref.order + 1] ?? null) : nextIn(st, ref.level.id);
     const sameStage = next !== null && content.stageOf(next.id) === ref.stage;
     const nextShort = next ? (sameStage ? next.title : content.shortTitle(next.id)) : null;
     const done = st.completed.size;
@@ -706,10 +732,17 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       reviewNote,
       next:
         success && next && nextShort
-          ? { levelId: next.id, label: `Keep going — ${nextShort}`, route: routeFor(next.id) }
+          ? {
+              levelId: next.id,
+              label: `Keep going — ${nextShort}`,
+              route: routeFor(next.id),
+              run,
+            }
           : null,
       levelStatus: lp?.status ?? 'available',
       focus: session.focus,
+      run,
+      runPosition: run === null ? null : ref.order + 1,
     };
   };
 

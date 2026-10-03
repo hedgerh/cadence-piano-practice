@@ -15,6 +15,7 @@ import type {
   PlanBlockType,
   SessionFocus,
   SessionKind,
+  SessionRun,
   StepResult,
   Visibility,
   XpReason,
@@ -33,6 +34,7 @@ const SESSION_KIND = [
   'free',
 ] as const satisfies readonly SessionKind[];
 const SESSION_FOCUS = ['misses'] as const satisfies readonly SessionFocus[];
+const SESSION_RUN = ['circle'] as const satisfies readonly SessionRun[];
 const STEP_RESULT = [
   'clean',
   'hinted',
@@ -145,6 +147,8 @@ export const sessions = sqliteTable(
     questionOrder: text('question_order', { mode: 'json' }).$type<string[]>(),
     /** engine.md §4 focus rounds: 'misses' or null. */
     focus: text('focus', { enum: SESSION_FOCUS }),
+    /** Circle run (decisions.md 2026-10-03): 'circle' or null. */
+    run: text('run', { enum: SESSION_RUN }),
   },
   (t) => [
     index('sessions_started_at_idx').on(t.startedAt),

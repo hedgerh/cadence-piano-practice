@@ -601,3 +601,126 @@ describe('focus rounds', () => {
     expect(again.sessionId).toBe(focus.sessionId);
   });
 });
+
+// decisions.md 2026-10-03 circle run: play every key in circle order regardless of completion.
+describe('circle run', () => {
+  const TRACK = 'major-diatonic-chords';
+
+  /** Start a level as part of the run, play every step clean, finish. */
+  const playRun = (services: ReturnType<typeof onboarded>['services'], levelId: string) => {
+    const s = services.progress.startLevel(levelId, 'learn', undefined, undefined, 'circle');
+    s.steps.forEach((step, ordinal) =>
+      services.progress.recordStep({
+        sessionId: s.sessionId,
+        stepId: step.id,
+        ordinal,
+        result: 'clean',
+        hintLevel: 0,
+      }),
+    );
+    return {
+      session: s,
+      complete: services.progress.finishSession({ sessionId: s.sessionId, durationMs: 60_000 }),
+    };
+  };
+
+  const day8 = () => {
+    const h = createHarness();
+    seed(h.services, 'day8', { timezone: TZ });
+    return h;
+  };
+
+  it('a run from C walks the whole circle in order (… B → G♭ … F) and ends with null', () => {
+    const { services } = onboarded();
+    const order = services.content.levelOrder(TRACK).map((l) => l.id);
+    expect(order[0]).toBe('c-major');
+    const visited: string[] = [];
+    let levelId: string | null = 'c-major';
+    while (levelId !== null) {
+      const { session, complete } = playRun(services, levelId);
+      expect(session.run).toBe('circle');
+      expect(complete.run).toBe('circle');
+      expect(complete.runPosition).toBe(visited.length + 1);
+      visited.push(levelId);
+      if (levelId === 'b-major') {
+        expect(complete.next).toEqual({
+          levelId: 'gb-major',
+          label: 'Keep going — G♭ major',
+          route: '/practice/gb-major',
+          run: 'circle',
+        });
+      }
+      if (complete.next) expect(complete.next.run).toBe('circle');
+      levelId = complete.next?.levelId ?? null;
+    }
+    expect(visited).toEqual(order);
+    expect(visited.at(-1)).toBe('f-major');
+    expect(services.progress.completedCount(TRACK)).toBe(12);
+  });
+
+  it('kind: review on a completed key, learn on an uncompleted one (still claims the plan block)', () => {
+    const { services } = day8();
+    const c = services.progress.startLevel('c-major', 'learn', undefined, undefined, 'circle');
+    expect(c.kind).toBe('review');
+    expect(c.run).toBe('circle');
+    const a = services.progress.startLevel('a-major', 'review', undefined, undefined, 'circle');
+    expect(a.kind).toBe('learn');
+    const block = services.repos.plans
+      .get(services.plan.getToday().day)
+      ?.blocks.find((b) => b.levelId === 'a-major');
+    expect(block).toMatchObject({ status: 'in_progress', sessionId: a.sessionId });
+    expect(services.repos.sessions.get(a.sessionId)?.run).toBe('circle');
+  });
+
+  it('next ignores completion; a one-off session still goes to the next uncompleted key', () => {
+    const { services } = day8();
+    // G is completed in day8: the run goes there anyway.
+    expect(playRun(services, 'c-major').complete.next?.levelId).toBe('g-major');
+    const oneOff = services.progress.startLevel('g-major', 'review');
+    expect(oneOff.run).toBeNull();
+    oneOff.steps.forEach((step, ordinal) =>
+      services.progress.recordStep({
+        sessionId: oneOff.sessionId,
+        stepId: step.id,
+        ordinal,
+        result: 'clean',
+        hintLevel: 0,
+      }),
+    );
+    const done = services.progress.finishSession({ sessionId: oneOff.sessionId, durationMs: 1 });
+    expect(done.run).toBeNull();
+    expect(done.runPosition).toBeNull();
+    expect(done.next).toMatchObject({ levelId: 'a-major', run: null });
+  });
+
+  it('the last key in circle order ends the run (F major, D minor)', () => {
+    const { services } = day8();
+    expect(playRun(services, 'f-major').complete).toMatchObject({
+      next: null,
+      run: 'circle',
+      runPosition: 12,
+    });
+    const order = services.content.levelOrder('minor-diatonic-chords').map((l) => l.id);
+    expect(order.at(-1)).toBe('d-minor');
+    expect(playRun(services, 'd-minor').complete.next).toBeNull();
+  });
+
+  it('a resumed session joins or leaves the run the learner asked for; ladders ignore run', () => {
+    const { services } = day8();
+    const run = services.progress.startLevel('e-major', 'learn', undefined, undefined, 'circle');
+    const oneOff = services.progress.startLevel('e-major', 'learn');
+    expect(oneOff.sessionId).toBe(run.sessionId);
+    expect(oneOff.run).toBeNull();
+    const again = services.progress.startLevel('e-major', 'learn', undefined, undefined, 'circle');
+    expect(again.sessionId).toBe(run.sessionId);
+    expect(again.run).toBe('circle');
+    const ear = services.progress.startLevel(
+      'intervals-3',
+      'learn',
+      undefined,
+      undefined,
+      'circle',
+    );
+    expect(ear.run).toBeNull();
+  });
+});

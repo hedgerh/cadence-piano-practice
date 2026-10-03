@@ -31,6 +31,7 @@ function session(results: PracticeSession['results'] = []): PracticeSession {
   return {
     sessionId: 's1',
     focus: null,
+    run: null,
     trackId: 'major-diatonic-chords',
     trackTitle: 'Major diatonic chords',
     levelId: level.id,
@@ -332,6 +333,23 @@ describe('practice selectors', () => {
     expect(eyebrowFor({ kind: 'review', trackTitle: 'Minor diatonic chords' }).text).toBe(
       'Review · diatonic chords',
     );
+    // decisions.md 2026-10-03 circle run.
+    expect(
+      eyebrowFor({
+        kind: 'review',
+        trackTitle: 'Major diatonic chords',
+        run: 'circle',
+        levelTitle: 'G major',
+      }),
+    ).toEqual({ text: 'Circle run · G major', tone: 'lavender' });
+    expect(
+      eyebrowFor({
+        kind: 'learn',
+        trackTitle: 'Major diatonic chords',
+        run: null,
+        levelTitle: 'A major',
+      }).text,
+    ).toBe('Learn · diatonic chords');
   });
 
   it.each<[Parameters<typeof markPlayedMode>[0], boolean, string]>([

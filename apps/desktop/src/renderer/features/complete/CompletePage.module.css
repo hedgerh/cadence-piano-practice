@@ -41,6 +41,16 @@
   color: var(--ink);
 }
 
+/* decisions.md 2026-10-03 "Circle run · 4 of 12": the Path eyebrow (Path:52), teal-deep. */
+.runCaption {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--teal-deep);
+}
+
 /* Complete:34 */
 .title {
   margin: 8px 0 0;

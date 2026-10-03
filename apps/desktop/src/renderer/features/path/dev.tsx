@@ -128,6 +128,7 @@ function PathDevScreen() {
       reviewOpen={reviewOpen}
       onToggleReview={toggle}
       review={<ReviewFinishedKey keys={DESIGN_DONE} onPick={noop} />}
+      onPlayCircle={noop}
       circle={{
         keys: pathFixture.keys.map((k) => ({ ...k, onClick: noop })),
         minors: pathFixture.minors,

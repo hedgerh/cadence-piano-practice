@@ -111,9 +111,10 @@
   color: var(--tangerine-deep);
 }
 
-/* Path:84 */
+/* Path:84 (+ wrap: the third "Play the whole circle" button, decisions.md 2026-10-03). */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 14px;
 }

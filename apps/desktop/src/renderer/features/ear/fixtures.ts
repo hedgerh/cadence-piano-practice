@@ -35,6 +35,7 @@ export function earSessionFixture(
   return {
     sessionId: `dev-${levelId}`,
     focus: null,
+    run: null,
     trackId: 'ear-training',
     trackTitle: 'Ear training',
     levelId,
@@ -98,6 +99,8 @@ export function earCompleteFixture(
   return {
     sessionId: 'dev-ear-results',
     focus: focus ? 'misses' : null,
+    run: null,
+    runPosition: null,
     kind: focus ? 'free' : 'learn',
     trackId: 'ear-training',
     levelId: 'intervals-3',
@@ -145,7 +148,12 @@ export function earCompleteFixture(
       : 'Major 3rd, Minor 3rd, Octave and Perfect 5th come back tomorrow.',
     next:
       pass && opts.last !== true
-        ? { levelId: 'intervals-4', label: 'Keep going — Level 4', route: '/ear/intervals-4' }
+        ? {
+            levelId: 'intervals-4',
+            label: 'Keep going — Level 4',
+            route: '/ear/intervals-4',
+            run: null,
+          }
         : null,
     levelStatus: pass ? 'completed' : 'in_progress',
   };

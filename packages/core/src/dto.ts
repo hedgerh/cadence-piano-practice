@@ -9,6 +9,7 @@ import type {
   PlanBlockType,
   SessionFocus,
   SessionKind,
+  SessionRun,
   StepResult,
   Visibility,
 } from './ports';
@@ -242,6 +243,12 @@ export interface SessionStartInput {
   planBlockId?: string;
   /** engine.md §4 focus rounds: drill the last misses (+ interval neighbours); never passes. */
   focus?: SessionFocus;
+  /**
+   * Circle run (decisions.md 2026-10-03): the session is part of "Play the whole circle". The
+   * engine picks the kind itself (`review` when the key is completed, else `learn`) and
+   * Complete's `next` is the next key clockwise regardless of completion. Circle tracks only.
+   */
+  run?: SessionRun;
 }
 
 /** A chord-level step with its last scheduled result. */
@@ -292,6 +299,8 @@ export interface SessionDto {
   results: SessionResultDto[];
   /** Focus round ("Drill what you missed"); null for a normal session. */
   focus: SessionFocus | null;
+  /** Circle run (decisions.md 2026-10-03); null for a one-off session. */
+  run: SessionRun | null;
 }
 
 export interface RecordStepInput {
@@ -391,9 +400,17 @@ export interface CompleteDto {
   };
   /** "G♯° will come back in tomorrow's review until it's clean." */
   reviewNote: string;
-  /** "Keep going — E major" / "Keep going — Level 4"; null when nothing is next or not passed. */
-  next: { levelId: string; label: string; route: string } | null;
+  /**
+   * "Keep going — E major" / "Keep going — Level 4"; null when nothing is next or not passed.
+   * In a circle run: the next key clockwise regardless of completion (null after the last key),
+   * with `run: 'circle'` so the renderer starts it as part of the run.
+   */
+  next: { levelId: string; label: string; route: string; run: SessionRun | null } | null;
   levelStatus: LevelStatus;
   /** Focus round: no pass/fail judgement, no level XP, the level's state is untouched. */
   focus: SessionFocus | null;
+  /** Circle run (decisions.md 2026-10-03); null for a one-off session. */
+  run: SessionRun | null;
+  /** Circle run: 1-based position of this key in circle order ("Circle run · 4 of 12"). */
+  runPosition: number | null;
 }

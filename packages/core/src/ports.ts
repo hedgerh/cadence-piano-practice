@@ -24,6 +24,8 @@ export type LevelStatus = 'available' | 'in_progress' | 'completed';
 export type SessionKind = 'warmup' | 'learn' | 'review' | 'free';
 /** engine.md §4 focus rounds: `misses` = "Drill what you missed" (no pass, no completion). */
 export type SessionFocus = 'misses';
+/** Circle run (decisions.md 2026-10-03): play every key in circle order regardless of completion. */
+export type SessionRun = 'circle';
 export type StepResult = 'clean' | 'hinted' | 'skipped' | 'marked' | 'wrong';
 export type XpReason = 'step' | 'level' | 'playback';
 export type PlanBlockType = 'warmup' | 'learn' | 'review';
@@ -115,6 +117,8 @@ export interface SessionRow {
   questionOrder: string[] | null;
   /** Focus round (engine.md §4); null for a normal session. */
   focus: SessionFocus | null;
+  /** Circle run (decisions.md 2026-10-03); null for a one-off session. */
+  run: SessionRun | null;
 }
 
 export interface SessionStepRow {
@@ -209,6 +213,7 @@ export interface NewSession {
   startedAt: number;
   questionOrder?: string[] | null;
   focus?: SessionFocus | null;
+  run?: SessionRun | null;
 }
 
 export type SessionPatch = Partial<Omit<SessionRow, 'id'>>;

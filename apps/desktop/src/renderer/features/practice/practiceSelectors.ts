@@ -80,11 +80,20 @@ const KIND_TONE: Record<PracticeSession['kind'], EyebrowTone> = {
   free: 'teal',
 };
 
-/** Practice:29 "Learn · diatonic chords" — kind + the track title without its Major/Minor prefix. */
-export function eyebrowFor(session: Pick<PracticeSession, 'kind' | 'trackTitle'>): {
+/**
+ * Practice:29 "Learn · diatonic chords" — kind + the track title without its Major/Minor prefix.
+ * A circle-run session reads "Circle run · G major" (decisions.md 2026-10-03), toned by kind.
+ */
+export function eyebrowFor(
+  session: Pick<PracticeSession, 'kind' | 'trackTitle'> &
+    Partial<Pick<PracticeSession, 'run' | 'levelTitle'>>,
+): {
   text: string;
   tone: EyebrowTone;
 } {
+  if (session.run === 'circle' && session.levelTitle !== undefined) {
+    return { text: `Circle run · ${session.levelTitle}`, tone: KIND_TONE[session.kind] };
+  }
   const topic = session.trackTitle.replace(/^(Major|Minor) /, '');
   const lower = topic.charAt(0).toLowerCase() + topic.slice(1);
   return { text: `${KIND_LABEL[session.kind]} · ${lower}`, tone: KIND_TONE[session.kind] };

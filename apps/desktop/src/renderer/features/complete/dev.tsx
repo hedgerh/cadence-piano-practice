@@ -44,6 +44,8 @@ export function completeDtoFixture(skipped: readonly number[] = []): CompleteDto
   return {
     sessionId: 'dev-complete',
     focus: null,
+    run: null,
+    runPosition: null,
     kind: 'learn',
     trackId: 'major-diatonic-chords',
     levelId: 'a-major',
@@ -77,8 +79,41 @@ export function completeDtoFixture(skipped: readonly number[] = []): CompleteDto
       nextTitle: 'E major',
     },
     reviewNote,
-    next: { levelId: 'e-major', label: completeFixture.cta, route: '/practice/e-major' },
+    next: {
+      levelId: 'e-major',
+      label: completeFixture.cta,
+      route: '/practice/e-major',
+      run: null,
+    },
     levelStatus: 'completed',
+  };
+}
+
+/**
+ * decisions.md 2026-10-03 circle run: the design fixture as key 4 of a run (`mid`), or as the
+ * last key of the run (`end`: F major, 12 of 12, nothing next).
+ */
+export function circleRunFixture(at: 'mid' | 'end', skipped: readonly number[] = []): CompleteDto {
+  const dto = completeDtoFixture(skipped);
+  if (at === 'mid') {
+    return {
+      ...dto,
+      run: 'circle',
+      runPosition: 4,
+      next: dto.next ? { ...dto.next, run: 'circle' } : null,
+    };
+  }
+  return {
+    ...dto,
+    levelId: 'f-major',
+    levelTitle: 'F major',
+    shortTitle: 'F major',
+    title: 'F major, complete',
+    subtitle: "All seven diatonic chords. That's twelve keys around the circle.",
+    run: 'circle',
+    runPosition: 12,
+    next: null,
+    track: { ...dto.track, done: 12, nextLevelId: null, nextTitle: null },
   };
 }
 
@@ -98,7 +133,10 @@ function CompleteDevScreen() {
 }
 
 function CompleteDevFixture({ params }: { params: URLSearchParams }) {
-  const complete = completeDtoFixture(parseSkipped(params.get('skipped')));
+  const skipped = parseSkipped(params.get('skipped'));
+  const run = params.get('run');
+  const complete =
+    run === 'mid' || run === 'end' ? circleRunFixture(run, skipped) : completeDtoFixture(skipped);
   const [auto, setAuto] = useState(params.get('auto') !== '0');
   return (
     <CompleteView

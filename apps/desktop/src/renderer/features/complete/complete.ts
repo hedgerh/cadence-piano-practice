@@ -58,10 +58,19 @@ export function chipView(chip: CompleteDto['chips'][number]): CompleteChipView {
   }
 }
 
-export type NextAction = { kind: 'next'; label: string; levelId: string };
+/** `run: 'circle'` keeps a circle run going (decisions.md 2026-10-03). */
+export type NextAction = {
+  kind: 'next';
+  label: string;
+  levelId: string;
+  run: NonNullable<CompleteDto['next']>['run'];
+};
 
 export type CompleteAction =
-  { kind: 'replay'; label: string } | NextAction | { kind: 'done'; label: string };
+  | { kind: 'replay'; label: string }
+  | NextAction
+  | { kind: 'map'; label: string }
+  | { kind: 'done'; label: string };
 
 /**
  * decisions.md 2026-10-01 "Hands-free key loop": the "Keep going" the screen may run without a
@@ -78,6 +87,8 @@ export interface AutoNextView {
 export interface CompleteView {
   title: string;
   subtitle: string;
+  /** decisions.md 2026-10-03: "Circle run · 4 of 12" over the title; null outside a run. */
+  runCaption: string | null;
   chips: CompleteChipView[];
   stats: ReadonlyArray<{ value: string; label: string; tone: 'ground' | 'lavender' }>;
   progressLeft: string;
@@ -93,6 +104,15 @@ export interface CompleteView {
 }
 
 const DONE: CompleteAction = { kind: 'done', label: 'Done for today' };
+const MAP: CompleteAction = { kind: 'map', label: 'Back to the map' };
+
+/** decisions.md 2026-10-03: the last key of a circle run, played through. */
+const endsCircleRun = (dto: CompleteDto): boolean =>
+  dto.run === 'circle' &&
+  dto.next === null &&
+  dto.completed &&
+  dto.runPosition !== null &&
+  dto.runPosition === dto.track.total;
 
 /** Complete:35 — the engine's subtitle, with the first sentence adjusted when chords were skipped. */
 function subtitleFor(dto: CompleteDto, skipped: number): string {
@@ -119,8 +139,11 @@ function nextLabel(dto: CompleteDto): string | null {
 export function completeView(dto: CompleteDto): CompleteView {
   const skipped = dto.skippedCount;
   const next: NextAction | null = dto.next
-    ? { kind: 'next', label: dto.next.label, levelId: dto.next.levelId }
+    ? { kind: 'next', label: dto.next.label, levelId: dto.next.levelId, run: dto.next.run }
     : null;
+  const runEnd = endsCircleRun(dto);
+  // At the end of a circle run "Back to the map" takes the place of "Keep going".
+  const onward: CompleteAction | null = next ?? (runEnd ? MAP : null);
 
   // ui.md §3: with skips the primary replays the level ("Play the two you skipped") and
   // "Keep going" is demoted to the secondary button; "Done for today" becomes a text button.
@@ -129,19 +152,29 @@ export function completeView(dto: CompleteDto): CompleteView {
   let tertiary: CompleteAction | null = null;
   if (skipped > 0) {
     primary = { kind: 'replay', label: `Play the ${word(skipped)} you skipped` };
-    secondary = next ?? DONE;
-    tertiary = next ? DONE : null;
-  } else if (next) {
-    primary = next;
+    secondary = onward ?? DONE;
+    tertiary = onward ? DONE : null;
+  } else if (onward) {
+    primary = onward;
     secondary = DONE;
   } else {
     primary = DONE;
     secondary = null;
   }
 
+  let subtitle = subtitleFor(dto, skipped);
+  if (runEnd) {
+    const cut = subtitle.indexOf('. ');
+    subtitle = `${cut >= 0 ? subtitle.slice(0, cut + 1) : subtitle} That's the whole circle.`;
+  }
+
   return {
     title: dto.title,
-    subtitle: subtitleFor(dto, skipped),
+    subtitle,
+    runCaption:
+      dto.run === 'circle' && dto.runPosition !== null
+        ? `Circle run · ${dto.runPosition} of ${dto.track.total}`
+        : null,
     chips: dto.chips.map(chipView),
     stats: [
       { value: formatDuration(dto.durationMs), label: 'time, no tempo', tone: 'ground' },

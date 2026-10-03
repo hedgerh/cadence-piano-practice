@@ -6,6 +6,7 @@ import type { TrackOverviewDto } from '../shared/hooks';
 import { minorReadyOverview } from './dev';
 import {
   circleKeys,
+  circleRunStart,
   ctaLabel,
   finishedKeys,
   innerRing,
@@ -212,7 +213,12 @@ describe('primary action and up-next card (engine.md §4 lesson-seen, §6.15 enr
 });
 
 describe('PathView', () => {
-  function renderPath(onCta = vi.fn(), onDone = vi.fn(), reviewOpen = false) {
+  function renderPath(
+    onCta = vi.fn(),
+    onDone = vi.fn(),
+    reviewOpen = false,
+    onPlayCircle: (() => void) | undefined = undefined,
+  ) {
     const o = majorDay8();
     const ring = innerRing(majorDiatonicChords());
     render(
@@ -242,6 +248,7 @@ describe('PathView', () => {
           reviewOpen={reviewOpen}
           onToggleReview={() => undefined}
           review={<ReviewFinishedKey keys={finishedKeys(o)} onPick={onDone} />}
+          onPlayCircle={onPlayCircle}
           circle={{
             keys: circleKeys(o, { onCurrent: onCta, onDone }),
             minors: ring.labels,
@@ -278,5 +285,38 @@ describe('PathView', () => {
     expect(card.textContent).toContain('C major');
     fireEvent.click(screen.getByTestId('review-key-d-major'));
     expect(onDone).toHaveBeenCalledWith('d-major');
+  });
+
+  it('"Play the whole circle" sits next to "Review a finished key" when a handler is given', () => {
+    renderPath();
+    expect(screen.queryByTestId('circle-run')).toBeNull();
+    cleanup();
+    const onPlayCircle = vi.fn();
+    renderPath(vi.fn(), vi.fn(), false, onPlayCircle);
+    const button = screen.getByTestId('circle-run');
+    expect(button.textContent).toBe('Play the whole circle');
+    expect(button.previousElementSibling?.textContent).toBe('Review a finished key');
+    fireEvent.click(button);
+    expect(onPlayCircle).toHaveBeenCalledTimes(1);
+  });
+});
+
+// decisions.md 2026-10-03 circle run.
+describe('circleRunStart', () => {
+  it('starts at the first key in circle order once any key is done', () => {
+    expect(circleRunStart(majorDay8())).toEqual({
+      levelId: 'c-major',
+      kind: 'review',
+      enroll: false,
+    });
+    const paused = { ...majorDay8(), active: false };
+    expect(circleRunStart(paused)?.enroll).toBe(true);
+  });
+
+  it('is unavailable before the first key is done and on ladder tracks', () => {
+    const fresh = majorDay8();
+    const nodes = (fresh.nodes ?? []).map((n) => ({ ...n, state: 'upcoming' as const }));
+    expect(circleRunStart({ ...fresh, nodes })).toBeNull();
+    expect(circleRunStart({ ...fresh, nodes: null })).toBeNull();
   });
 });

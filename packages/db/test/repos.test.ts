@@ -260,6 +260,7 @@ describe('SessionRepo', () => {
       xpPlayback: 0,
       questionOrder: null,
       focus: null,
+      run: null,
     });
     expect(t.repos.sessions.get(s.id)).toEqual(s);
     expect(t.repos.sessions.get('missing')).toBeNull();
