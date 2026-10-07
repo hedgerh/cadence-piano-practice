@@ -4,7 +4,7 @@ import { type MatchSpec, hintFor, noteToMidi, pcNumber, scale } from '@cadence/m
 import { describe, expect, it } from 'vitest';
 import { intervalAnchor, spellTriad } from './generators/earTrack';
 import { numeralAscii, stepKey } from './ids';
-import { buildTracks } from './index';
+import { buildTracks, stepNoun, stepNounPlural } from './index';
 import { allLevels, allSteps, at, stageById, trackById } from './testUtils';
 import { validateTracks } from './validate';
 
@@ -24,7 +24,7 @@ describe('buildTracks', () => {
       'inversions-voice-leading',
       'ear-training',
     ]);
-    expect(tracks.map((t) => t.available)).toEqual([true, true, false, false, true]);
+    expect(tracks.map((t) => t.available)).toEqual([true, true, true, false, true]);
     expect(tracks.map((t) => t.map)).toEqual([
       'circle-of-fifths',
       'circle-of-fifths',
@@ -190,12 +190,38 @@ describe('minor-scales', () => {
       type: 'sequence',
       notes: ['A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'],
       direction: 'up',
+      anyOctave: true,
     });
     expect(at(a.steps, 1).match).toEqual({
       type: 'sequence',
       notes: ['A4', 'G4', 'F4', 'E4', 'D4', 'C4', 'B3', 'A3'],
       direction: 'down',
+      anyOctave: true,
     });
+    expect(at(a.steps, 0).name).toBe('A minor scale, going up');
+  });
+
+  it('is playable (available) and blurbs list the key signature and the notes', () => {
+    expect(scalesTrack.available).toBe(true);
+    expect(at(scalesTrack.levels, 0).blurb).toBe(
+      'No sharps or flats. Notes: A · B · C · D · E · F · G',
+    );
+    const eb = at(scalesTrack.levels, 6);
+    expect(eb.id).toBe('eb-minor-scale');
+    expect(eb.blurb).toBe(
+      'Six flats: B♭ · E♭ · A♭ · D♭ · G♭ · C♭. Notes: E♭ · F · G♭ · A♭ · B♭ · C♭ · D♭',
+    );
+  });
+});
+
+describe('stepNoun', () => {
+  it('chords for chord/voicing levels, scales for sequence levels, steps otherwise', () => {
+    expect(stepNoun(at(majorTrack.levels, 0).steps)).toBe('chord');
+    expect(stepNoun(at(inversionsTrack.levels, 0).steps)).toBe('chord');
+    expect(stepNoun(at(scalesTrack.levels, 0).steps)).toBe('scale');
+    expect(stepNoun([])).toBe('step');
+    expect(stepNoun([{ match: { type: 'choice', answer: 'a', options: ['a'] } }])).toBe('step');
+    expect(stepNounPlural('scale')).toBe('scales');
   });
 });
 

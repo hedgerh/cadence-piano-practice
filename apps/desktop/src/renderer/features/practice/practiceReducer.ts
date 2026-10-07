@@ -1,5 +1,7 @@
 // docs/engine.md §5 Practice (`practiceReducer`) and §6 defaults 1–7. Pure: no React, no IPC.
 // Practice.dc.html:136 / 223–225 is the design's state pseudo-code this machine generalises.
+// Chord/voicing steps match the held set; `sequence` steps (scales) match NOTE_ON events, one
+// at a time (HANDOFF §5: "Sequence matches accept notes one at a time in order").
 import {
   initialMatchState,
   reduceMatch,
@@ -52,7 +54,7 @@ export interface PracticeState {
   armed: boolean;
   held: ReadonlySet<Midi>;
   match: MatchState;
-  /** Keys flashing teal while `phase === 'matched'` (the notes that matched). */
+  /** Keys flashing teal while `phase === 'matched'` (the notes that matched, or the whole run). */
   flash: readonly Midi[];
   /** Resolutions in the order they happened (resumed ones first). */
   results: readonly Resolution[];
@@ -62,6 +64,8 @@ export interface PracticeState {
 
 export type PracticeAction =
   | { type: 'HELD_CHANGED'; held: ReadonlySet<Midi>; at: number }
+  /** Every MIDI note-on: drives `sequence` steps (chords ignore it and use the held set). */
+  | { type: 'NOTE_ON'; midi: Midi; at: number }
   | { type: 'HINT'; at: number }
   | { type: 'SKIP'; at: number }
   | { type: 'MARK_PLAYED'; at: number }
@@ -212,6 +216,16 @@ export function practiceReducer(state: PracticeState, action: PracticeAction): P
       if (match.status !== 'matched') return { ...s, match };
       const resolved = resolve(s, s.hint > 0 ? 'hinted' : 'clean', action.at);
       return { ...resolved, match, phase: 'matched', armed: false, flash: [...held] };
+    }
+    case 'NOTE_ON': {
+      // A held key never re-fires a note-on, so sequences need no re-arming between steps.
+      const spec = specOf(state);
+      if (state.phase !== 'listening' || spec?.type !== 'sequence') return state;
+      const s = startTimer(state, action.at);
+      const match = reduceMatch(spec, s.match, { type: 'noteOn', midi: action.midi });
+      if (match.status !== 'matched') return { ...s, match };
+      const resolved = resolve(s, s.hint > 0 ? 'hinted' : 'clean', action.at);
+      return { ...resolved, match, phase: 'matched', flash: match.played };
     }
     case 'HINT': {
       if (state.phase !== 'listening' || state.hint >= 2) return state;

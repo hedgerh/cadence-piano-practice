@@ -1,8 +1,9 @@
 // docs/engine.md §5 Practice reducer and §6 defaults 1–7 (HANDOFF §5 practice loop).
-import { keyLevel } from '@cadence/content';
+import { keyLevel, minorScaleLevel } from '@cadence/content';
 import { noteToMidi, type Midi, type Note } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
 import {
+  currentStep,
   doneCount,
   durationMs,
   HINT_LABELS,
@@ -20,6 +21,7 @@ import {
   hintNames,
   keyboardStates,
   markPlayedMode,
+  practiceNoun,
   progressSegments,
 } from './practiceSelectors';
 import { withRetry } from './retry';
@@ -382,5 +384,113 @@ describe('withRetry (recordStep posts)', () => {
     };
     await expect(withRetry(fn, [1, 1], noWait)).rejects.toThrow('down');
     expect(calls).toBe(3);
+  });
+});
+
+// HANDOFF §5: "Sequence matches accept notes one at a time in order; a wrong note resets the
+// sequence silently." The minor-scales track (decisions.md 2026-10-03) runs on this.
+describe('scale levels (sequence steps fed by NOTE_ON)', () => {
+  const scaleLevel = minorScaleLevel({ tonic: 'A', mode: 'minor' });
+  const scaleSteps = scaleLevel.steps.map((s) => ({
+    ...s,
+    lastResult: null,
+    dueOn: null,
+    intervalDays: 0,
+  }));
+  const start = (): PracticeState =>
+    initialPracticeState({ steps: scaleSteps, results: [], visibility: 'all' });
+  const UP: Note[] = ['A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'];
+  const noteOn = (at: number, note: Note): PracticeAction => ({
+    type: 'NOTE_ON',
+    midi: noteToMidi(note),
+    at,
+  });
+
+  /** Tap each note as the session hook sees it: the note-on, held {n}, then released. */
+  function tap(state: PracticeState, notes: readonly Note[], t0 = 0): PracticeState {
+    let s = state;
+    notes.forEach((n, i) => {
+      s = practiceReducer(s, noteOn(t0 + i * 2, n));
+      s = practiceReducer(s, press(t0 + i * 2, n));
+      s = practiceReducer(s, releaseAll(t0 + i * 2 + 1));
+    });
+    return s;
+  }
+
+  it('matches when the eight notes are played one at a time, then flashes the run', () => {
+    let s = tap(start(), UP.slice(0, 7));
+    expect(s.phase).toBe('listening');
+    expect(s.match.index).toBe(7);
+    expect(s.timer.startedAt).toBe(0);
+    s = practiceReducer(s, noteOn(100, 'A4'));
+    expect(s.phase).toBe('matched');
+    expect(s.results).toEqual([expect.objectContaining({ stepId: 'up', result: 'clean' })]);
+    expect(s.flash).toEqual(UP.map(noteToMidi));
+  });
+
+  it('accepts legato playing (the next key goes down before the last comes up)', () => {
+    let s = start();
+    let prev: Note | null = null;
+    UP.forEach((n, i) => {
+      s = practiceReducer(s, noteOn(i * 2, n));
+      s = practiceReducer(s, press(i * 2, ...(prev ? [prev, n] : [n])));
+      if (prev) s = practiceReducer(s, press(i * 2 + 1, n));
+      prev = n;
+    });
+    expect(s.phase).toBe('matched');
+  });
+
+  it('accepts the scale an octave up (any octave, still going up)', () => {
+    const s = tap(start(), ['A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5']);
+    expect(s.phase).toBe('matched');
+  });
+
+  it('a wrong note starts the run again; lit keys show only the run so far', () => {
+    let s = tap(start(), ['A3', 'B3', 'C4']);
+    expect(keyboardStates(s)).toEqual({ 57: 'correct', 59: 'correct', 60: 'correct' });
+    s = tap(s, ['C#4']);
+    expect(s.match.index).toBe(0);
+    expect(keyboardStates(s)).toEqual({});
+    s = tap(s, UP);
+    expect(s.phase).toBe('matched');
+  });
+
+  it('holding keys is not playing a scale', () => {
+    const s = practiceReducer(start(), press(0, 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'));
+    expect(s.phase).toBe('listening');
+    expect(s.match.index).toBe(0);
+  });
+
+  it('chord steps ignore NOTE_ON (they match the held set)', () => {
+    const chord = initialPracticeState(session());
+    expect(practiceReducer(chord, { type: 'NOTE_ON', midi: 57, at: 0 })).toBe(chord);
+  });
+
+  it('down can start while the top note of the up run is still held', () => {
+    let s = tap(start(), UP.slice(0, 7));
+    s = practiceReducer(s, noteOn(20, 'A4'));
+    s = practiceReducer(s, press(20, 'A4'));
+    s = practiceReducer(s, { type: 'FLASH_DONE' });
+    s = practiceReducer(s, { type: 'ADVANCE', at: 30 });
+    expect(currentStep(s)?.id).toBe('down');
+    expect(s.armed).toBe(false);
+    // Still holding A4: the next note-on (G4) needs no re-arm; the run restarts on A.
+    s = tap(s, [...UP].reverse(), 40);
+    expect(s.phase).toBe('matched');
+  });
+
+  it('after up and down, the finish copy names the scale', () => {
+    let s = tap(start(), UP);
+    s = practiceReducer(s, { type: 'FLASH_DONE' });
+    s = practiceReducer(s, { type: 'ADVANCE', at: 50 });
+    s = tap(s, [...UP].reverse(), 60);
+    s = practiceReducer(s, { type: 'FLASH_DONE' });
+    s = practiceReducer(s, { type: 'ADVANCE', at: 200 });
+    expect(s.phase).toBe('finished');
+    expect(finishCopy(s, 'A minor')).toEqual({
+      title: 'Up and down. Nice.',
+      body: 'The A minor scale is in your hands now.',
+    });
+    expect(practiceNoun(s)).toBe('scale');
   });
 });

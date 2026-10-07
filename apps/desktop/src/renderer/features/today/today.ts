@@ -118,7 +118,11 @@ export function resumeOffer(today: Pick<TodayDto, 'resume' | 'cta'>): ResumeDto 
   return r;
 }
 
-/** "3 of 7 chords played" · "4 of 10 answered". */
-export function resumeProgress(r: Pick<ResumeDto, 'done' | 'total' | 'isEar'>): string {
-  return r.isEar ? `${r.done} of ${r.total} answered` : `${r.done} of ${r.total} chords played`;
+/** "3 of 7 chords played" · "1 of 2 scales played" · "4 of 10 answered". */
+export function resumeProgress(
+  r: Pick<ResumeDto, 'done' | 'total' | 'isEar' | 'stepNoun'>,
+): string {
+  return r.isEar
+    ? `${r.done} of ${r.total} answered`
+    : `${r.done} of ${r.total} ${r.stepNoun}s played`;
 }

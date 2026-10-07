@@ -1,7 +1,7 @@
 // HANDOFF §5 Today's plan, refined by engine.md §4 PlanService: a warm-up (mastered level,
 // lowest recent score), one new level (alternating active tracks day to day) and one review
 // (the level with the most due steps). Built once per local day and persisted.
-import type { Level, Step } from '@cadence/content';
+import { type Level, type Step, stepNoun } from '@cadence/content';
 import { keySignatureText } from '@cadence/music';
 import { type ServiceContext, joinAnd, timezoneOf } from './context';
 import { localDay, localHour } from './dates';
@@ -45,15 +45,19 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
 
   // ------------------------------------------------------------------ copy helpers
 
-  /** "C major · all 7 diatonic chords" · "Intervals · Level 3". */
+  /** "C major · all 7 diatonic chords" · "A minor · scale, up and down" · "Intervals · Level 3". */
   const blockTitle = (levelId: string): string => {
     const ref = content.requireLevel(levelId);
     if (ref.isEar) return content.shortTitle(levelId);
-    const n = ref.level.steps.length;
-    const chords = ref.level.steps.every((s) => s.match.type === 'chord');
-    return chords
-      ? `${ref.level.title} · all ${n} diatonic chords`
-      : `${ref.level.title} · ${n} steps`;
+    const steps = ref.level.steps;
+    const n = steps.length;
+    if (steps.every((s) => s.match.type === 'chord')) {
+      return `${ref.level.title} · all ${n} diatonic chords`;
+    }
+    if (stepNoun(steps) === 'scale') {
+      return `${ref.level.title} · scale, ${joinAnd(steps.map((s) => s.label.toLowerCase()))}`;
+    }
+    return `${ref.level.title} · ${n} steps`;
   };
 
   const warmupBlurb = (levelId: string): string => {
@@ -323,6 +327,7 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
         trackId: s.trackId,
         title: content.shortTitle(s.levelId),
         isEar: ref.isEar,
+        stepNoun: stepNoun(ref.level.steps),
         done,
         total: ref.isEar ? (s.questionOrder?.length ?? done) : ref.level.steps.length,
       };

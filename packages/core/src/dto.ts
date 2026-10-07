@@ -2,7 +2,7 @@
 // field names follow docs/architecture.md §3 (channel table) and docs/engine.md §4.
 // Conventions: optional values are `T | null` (zod-friendly under exactOptionalPropertyTypes),
 // except `MeDto.midi`, which architecture.md §3 specifies with optional fields.
-import type { Pass, Quality, Step, Track } from '@cadence/content';
+import type { Pass, Quality, Step, StepNoun, Track } from '@cadence/content';
 import type {
   LevelStatus,
   PlanBlockStatus,
@@ -142,6 +142,8 @@ export interface ResumeDto {
   /** "A major" · "Intervals · Level 3". */
   title: string;
   isEar: boolean;
+  /** What the level's steps are called ("3 of 7 chords played" · "1 of 2 scales played"). */
+  stepNoun: StepNoun;
   /** Steps/questions already recorded in the session. */
   done: number;
   /** Steps (chord level) or questions (ear level) in the session. */
@@ -365,6 +367,8 @@ export interface CompleteDto {
   levelTitle: string;
   shortTitle: string;
   isEar: boolean;
+  /** "chords without a hint" · "scales without a hint". */
+  stepNoun: StepNoun;
   /** "A major, complete". */
   title: string;
   /** "All seven diatonic chords. That's four keys around the circle." */

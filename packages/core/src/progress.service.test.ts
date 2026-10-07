@@ -233,6 +233,31 @@ describe('sessions.finish', () => {
     });
   });
 
+  it('a minor-scale level completes with scale copy (HANDOFF §4 sequence steps)', () => {
+    const { services } = onboarded();
+    const s = services.progress.startLevel('a-minor-scale', 'learn');
+    expect(s.steps.map((step) => step.id)).toEqual(['up', 'down']);
+    s.steps.forEach((step, ordinal) =>
+      services.progress.recordStep({
+        sessionId: s.sessionId,
+        stepId: step.id,
+        ordinal,
+        result: 'clean',
+        hintLevel: 0,
+      }),
+    );
+    const done = services.progress.finishSession({ sessionId: s.sessionId, durationMs: 40_000 });
+    expect(done).toMatchObject({
+      completed: true,
+      stepNoun: 'scale',
+      total: 2,
+      cleanCount: 2,
+      title: 'A minor, complete',
+      subtitle: "Up and down, every note in order. That's your first key on the circle.",
+    });
+    expect(done.track).toMatchObject({ id: 'minor-scales', unit: 'keys', nextTitle: 'E minor' });
+  });
+
   it('an incomplete chord level is not completed and earns no level XP', () => {
     const { services } = onboarded();
     const s = services.progress.startLevel('c-major', 'learn');

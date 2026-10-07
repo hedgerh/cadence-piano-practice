@@ -206,6 +206,21 @@ describe('PlanService.getToday', () => {
     expect(services.plan.getToday().blocks[0]?.route).toBe('/practice/a-minor');
   });
 
+  it('an enrolled minor-scales track plans "A minor · scale, up and down"', () => {
+    const { services } = onboarded();
+    services.settings.setTrackSettings({ trackId: 'major-diatonic-chords', active: false });
+    services.settings.setTrackSettings({ trackId: 'ear-training', active: false });
+    services.settings.enroll('minor-scales');
+    expect(services.plan.getToday().blocks[0]).toMatchObject({
+      type: 'learn',
+      levelId: 'a-minor-scale',
+      title: 'A minor · scale, up and down',
+      blurb: 'Your first key. No sharps or flats.',
+      route: '/practice/a-minor-scale',
+      isEar: false,
+    });
+  });
+
   it('greets by local hour', () => {
     const morning = onboarded('2026-10-01T15:00:00Z'); // 08:00 PDT
     expect(morning.services.plan.getToday().greeting).toBe('Good morning, Harry.');
@@ -248,8 +263,23 @@ describe('PlanService.getToday · resume', () => {
       trackId: 'major-diatonic-chords',
       title: 'C major',
       isEar: false,
+      stepNoun: 'chord',
       done: 3,
       total: 7,
+    });
+  });
+
+  it('a minor-scale session reads as scales (decisions.md 2026-10-03 "Minor scales track")', () => {
+    const { services } = onboarded();
+    const session = services.progress.startLevel('a-minor-scale', 'learn');
+    recordSteps(services, session.sessionId, 1);
+    expect(services.plan.getToday().resume).toMatchObject({
+      levelId: 'a-minor-scale',
+      trackId: 'minor-scales',
+      isEar: false,
+      stepNoun: 'scale',
+      done: 1,
+      total: 2,
     });
   });
 

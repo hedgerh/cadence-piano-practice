@@ -119,6 +119,7 @@ export function fixtureTodayVariant(
           trackId: 'ear-training',
           title: 'Intervals · Level 3',
           isEar: true,
+          stepNoun: 'step',
           done: 4,
           total: 10,
         },

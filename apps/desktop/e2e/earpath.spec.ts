@@ -27,7 +27,6 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
     const pills = page.getByTestId('track-pills');
     await expect(pills.locator('[data-state="active"]')).toHaveText('Ear training');
     await expect(pills.locator('span[data-state="locked"]')).toHaveText([
-      'Minor scales',
       'Inversions & voice leading',
     ]);
 

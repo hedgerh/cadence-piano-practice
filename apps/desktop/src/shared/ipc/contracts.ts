@@ -37,6 +37,8 @@ import { z } from 'zod';
 
 const VisibilitySchema = z.enum(['num', 'name', 'all']);
 const LevelStatusSchema = z.enum(['available', 'in_progress', 'completed']);
+/** What a practice level's steps are called in copy (`stepNoun` in @cadence/content). */
+const StepNounSchema = z.enum(['chord', 'scale', 'step']);
 const SessionKindSchema = z.enum(['warmup', 'learn', 'review', 'free']);
 const SessionFocusSchema = z.enum(['misses']);
 const SessionRunSchema = z.enum(['circle']);
@@ -169,6 +171,7 @@ const ResumeSchema = z.object({
   trackId: z.string(),
   title: z.string(),
   isEar: z.boolean(),
+  stepNoun: StepNounSchema,
   done: z.number(),
   total: z.number(),
 });
@@ -352,6 +355,7 @@ export const CompleteSchema = z.object({
   levelTitle: z.string(),
   shortTitle: z.string(),
   isEar: z.boolean(),
+  stepNoun: StepNounSchema,
   title: z.string(),
   subtitle: z.string(),
   completed: z.boolean(),

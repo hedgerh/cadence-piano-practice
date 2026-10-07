@@ -79,7 +79,7 @@ describe('seed day8 → Today (Main.dc.html)', () => {
     });
     const ear = cards.find((c) => c.trackId === 'ear-training');
     expect(ear?.currentLabel).toBe('Intervals · Level 3');
-    expect(cards.find((c) => c.trackId === 'minor-scales')?.statusLabel).toBe('Not started');
+    expect(cards.find((c) => c.trackId === 'minor-scales')?.statusLabel).toBe('Ready to start');
   });
 
   it('renders the EarPath ladder copy (EarPath.dc.html)', () => {

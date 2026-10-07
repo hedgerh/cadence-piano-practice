@@ -180,7 +180,7 @@ export function completeView(dto: CompleteDto): CompleteView {
       { value: formatDuration(dto.durationMs), label: 'time, no tempo', tone: 'ground' },
       {
         value: `${dto.cleanCount} of ${dto.total}`,
-        label: dto.isEar ? 'without a hint' : 'chords without a hint',
+        label: dto.isEar ? 'without a hint' : `${dto.stepNoun}s without a hint`,
         tone: 'ground',
       },
       // engine.md §4 XpService: the tile shows the level bonus only (+40), as designed.

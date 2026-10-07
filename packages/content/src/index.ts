@@ -15,6 +15,7 @@ export * from './generators/inversionsTrack';
 export * from './generators/earTrack';
 export * from './generators/phrase';
 export * from './lessons/minorPattern';
+export * from './stepNoun';
 
 /** All five tracks in display order: major, minor, minor-scales, inversions, ear. */
 export function buildTracks(): Track[] {

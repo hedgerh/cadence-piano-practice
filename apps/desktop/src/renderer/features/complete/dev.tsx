@@ -52,6 +52,7 @@ export function completeDtoFixture(skipped: readonly number[] = []): CompleteDto
     levelTitle: 'A major',
     shortTitle: 'A major',
     isEar: false,
+    stepNoun: 'chord',
     title: completeFixture.title,
     subtitle: completeFixture.body,
     completed: true,

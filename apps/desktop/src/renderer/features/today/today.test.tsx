@@ -244,8 +244,15 @@ describe('Today edge states (Task 16)', () => {
     expect(resumeOffer(t)?.levelId).toBe('intervals-3');
     expect(resumeOffer({ ...t, cta: { ...t.cta, levelId: 'intervals-3' } })).toBeNull();
     expect(resumeOffer(fixtureToday(1))).toBeNull();
-    expect(resumeProgress({ done: 3, total: 7, isEar: false })).toBe('3 of 7 chords played');
-    expect(resumeProgress({ done: 4, total: 10, isEar: true })).toBe('4 of 10 answered');
+    expect(resumeProgress({ done: 3, total: 7, isEar: false, stepNoun: 'chord' })).toBe(
+      '3 of 7 chords played',
+    );
+    expect(resumeProgress({ done: 1, total: 2, isEar: false, stepNoun: 'scale' })).toBe(
+      '1 of 2 scales played',
+    );
+    expect(resumeProgress({ done: 4, total: 10, isEar: true, stepNoun: 'step' })).toBe(
+      '4 of 10 answered',
+    );
   });
 
   function renderToday(today: TodayDto, onAddTrack = vi.fn()) {

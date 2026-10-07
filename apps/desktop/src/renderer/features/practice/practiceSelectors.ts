@@ -1,5 +1,6 @@
 // Practice.dc.html:153–196 — derivations from PracticeState to what the screen draws.
 // Pure (no React) so the reducer tests can cover them.
+import { stepNoun, type StepNoun } from '@cadence/content';
 import { hintFor, pretty, type Midi, type PitchClass } from '@cadence/music';
 import type { KeyState } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import type { EyebrowTone } from '../../components/ui/TaskHeader';
@@ -35,13 +36,25 @@ export function progressSegments(state: PracticeState): Segment[] {
   });
 }
 
-/** Practice:159–170 + engine.md §5: hint 2 lights the target tangerine; a match flashes teal. */
+/** "chord" for chord levels, "scale" for scale levels: picks the screen's wording. */
+export function practiceNoun(state: Pick<PracticeState, 'steps'>): StepNoun {
+  return stepNoun(state.steps);
+}
+
+/**
+ * Practice:159–170 + engine.md §5: hint 2 lights the target tangerine; a match flashes teal.
+ * A scale lights each note teal as it is accepted, so the run so far stays visible (a wrong
+ * note clears it: HANDOFF §5 resets silently).
+ */
 export function keyboardStates(state: PracticeState): Record<Midi, KeyState> {
   const out: Record<Midi, KeyState> = {};
   if (state.phase === 'finished') return out;
   const step = currentStep(state);
   if (state.hint >= 2 && step) {
     for (const m of hintFor(step.match)?.keys ?? []) out[m] = 'hint';
+  }
+  if (state.phase === 'listening' && step?.match.type === 'sequence') {
+    for (const m of state.match.played) out[m] = 'correct';
   }
   if (state.phase === 'matched' || state.phase === 'advancing') {
     for (const m of state.flash) out[m] = 'correct';
@@ -124,7 +137,8 @@ function joinNames(names: readonly string[]): string {
 
 /**
  * Practice:80–81 "All seven. Nice." / "A major is in your hands now."; ui.md §3: the copy
- * adapts to skips ("Five of seven. Nice." / "G♯° and B° come back tomorrow.").
+ * adapts to skips ("Five of seven. Nice." / "G♯° and B° come back tomorrow."). A scale level
+ * reads "Up and down. Nice." / "The A minor scale is in your hands now."
  */
 export function finishCopy(
   state: PracticeState,
@@ -133,6 +147,13 @@ export function finishCopy(
   const total = state.steps.length;
   const skipped = skippedOrdinals(state);
   if (skipped.length === 0) {
+    if (practiceNoun(state) === 'scale') {
+      const run = joinNames(state.steps.map((s) => s.label.toLowerCase()));
+      return {
+        title: `${capital(run)}. Nice.`,
+        body: `The ${levelTitle} scale is in your hands now.`,
+      };
+    }
     return { title: `All ${word(total)}. Nice.`, body: `${levelTitle} is in your hands now.` };
   }
   const names = skipped.map((o) => {

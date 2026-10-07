@@ -18,7 +18,7 @@ Conventions: notes are ASCII in data (`"C#4"`, `"Bb3"`), rendered with `♯`/`�
   type MatchInput = { type:'held'; held: ReadonlySet<Midi> } | { type:'noteOn'; midi } | { type:'choose'; option }
   initialMatchState(spec); reduceMatch(spec, state, input)
   ```
-  chord = pitch-class set equality (any octave, inversion, doubling); voicing = exact MIDI set; sequence = ordered note-ons, wrong note resets silently (if the wrong note is `target[0]`, restart at index 1), option `anyOctave` for ear play-backs; root = note-on pitch class equals tonic (tries recorded), then chains into `then`; choice = string equality. `hintFor(spec)` → `{ names: string[], keys: Midi[] } | null` — derived, never authored (level 1 shows names, level 2 lights keys; `choice` → null).
+  chord = pitch-class set equality (any octave, inversion, doubling); voicing = exact MIDI set; sequence = ordered note-ons, wrong note resets silently (if the wrong note is `target[0]`, restart at index 1), option `anyOctave` for ear play-backs and scales (with `anyOctave` and `direction`, each note after the first must also move that way; `MatchState.played` holds the accepted MIDI notes); root = note-on pitch class equals tonic (tries recorded), then chains into `then`; choice = string equality. `hintFor(spec)` → `{ names: string[], keys: Midi[] } | null` — derived, never authored (level 1 shows names, level 2 lights keys; `choice` → null).
 
 Tests (§1.T): all 24 keys' scales/triads/signatures with hand tables for C, A, G♭, B major and A, E♭, G♯ minor (E♭ minor → `Ebm F° Gb Abm Bbm Cb Db`); `placeTriad` reproduces the four design voicings; matcher table (C major matched by `E3 G3 C4`, by `C4 E4 G4 C5`, not by `C4 E4 G4 A4`, partial on `C4 E4`; voicing rejects inversion; sequence reset semantics; root any octave); `midiToFrequency(69) === 440`.
 
@@ -43,7 +43,7 @@ Progress key for a step = `${levelId}/${stepId}`. `pass.of` is the question coun
 Content is generated **at runtime in main** from code and validated at startup. A snapshot test freezes the complete list of `${levelId}/${stepId}` so that a content change which would orphan progress rows fails CI.
 
 - `major-diatonic-chords`, `minor-diatonic-chords`: 12 levels over `CIRCLE_MAJOR` / `CIRCLE_MINOR` (minor starts at A minor). `level.id = keySlug`, `title = keyTitle`, `blurb = keySignatureText + " Chords: " + shorts.join(' · ')`. Steps `d1..d7`: `{ label: numeral, name, quality, match:{type:'chord', notes:[root,third,fifth]} }`. The minor track carries the `Lesson` from Learn.dc.html (C major row with pivot `vi`; A minor row with pivot `i`; `hear` = both triad sets).
-- `minor-scales` (`available:false`): 12 levels; steps `up`/`down` `sequence` via `placeScale`.
+- `minor-scales` (available): 12 levels; steps `up`/`down` `sequence` via `placeScale`, `anyOctave` with `direction` (decisions.md 2026-10-03 "Minor scales track").
 - `inversions-voice-leading` (`available:false`): 12 levels; I/IV/V × root/1st/2nd inversion = 9 `voicing` steps.
 - `ear-training` ladder:
 

@@ -2,7 +2,8 @@
 // vis all, no hint; Practice:136) driven through the real reducer, with live dev MIDI.
 // Knobs: ?hint=0|1|2 &vis=num|name|all &midi=none|denied &finished=1 &auto=1 (hands-free
 // auto-finish; the dev screen has no session, so it ends in the finish error)
-import { keyLevel } from '@cadence/content';
+// &level=scale (A minor scale, nothing done yet: the minor-scales track)
+import { keyLevel, minorScaleLevel } from '@cadence/content';
 import type { ComponentType } from 'react';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router';
@@ -19,19 +20,25 @@ import { eyebrowFor, markPlayedMode } from './practiceSelectors';
 import { PracticeView } from './PracticeView';
 import { usePracticeSession, type PracticeIo } from './usePracticeSession';
 
-/** A major (Practice:139–147) as a SessionDto, with `done` ordinals recorded clean. */
+/**
+ * A major (Practice:139–147) as a SessionDto, with `done` ordinals recorded clean; `scale`
+ * swaps in the A minor scale level (steps Up / Down).
+ */
 export function practiceSessionFixture(opts: {
   done: readonly number[];
   vis: Visibility;
+  scale?: boolean;
 }): PracticeSession {
-  const level = keyLevel({ tonic: 'A', mode: 'major' });
+  const level = opts.scale
+    ? minorScaleLevel({ tonic: 'A', mode: 'minor' })
+    : keyLevel({ tonic: 'A', mode: 'major' });
   const steps = level.steps.map((s) => ({ ...s, lastResult: null, dueOn: null, intervalDays: 0 }));
   return {
     sessionId: 'dev-practice',
     focus: null,
     run: null,
-    trackId: 'major-diatonic-chords',
-    trackTitle: 'Major diatonic chords',
+    trackId: opts.scale ? 'minor-scales' : 'major-diatonic-chords',
+    trackTitle: opts.scale ? 'Minor scales' : 'Major diatonic chords',
     levelId: level.id,
     levelTitle: level.title,
     shortTitle: level.title,
@@ -93,14 +100,16 @@ function DevPracticeScreen({ search }: { search: string }) {
   const hint = Math.min(2, Math.max(0, Number(params.get('hint') ?? practiceState.hint) || 0));
   const finished = params.get('finished') === '1';
   const midi = MIDI[params.get('midi') ?? ''] ?? CONNECTED;
+  const scale = params.get('level') === 'scale';
 
   const session = useMemo(
     () =>
       practiceSessionFixture({
-        done: finished ? [0, 1, 2, 3, 4, 5, 6] : practiceState.done,
+        done: finished ? (scale ? [0, 1] : [0, 1, 2, 3, 4, 5, 6]) : scale ? [] : practiceState.done,
         vis,
+        scale,
       }),
-    [finished, vis],
+    [finished, vis, scale],
   );
   const initial = useMemo(() => {
     let s: PracticeState = initialPracticeState(session);

@@ -27,6 +27,7 @@ import {
   finishCopy,
   hintNames,
   keyboardStates,
+  practiceNoun,
   progressSegments,
   type MarkPlayedMode,
 } from './practiceSelectors';
@@ -77,6 +78,11 @@ export function PracticeView({
   const names = hintNames(state);
   const copy = finished ? finishCopy(state, title) : null;
   const chips = chordStates(state);
+  // Show me (numerals / names / the strip of all 7) is about chords; scale levels always name
+  // the step ("A minor scale, going up") and skip the strip.
+  const noun = practiceNoun(state);
+  const chordLevel = noun === 'chord';
+  const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
 
   return (
     <div
@@ -103,10 +109,10 @@ export function PracticeView({
             data-testid="practice-progress"
           />
           <span className={styles.count} data-testid="practice-count">
-            {doneCount(state)} of {total} chords
+            {doneCount(state)} of {total} {noun}s
           </span>
         </div>
-        <ShowMeControl value={state.vis} onChange={onVisibility} />
+        {chordLevel && <ShowMeControl value={state.vis} onChange={onVisibility} />}
       </div>
 
       <main className={styles.main}>
@@ -114,12 +120,12 @@ export function PracticeView({
           <>
             <div className={styles.prompt}>
               <span className={styles.chordNo} data-testid="chord-no">
-                Chord {state.current + 1} of {total}
+                {Noun} {state.current + 1} of {total}
               </span>
               <span className={styles.numeral} data-testid="numeral">
                 {step.label}
               </span>
-              {state.vis !== 'num' && (
+              {(state.vis !== 'num' || !chordLevel) && (
                 <span className={styles.name} data-testid="chord-name">
                   {pretty(step.name)}
                 </span>
@@ -158,8 +164,10 @@ export function PracticeView({
             states={keyboardStates(state)}
             data-testid="practice-keyboard"
           />
-          <span className={styles.caption}>
-            Keys light up as you play. Hints light up the target.
+          <span className={styles.caption} data-testid="keyboard-caption">
+            {chordLevel
+              ? 'Keys light up as you play. Hints light up the target.'
+              : 'One note at a time, any octave. Each right note stays lit; a wrong one starts the run again.'}
           </span>
         </div>
 
@@ -193,7 +201,7 @@ export function PracticeView({
         )}
       </main>
 
-      {state.vis === 'all' && (
+      {state.vis === 'all' && chordLevel && (
         <footer className={styles.footer} data-testid="practice-strip">
           <div className={styles.strip}>
             {state.steps.map((s, i) => (

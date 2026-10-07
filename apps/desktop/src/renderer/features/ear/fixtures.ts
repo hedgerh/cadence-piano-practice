@@ -107,6 +107,7 @@ export function earCompleteFixture(
     levelTitle: 'Level 3',
     shortTitle: 'Intervals · Level 3',
     isEar: true,
+    stepNoun: 'step',
     title: focus
       ? 'Focus round'
       : pass

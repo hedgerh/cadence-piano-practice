@@ -1,9 +1,16 @@
 // engine.md §4 ProgressService (sessions, level progress, nextLevel, trackOverview) and the
 // ear question hand-off (questions.ts). HANDOFF §5 for XP, review and streak side effects.
-import { type Level, type Stage, type Track, stepKey } from '@cadence/content';
+import { type Level, type Stage, type Track, stepKey, stepNoun } from '@cadence/content';
 import { pretty } from '@cadence/music';
 import type { LevelRef } from './content.service';
-import { type ServiceContext, numberWord, timezoneOf, todayOf } from './context';
+import {
+  type ServiceContext,
+  capitalize,
+  joinAnd,
+  numberWord,
+  timezoneOf,
+  todayOf,
+} from './context';
 import { localDay } from './dates';
 import type {
   CircleNodeDto,
@@ -679,10 +686,13 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       subtitle = `${correct} of ${total} correct.`;
     } else if (success) {
       title = `${ref.level.title}, complete`;
+      const steps = ref.level.steps;
       const what =
-        ref.track.map === 'circle-of-fifths'
-          ? `All ${numberWord(total)} diatonic chords.`
-          : `All ${numberWord(total)} steps.`;
+        stepNoun(steps) === 'scale'
+          ? `${capitalize(joinAnd(steps.map((s) => s.label.toLowerCase())))}, every note in order.`
+          : ref.track.map === 'circle-of-fifths'
+            ? `All ${numberWord(total)} diatonic chords.`
+            : `All ${numberWord(total)} steps.`;
       const where =
         ref.track.map === 'circle-of-fifths'
           ? done === 1
@@ -703,6 +713,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       levelTitle: ref.level.title,
       shortTitle,
       isEar: ref.isEar,
+      stepNoun: stepNoun(ref.level.steps),
       title,
       subtitle,
       completed: success,

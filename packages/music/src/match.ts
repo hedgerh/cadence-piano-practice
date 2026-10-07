@@ -21,8 +21,12 @@ export type MatchSpec =
   | {
       type: 'sequence';
       notes: readonly Note[];
+      /**
+       * With `anyOctave`, each note after the first must also be higher (`up`) or lower (`down`)
+       * than the one before, so a scale is played as a run in whatever octave you like.
+       */
       direction?: 'up' | 'down';
-      /** Accept each note in any octave (ear play-backs). */
+      /** Accept each note in any octave (ear play-backs, scales). */
       anyOctave?: boolean;
     }
   /** Name it from a list. */
@@ -36,6 +40,8 @@ export interface MatchState {
   status: MatchStatus;
   /** sequence: how many target notes have been played in order. */
   index: number;
+  /** sequence: the MIDI notes accepted so far (`index` of them), as actually played. */
+  played: readonly Midi[];
   /** root: MIDI notes played before the tonic was found. */
   tries: readonly Midi[];
   /** root: the tonic has been hit. */
@@ -52,7 +58,15 @@ export type MatchInput =
   | { type: 'choose'; option: string };
 
 export function initialMatchState(_spec: MatchSpec): MatchState {
-  return { status: 'idle', index: 0, tries: [], found: false, then: null, chosen: null };
+  return {
+    status: 'idle',
+    index: 0,
+    played: [],
+    tries: [],
+    found: false,
+    then: null,
+    chosen: null,
+  };
 }
 
 function setEquals<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
@@ -88,21 +102,29 @@ export function reduceMatch(spec: MatchSpec, state: MatchState, input: MatchInpu
     }
     case 'sequence': {
       if (input.type !== 'noteOn' || state.status === 'matched') return state;
-      const same = (target: Note, midi: Midi): boolean =>
+      const midi = input.midi;
+      const same = (target: Note): boolean =>
         spec.anyOctave === true
           ? midiToPc(noteToMidi(target)) === midiToPc(midi)
           : noteToMidi(target) === midi;
+      const prev = state.played[state.played.length - 1];
+      const onward =
+        spec.anyOctave !== true ||
+        spec.direction === undefined ||
+        prev === undefined ||
+        (spec.direction === 'up' ? midi > prev : midi < prev);
       const expected = spec.notes[state.index];
       const first = spec.notes[0];
       if (expected === undefined || first === undefined) return state;
-      let index: number;
-      if (same(expected, input.midi)) index = state.index + 1;
-      else if (same(first, input.midi))
-        index = 1; // HANDOFF §5: wrong note resets silently
-      else index = 0;
+      let played: Midi[];
+      if (onward && same(expected)) played = [...state.played, midi];
+      else if (same(first))
+        played = [midi]; // HANDOFF §5: wrong note resets silently
+      else played = [];
+      const index = played.length;
       const status: MatchStatus =
         index === 0 ? 'idle' : index >= spec.notes.length ? 'matched' : 'partial';
-      return { ...state, index, status };
+      return { ...state, index, played, status };
     }
     case 'root': {
       if (state.status === 'matched') return state;

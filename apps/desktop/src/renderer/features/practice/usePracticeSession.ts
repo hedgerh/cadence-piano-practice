@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { useSearchParams } from 'react-router';
 import type { ChannelInput, ChannelOutput } from '@shared/ipc/contracts';
 import { api, queryKey } from '../../lib/api';
-import { useHeldNotes } from '../../midi/hooks';
+import { useHeldNotes, useMidiEvents } from '../../midi/hooks';
 import { PostQueue } from './retry';
 import { useInvalidateProgress, useSetTrackSettings } from '../shared/hooks';
 import {
@@ -103,6 +103,10 @@ export function usePracticeSession(
   useEffect(() => {
     dispatch({ type: 'HELD_CHANGED', held, at: Date.now() });
   }, [held]);
+  // Scales: each note-on as it happens (a quick tap can come and go between held renders).
+  useMidiEvents((e) => {
+    if (e.type === 'on') dispatch({ type: 'NOTE_ON', midi: e.midi, at: Date.now() });
+  });
 
   // engine.md §6.6: matched (teal) → 600 ms → advancing → next step.
   const resolvedCount = state.results.length;

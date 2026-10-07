@@ -45,3 +45,8 @@ export function joinAnd(items: readonly string[]): string {
   if (items.length <= 1) return items[0] ?? '';
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1] ?? ''}`;
 }
+
+/** "up and down" → "Up and down". */
+export function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}

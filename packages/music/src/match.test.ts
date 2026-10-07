@@ -48,6 +48,7 @@ describe('initialMatchState', () => {
       expect(initialMatchState(spec)).toEqual({
         status: 'idle',
         index: 0,
+        played: [],
         tries: [],
         found: false,
         then: null,
@@ -141,6 +142,39 @@ describe('sequence — ordered note-ons, wrong note resets silently', () => {
     const s = initialMatchState(seq);
     expect(reduceMatch(seq, s, held('C4'))).toBe(s);
     expect(reduceMatch(seq, s, choose('x'))).toBe(s);
+  });
+
+  it('records the notes accepted so far, as played', () => {
+    const any: MatchSpec = { type: 'sequence', notes: ['C4', 'D4', 'E4'], anyOctave: true };
+    const { states } = run(any, [noteOn('C5'), noteOn('D5'), noteOn('F5')]);
+    expect(states.map((s) => s.played)).toEqual([[72], [72, 74], []]);
+  });
+
+  describe('scales: anyOctave + direction keeps the run moving one way', () => {
+    const up: MatchSpec = {
+      type: 'sequence',
+      notes: ['A3', 'B3', 'C4'],
+      direction: 'up',
+      anyOctave: true,
+    };
+    const down: MatchSpec = { ...up, notes: ['C4', 'B3', 'A3'], direction: 'down' };
+
+    it('matches the run started in any octave', () => {
+      expect(run(up, [noteOn('A4'), noteOn('B4'), noteOn('C5')]).last.status).toBe('matched');
+      expect(run(down, [noteOn('C5'), noteOn('B4'), noteOn('A4')]).last.status).toBe('matched');
+    });
+
+    it('a right name in the wrong direction resets', () => {
+      const { last } = run(up, [noteOn('A4'), noteOn('B3')]);
+      expect(last.index).toBe(0);
+      expect(last.status).toBe('idle');
+      expect(run(down, [noteOn('C4'), noteOn('B4')]).last.index).toBe(0);
+    });
+
+    it('direction is ignored when the sequence is octave-strict', () => {
+      const strict: MatchSpec = { type: 'sequence', notes: ['A3', 'B3'], direction: 'up' };
+      expect(run(strict, [noteOn('A3'), noteOn('B3')]).last.status).toBe('matched');
+    });
   });
 
   it('a one-note sequence matches on its note', () => {
