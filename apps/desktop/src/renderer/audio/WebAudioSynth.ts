@@ -1,7 +1,16 @@
-// docs/engine.md §7 — the voice is the design's own tone() (EarInterval:105–117), routed
-// through a master gain and a DynamicsCompressor (−12 dB, ratio 4) so chords don't clip.
+// docs/engine.md §7 — voices routed through a master gain and a DynamicsCompressor (−12 dB,
+// ratio 4) so chords don't clip. The voice is a sampled grand piano (decisions.md 2026-10-07
+// "Piano voice"): the nearest sample, pitched by playbackRate, held for `dur` and then damped.
+// Until the samples are decoded (or if they fail), the design's own tone() plays instead
+// (EarInterval:105–117: a triangle oscillator).
 import type { Sound } from '@cadence/content';
 import { midiToFrequency, type Midi } from '@cadence/music';
+import {
+  loadPianoSamples,
+  nearestSample,
+  type SampleBank,
+  type SampleLoader,
+} from './pianoSamples';
 import { playSound } from './player';
 import type { PlayOptions, Synth } from './Synth';
 
@@ -11,6 +20,10 @@ export const ATTACK = 0.02;
 export const RELEASE_TAIL = 0.05;
 export const COMPRESSOR_THRESHOLD_DB = -12;
 export const COMPRESSOR_RATIO = 4;
+/** Piano level before the compressor (the samples are recorded well below full scale). */
+export const PIANO_GAIN = 0.9;
+/** After `dur` the key is let go: the damper fades the string out over this long. */
+export const DAMPER = 0.4;
 
 type ContextFactory = () => AudioContext;
 
@@ -19,11 +32,16 @@ const defaultFactory: ContextFactory = () => new AudioContext();
 export class WebAudioSynth implements Synth {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
-  private readonly active = new Set<OscillatorNode>();
+  private samples: SampleBank | null = null;
+  private loading: Promise<void> | null = null;
+  private readonly active = new Set<AudioScheduledSourceNode>();
   private readonly pending = new Set<() => void>();
   private volume = 1;
 
-  constructor(private readonly createContext: ContextFactory = defaultFactory) {}
+  constructor(
+    private readonly createContext: ContextFactory = defaultFactory,
+    private readonly loadSamples: SampleLoader = loadPianoSamples,
+  ) {}
 
   private ensure(): { ctx: AudioContext; master: GainNode } {
     if (this.ctx && this.master) return { ctx: this.ctx, master: this.master };
@@ -37,12 +55,25 @@ export class WebAudioSynth implements Synth {
     compressor.connect(ctx.destination);
     this.ctx = ctx;
     this.master = master;
+    this.loading = this.loadSamples(ctx).then(
+      (bank) => {
+        if (bank.size > 0) this.samples = bank;
+      },
+      () => undefined, // keep the oscillator voice
+    );
     return { ctx, master };
   }
 
+  /** Resumes the context and waits for the piano samples, so a play right after uses them. */
   async unlock(): Promise<void> {
     const { ctx } = this.ensure();
     if (ctx.state === 'suspended') await ctx.resume();
+    await this.loading;
+  }
+
+  /** Which voice `playMidi` uses right now (dev hooks / e2e). */
+  get voice(): 'piano' | 'tone' {
+    return this.samples ? 'piano' : 'tone';
   }
 
   now(): number {
@@ -52,23 +83,64 @@ export class WebAudioSynth implements Synth {
   playMidi(notes: readonly Midi[], at: number, dur: number): void {
     const { ctx, master } = this.ensure();
     for (const midi of notes) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = midiToFrequency(midi);
-      gain.gain.setValueAtTime(FLOOR_GAIN, at);
-      gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, at + ATTACK);
-      gain.gain.exponentialRampToValueAtTime(FLOOR_GAIN, at + dur);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.onended = () => {
-        this.active.delete(osc);
-        gain.disconnect();
-      };
-      this.active.add(osc);
-      osc.start(at);
-      osc.stop(at + dur + RELEASE_TAIL);
+      if (this.samples) this.pianoVoice(ctx, master, this.samples, midi, at, dur);
+      else this.toneVoice(ctx, master, midi, at, dur);
     }
+  }
+
+  private pianoVoice(
+    ctx: AudioContext,
+    master: GainNode,
+    bank: SampleBank,
+    midi: Midi,
+    at: number,
+    dur: number,
+  ): void {
+    const root = nearestSample(midi, [...bank.keys()]);
+    const buffer = root === null ? undefined : bank.get(root);
+    if (root === null || buffer === undefined) {
+      this.toneVoice(ctx, master, midi, at, dur);
+      return;
+    }
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    src.buffer = buffer;
+    src.playbackRate.value = 2 ** ((midi - root) / 12);
+    // Struck at full level (the sample has its own attack), held, then damped.
+    gain.gain.setValueAtTime(PIANO_GAIN, at);
+    gain.gain.setValueAtTime(PIANO_GAIN, at + dur);
+    gain.gain.exponentialRampToValueAtTime(FLOOR_GAIN, at + dur + DAMPER);
+    this.start(src, gain, master, at, at + dur + DAMPER + RELEASE_TAIL);
+  }
+
+  /** EarInterval:105–117 tone(): triangle, 20 ms attack, exponential decay over `dur`. */
+  private toneVoice(ctx: AudioContext, master: GainNode, midi: Midi, at: number, dur: number) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = midiToFrequency(midi);
+    gain.gain.setValueAtTime(FLOOR_GAIN, at);
+    gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, at + ATTACK);
+    gain.gain.exponentialRampToValueAtTime(FLOOR_GAIN, at + dur);
+    this.start(osc, gain, master, at, at + dur + RELEASE_TAIL);
+  }
+
+  private start(
+    src: AudioScheduledSourceNode,
+    gain: GainNode,
+    master: GainNode,
+    at: number,
+    stopAt: number,
+  ): void {
+    src.connect(gain);
+    gain.connect(master);
+    src.onended = () => {
+      this.active.delete(src);
+      gain.disconnect();
+    };
+    this.active.add(src);
+    src.start(at);
+    src.stop(stopAt);
   }
 
   async play(sound: Sound, opts?: PlayOptions): Promise<void> {
@@ -88,9 +160,9 @@ export class WebAudioSynth implements Synth {
   }
 
   stop(): void {
-    for (const osc of this.active) {
+    for (const src of this.active) {
       try {
-        osc.stop();
+        src.stop();
       } catch {
         // Already stopped.
       }

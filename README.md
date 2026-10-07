@@ -74,3 +74,7 @@ All design and engineering docs live in [`docs/`](docs/):
 - `docs/tasks/`: the build backlog, one file per task, with notes on every deviation from the designs.
 
 If you are an AI agent working in this repo, start with [`CLAUDE.md`](CLAUDE.md).
+
+## Credits
+
+The piano sound uses samples from the [Salamander Grand Piano V3](https://archive.org/details/SalamanderGrandPianoV3) by Alexander Holm, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (see `apps/desktop/src/renderer/audio/piano/README.md`).

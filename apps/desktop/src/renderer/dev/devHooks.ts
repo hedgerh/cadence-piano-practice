@@ -1,4 +1,6 @@
 import type { Midi } from '@cadence/music';
+import { appSynth } from '../audio/useAudio';
+import { WebAudioSynth } from '../audio/WebAudioSynth';
 import type { RuntimeMode } from '../lib/runtimeMode';
 import type { FakeMidiInput } from '../midi/FakeMidiInput';
 import { createFakeMidiAccess, type FakeMidiAccess } from '../midi/fakeMidiAccess';
@@ -28,6 +30,10 @@ export interface CadenceDevHooks {
     /** Fake ports with a message handler attached. */
     listening(): string[];
     devices(): MidiDeviceInfo[];
+  };
+  audio: {
+    /** Unlocks the synth (decoding the piano samples) and reports the voice that will play. */
+    voice(): Promise<'piano' | 'tone' | 'silent'>;
   };
   /** Set by the ear drill while mounted (features/ear/useEarDrill.ts); e2e reads the target. */
   ear?: {
@@ -75,6 +81,13 @@ export function installDevHooks(input: FakeMidiInput, mode: RuntimeMode): void {
       sendFrom: (id, bytes) => requireFake().send(id, bytes),
       listening: () => requireFake().listening(),
       devices: () => [...appMidi.store.getState().devices],
+    },
+    audio: {
+      voice: async () => {
+        if (!(appSynth instanceof WebAudioSynth)) return 'silent';
+        await appSynth.unlock();
+        return appSynth.voice;
+      },
     },
   };
 }
