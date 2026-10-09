@@ -2,6 +2,7 @@
   "name": "@cadence/db",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Drizzle schema, migrations and repositories implementing @cadence/core ports",
   "type": "module",
   "exports": {

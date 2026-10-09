@@ -2,6 +2,7 @@
   "name": "@cadence/music",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Pure music theory: pitch math, keys, diatonic triads, intervals, voicing placement, match evaluators",
   "type": "module",
   "exports": {

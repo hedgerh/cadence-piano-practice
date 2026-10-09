@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "productName": "Cadence",
   "private": true,
+  "license": "MIT",
   "description": "Cadence desktop app (Electron + React)",
   "main": "./out/main/index.js",
   "author": "Harry",

@@ -2,6 +2,7 @@
   "name": "@cadence/core",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Engine services: plan, review scheduling, XP, streak, sessions (pure TS, ports injected)",
   "type": "module",
   "exports": {

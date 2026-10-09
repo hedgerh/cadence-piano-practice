@@ -78,3 +78,7 @@ If you are an AI agent working in this repo, start with [`CLAUDE.md`](CLAUDE.md)
 ## Credits
 
 The piano sound uses samples from the [Salamander Grand Piano V3](https://archive.org/details/SalamanderGrandPianoV3) by Alexander Holm, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (see `apps/desktop/src/renderer/audio/piano/README.md`).
+
+## License
+
+Cadence is released under the [MIT License](LICENSE). The bundled piano samples keep their own license (CC BY 3.0, see Credits above).
