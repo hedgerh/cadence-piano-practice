@@ -81,4 +81,4 @@ The piano sound uses samples from the [Salamander Grand Piano V3](https://archiv
 
 ## License
 
-Cadence is released under the [MIT License](LICENSE). The bundled piano samples keep their own license (CC BY 3.0, see Credits above).
+Cadence is released under the [MIT License](LICENSE). The piano samples in `apps/desktop/src/renderer/audio/piano/` are not covered by it: they keep their own license (CC BY 3.0, see Credits above).
