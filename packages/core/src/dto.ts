@@ -48,6 +48,8 @@ export interface MeUpdate {
 export interface TrackSummaryDto {
   id: string;
   title: string;
+  /** Library section ("Chords"); the map's pills show this group's tracks. */
+  group: string;
   map: Track['map'];
   available: boolean;
 }
@@ -113,6 +115,10 @@ export type TrackCardStatus = 'in_progress' | 'ready' | 'not_started' | 'complet
 export interface TrackCardDto {
   trackId: string;
   title: string;
+  /** Library section ("Chords", "Scales", "Ear training"). */
+  group: string;
+  /** The track's one-line description (library cards). */
+  blurb: string;
   map: Track['map'];
   available: boolean;
   enrolled: boolean;

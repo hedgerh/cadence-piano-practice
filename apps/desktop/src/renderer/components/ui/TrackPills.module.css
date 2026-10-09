@@ -1,8 +1,26 @@
 /* Path:41 */
 .pills {
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* Not in Path.dc.html: the "All tracks" back link, TaskHeader's .back (Practice:23) with a 44px
+   tap target and room before the group's pills. */
+.all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin-right: 14px;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
+}
+.all:hover {
+  color: var(--ink);
 }
 
 /* Path:42–46 — 44px r999 15/800. */

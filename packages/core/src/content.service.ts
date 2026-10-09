@@ -20,6 +20,8 @@ export interface LevelRef {
 export interface TrackSummary {
   id: string;
   title: string;
+  /** Library section ("Chords"); the map's pills show this group's tracks. */
+  group: string;
   map: Track['map'];
   available: boolean;
 }
@@ -104,7 +106,13 @@ export function createContentService(tracks: readonly Track[]): ContentService {
   return {
     tracks: () => tracks,
     summaries: () =>
-      tracks.map((t) => ({ id: t.id, title: t.title, map: t.map, available: t.available })),
+      tracks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        group: t.group,
+        map: t.map,
+        available: t.available,
+      })),
     track: (id) => byTrack.get(id) ?? null,
     requireTrack(id) {
       const t = byTrack.get(id);

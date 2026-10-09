@@ -6,15 +6,29 @@ import { at } from './testUtils';
 import type { Track } from './types';
 import { validateTracks } from './validate';
 
-// tracks[0] = major (levels[3] = a-major), tracks[1] = minor, tracks[4] = ear training.
+// Tracks are found by id so adding a track never shifts these fixtures; error paths use the
+// track's index in buildTracks() (`T.major`, `T.minor`, `T.ear`).
+const ids = buildTracks().map((t) => t.id);
+const indexOf = (id: string): number => {
+  const i = ids.indexOf(id);
+  if (i < 0) throw new Error(`no track ${id}`);
+  return i;
+};
+const T = {
+  major: indexOf('major-diatonic-chords'),
+  minor: indexOf('minor-diatonic-chords'),
+  scales: indexOf('minor-scales'),
+  ear: indexOf('ear-training'),
+};
+
 function broken(mutate: (tracks: Track[]) => void): Track[] {
   const tracks = structuredClone(buildTracks());
   mutate(tracks);
   return tracks;
 }
 
-const aMajor = (t: Track[]) => at(at(t, 0).levels, 3);
-const ear = (t: Track[]) => at(t, 4);
+const aMajor = (t: Track[]) => at(at(t, T.major).levels, 3);
+const ear = (t: Track[]) => at(t, T.ear);
 const intervalsL1 = (t: Track[]) => at(at(ear(t).stages, 0).levels, 0);
 
 function expectOneError(tracks: Track[], path: string): void {
@@ -30,49 +44,49 @@ describe('validateTracks negatives', () => {
       const d1 = at(aMajor(t).steps, 0);
       d1.match = { type: 'chord', notes: ['A', 'C', 'E'] };
     });
-    expectOneError(tracks, 'tracks[0].levels[3].steps[0].match.notes[1]');
+    expectOneError(tracks, `tracks[${T.major}].levels[3].steps[0].match.notes[1]`);
   });
 
   it('a misspelled note (Db for C# in A major I)', () => {
     const tracks = broken((t) => {
       at(aMajor(t).steps, 0).match = { type: 'chord', notes: ['A', 'Db', 'E'] };
     });
-    expectOneError(tracks, 'tracks[0].levels[3].steps[0].match.notes[1]');
+    expectOneError(tracks, `tracks[${T.major}].levels[3].steps[0].match.notes[1]`);
   });
 
   it('a duplicate step id', () => {
     const tracks = broken((t) => {
       at(aMajor(t).steps, 1).id = 'd1';
     });
-    expectOneError(tracks, 'tracks[0].levels[3].steps[1].id');
+    expectOneError(tracks, `tracks[${T.major}].levels[3].steps[1].id`);
   });
 
   it('a duplicate level id across tracks', () => {
     const tracks = broken((t) => {
-      at(at(t, 2).levels, 0).id = 'a-minor';
+      at(at(t, T.scales).levels, 0).id = 'a-minor';
     });
-    expectOneError(tracks, 'tracks[2].levels[0].id');
+    expectOneError(tracks, `tracks[${T.scales}].levels[0].id`);
   });
 
   it('an out-of-range note', () => {
     const tracks = broken((t) => {
       at(intervalsL1(t).pool, 0).play = { type: 'notes', notes: ['C4', 'C9'], gapMs: 800 };
     });
-    expectOneError(tracks, 'tracks[4].stages[0].levels[0].pool[0].play.notes[1]');
+    expectOneError(tracks, `tracks[${T.ear}].stages[0].levels[0].pool[0].play.notes[1]`);
   });
 
   it('a missing unlock target', () => {
     const tracks = broken((t) => {
       at(ear(t).stages, 1).unlock = { stage: 'nope', level: 4 };
     });
-    expectOneError(tracks, 'tracks[4].stages[1].unlock.stage');
+    expectOneError(tracks, `tracks[${T.ear}].stages[1].unlock.stage`);
   });
 
   it('an unlock level past the end of its target', () => {
     const tracks = broken((t) => {
       at(ear(t).stages, 1).unlock = { stage: 'intervals', level: 8 };
     });
-    expectOneError(tracks, 'tracks[4].stages[1].unlock.level');
+    expectOneError(tracks, `tracks[${T.ear}].stages[1].unlock.level`);
   });
 
   it('an unlock cycle', () => {
@@ -80,7 +94,7 @@ describe('validateTracks negatives', () => {
       at(ear(t).stages, 1).unlock = { stage: 'chord-quality', level: 1 };
       at(ear(t).stages, 2).unlock = { stage: 'scale-degrees', level: 1 };
     });
-    expectOneError(tracks, 'tracks[4].stages[1].unlock');
+    expectOneError(tracks, `tracks[${T.ear}].stages[1].unlock`);
   });
 
   it('choice.answer not in options', () => {
@@ -89,14 +103,14 @@ describe('validateTracks negatives', () => {
       if (step.match.type !== 'choice') throw new Error('expected choice');
       step.match = { ...step.match, answer: 'XX' };
     });
-    expectOneError(tracks, 'tracks[4].stages[0].levels[0].pool[0].match.answer');
+    expectOneError(tracks, `tracks[${T.ear}].stages[0].levels[0].pool[0].match.answer`);
   });
 
   it('a pool answer that is not an active option', () => {
     const tracks = broken((t) => {
       intervalsL1(t).activeOptions = ['P1', 'P5'];
     });
-    expectOneError(tracks, 'tracks[4].stages[0].levels[0].pool[2].match.answer');
+    expectOneError(tracks, `tracks[${T.ear}].stages[0].levels[0].pool[2].match.answer`);
   });
 
   it('a phrase without 8 notes', () => {
@@ -105,28 +119,28 @@ describe('validateTracks negatives', () => {
       if (step.play?.type !== 'phrase') throw new Error('expected phrase');
       step.play = { type: 'phrase', notes: step.play.notes.slice(0, 7) };
     });
-    expectOneError(tracks, 'tracks[4].stages[4].levels[0].pool[0].play.notes');
+    expectOneError(tracks, `tracks[${T.ear}].stages[4].levels[0].pool[0].play.notes`);
   });
 
   it('circle levels out of order (G and D swapped)', () => {
     const tracks = broken((t) => {
-      const levels = at(t, 0).levels ?? [];
+      const levels = at(t, T.major).levels ?? [];
       const [g, d] = [at(levels, 1), at(levels, 2)];
       levels[1] = d;
       levels[2] = g;
     });
     expect(validateTracks(tracks).map((e) => e.path)).toEqual([
-      'tracks[0].levels[1].key.tonic',
-      'tracks[0].levels[2].key.tonic',
+      `tracks[${T.major}].levels[1].key.tonic`,
+      `tracks[${T.major}].levels[2].key.tonic`,
     ]);
   });
 
   it('a lesson chip with the wrong quality', () => {
     const tracks = broken((t) => {
-      const chip = at(at(at(t, 1).lesson?.rows, 1).chips, 2);
+      const chip = at(at(at(t, T.minor).lesson?.rows, 1).chips, 2);
       chip.quality = 'minor';
     });
-    expectOneError(tracks, 'tracks[1].lesson.rows[1].chips[2].quality');
+    expectOneError(tracks, `tracks[${T.minor}].lesson.rows[1].chips[2].quality`);
   });
 
   it('a malformed note fails the schema with a path', () => {
@@ -137,6 +151,6 @@ describe('validateTracks negatives', () => {
         gapMs: 800,
       };
     });
-    expectOneError(tracks, 'tracks[4].stages[0].levels[0].pool[0].play.notes[1]');
+    expectOneError(tracks, `tracks[${T.ear}].stages[0].levels[0].pool[0].play.notes[1]`);
   });
 });

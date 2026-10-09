@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { AppHeader } from '../../components/ui/AppHeader';
 import { BlockRow } from '../../components/ui/BlockRow';
@@ -12,6 +11,7 @@ import { sessionRoute } from '../shared/routes';
 import {
   blockStates,
   ctaNote,
+  LIBRARY_ROUTE,
   NO_TRACKS_CTA,
   partitionTracks,
   resumeOffer,
@@ -35,9 +35,6 @@ export interface TodayViewProps {
   midiOverride?: MidiStatus | undefined;
   onCta: () => void;
   ctaBusy?: boolean;
-  onAddTrack: () => void;
-  /** Rendered after the page (AddTrackDialog). */
-  children?: ReactNode;
 }
 
 /** Main.dc.html — the Today screen, fed by `plan.getToday` (or a fixture in /dev/screens/today). */
@@ -50,8 +47,6 @@ export function TodayView({
   midiOverride,
   onCta,
   ctaBusy = false,
-  onAddTrack,
-  children,
 }: TodayViewProps) {
   const states = today ? blockStates(today.blocks) : [];
   const { cards, rows } = partitionTracks(today?.tracks ?? []);
@@ -102,7 +97,7 @@ export function TodayView({
 
           {today && mode === 'no-tracks' && (
             <div className={styles.ctaRow}>
-              <PrimaryButton size={60} onClick={onAddTrack} data-testid="today-cta">
+              <PrimaryButton size={60} to={LIBRARY_ROUTE} data-testid="today-cta">
                 {NO_TRACKS_CTA}
               </PrimaryButton>
             </div>
@@ -142,8 +137,8 @@ export function TodayView({
           )}
           <div className={styles.tracksHead}>
             <h2 className={styles.h2}>Your tracks</h2>
-            <Link to="/tracks" className={styles.mapLink}>
-              See the map
+            <Link to={LIBRARY_ROUTE} className={styles.mapLink} data-testid="all-tracks">
+              All tracks
             </Link>
           </div>
           {cards.map((t) => (
@@ -156,12 +151,11 @@ export function TodayView({
               ))}
             </div>
           )}
-          <DashedButton onClick={onAddTrack} data-testid="add-track">
+          <DashedButton to={LIBRARY_ROUTE} data-testid="add-track">
             Add something to learn
           </DashedButton>
         </aside>
       </main>
-      {children}
     </div>
   );
 }

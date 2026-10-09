@@ -114,11 +114,20 @@ describe('registerHandlers', () => {
     registerHandlers(ipc, {
       ...handlers,
       'content.tracks': () =>
-        [{ id: 'x', title: 'X', map: 'circle-of-fifths', available: true, secret: 1 }] as never,
+        [
+          {
+            id: 'x',
+            title: 'X',
+            group: 'G',
+            map: 'circle-of-fifths',
+            available: true,
+            secret: 1,
+          },
+        ] as never,
       'me.get': () => ({ name: 'Harry' }) as never,
     });
     await expect(invoke('content.tracks')).resolves.toEqual([
-      { id: 'x', title: 'X', map: 'circle-of-fifths', available: true },
+      { id: 'x', title: 'X', group: 'G', map: 'circle-of-fifths', available: true },
     ]);
     await expect(invoke('me.get')).rejects.toBeInstanceOf(ZodError);
   });

@@ -1,0 +1,143 @@
+/* Track library (decisions.md 2026-10-08 "Track library"; not in the designs). Page and main
+   copy the Path page (Path:18, Path:39); the card is the Main:119 track card. */
+
+/* Path:18 */
+.page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Path:39 */
+.main {
+  max-width: 1184px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 48px 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Main:46 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Path:54 */
+.h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* Path:55 */
+.subtitle {
+  margin: 0;
+  font-size: 17px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Main:115 — section heading. */
+.h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+/* Three cards across at 1280 (1088px content), one column on narrow windows. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+}
+
+.card {
+  height: 100%;
+  box-sizing: border-box;
+}
+.cardMuted {
+  box-shadow: none;
+}
+
+/* Main:120 */
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Main:121 */
+.title {
+  font-size: 18px;
+  font-weight: 800;
+}
+.cardMuted .title {
+  color: var(--muted);
+}
+
+/* Main:122 / Main:136 / Main:150 */
+.status {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+.warm {
+  color: var(--tangerine-deep);
+}
+.cool {
+  color: var(--teal-deep);
+}
+.muted {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* Path:55 at card size. */
+.blurb {
+  margin: 0;
+  flex-grow: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Main:127 */
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.next {
+  text-align: right;
+}
+
+/* Main:158 — lavender label, like the current ladder level. */
+.joined {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--lavender-deep);
+}

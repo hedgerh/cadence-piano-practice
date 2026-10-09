@@ -573,6 +573,7 @@ export function earTraining(): Track {
     title: 'Ear training',
     blurb:
       'The app plays, you name it, then you play it back. Five stages, each building on the last — from two notes to a whole key.',
+    group: 'Ear training',
     map: 'ladder',
     available: true,
     stages: [

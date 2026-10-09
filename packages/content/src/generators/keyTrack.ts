@@ -49,6 +49,7 @@ export function majorDiatonicChords(): Track {
     title: 'Major diatonic chords',
     blurb:
       'One key per level, moving clockwise around the circle of fifths. Each level: play all seven chords of the key.',
+    group: 'Chords',
     map: 'circle-of-fifths',
     available: true,
     levels: circleLevels(CIRCLE_MAJOR, 'major'),
@@ -61,6 +62,7 @@ export function minorDiatonicChords(): Track {
     title: 'Minor diatonic chords',
     blurb:
       'One minor key per level, starting from A minor and moving clockwise around the circle of fifths. Each level: play all seven chords of the key.',
+    group: 'Chords',
     map: 'circle-of-fifths',
     available: true,
     lesson: minorPatternLesson(),

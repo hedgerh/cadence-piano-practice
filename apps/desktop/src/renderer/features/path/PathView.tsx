@@ -10,7 +10,7 @@ import { PrimaryButton } from '../../components/ui/PrimaryButton';
 import { RomanChip } from '../../components/ui/RomanChip';
 import { SecondaryButton } from '../../components/ui/SecondaryButton';
 import { TrackPills, type TrackPill } from '../../components/ui/TrackPills';
-import type { PatternChip, UpNextCard } from './path';
+import { LIBRARY_ROUTE, type PatternChip, type UpNextCard } from './path';
 import styles from './PathPage.module.css';
 
 export interface PathViewProps {
@@ -67,7 +67,7 @@ export function PathView({
     <div className={styles.page} data-testid="path">
       <AppHeader active="tracks" streakDays={streakDays} xp={xp} />
       <main className={styles.main}>
-        <TrackPills pills={pills} />
+        <TrackPills pills={pills} allTracksTo={LIBRARY_ROUTE} />
 
         <div className={styles.grid}>
           <section className={styles.info}>

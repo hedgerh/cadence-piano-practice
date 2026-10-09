@@ -1,15 +1,14 @@
 // /dev/screens/today — the Today screen fed by Main.dc.html's fixture (no IPC).
 // Knobs: ?done=0|1|2|3 (blocks finished; default 1 = the design), ?midi=connected|no-device|…,
-// ?add=1 (open the "Add something to learn" dialog). Task 16: ?resume=1 (an ear level left
-// mid-way), ?state=no-tracks|all-complete (edge states).
+// Task 16: ?resume=1 (an ear level left mid-way), ?state=no-tracks|all-complete (edge states).
+// "Add something to learn" links to the library (/dev/screens/library).
+import { buildTracks } from '@cadence/content';
 import type { ComponentType } from 'react';
-import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { mainFixture } from '../../dev/fixtures/main';
 import { midiStatuses, user } from '../../dev/fixtures/user';
 import type { MidiStatus } from '../../midi/MidiInput';
-import { AddTrackDialog } from './AddTrackDialog';
-import type { PlanBlockDto, TodayDto, TrackCardDto, TrackSummary } from './today';
+import type { PlanBlockDto, TodayDto, TrackCardDto } from './today';
 import { TodayView } from './TodayView';
 
 const LEVELS = ['c-major', 'a-major', 'g-major'] as const;
@@ -51,9 +50,11 @@ export function fixtureToday(done: number): TodayDto {
     card('minor-diatonic-chords', minor.title, 'ready', minor.status, 0, minor),
     ...rows.map((r): TrackCardDto => {
       const ear = r.available;
+      const trackId = ear ? 'ear-training' : r.title.toLowerCase().replace(/[^a-z]+/g, '-');
       return {
-        trackId: ear ? 'ear-training' : r.title.toLowerCase().replace(/[^a-z]+/g, '-'),
+        trackId,
         title: r.title,
+        ...contentOf(trackId),
         map: ear ? 'ladder' : 'circle-of-fifths',
         available: r.available,
         enrolled: ear,
@@ -155,6 +156,14 @@ export function fixtureTodayVariant(
   return today;
 }
 
+const CONTENT = new Map(buildTracks().map((t) => [t.id, t]));
+
+/** The real track's library group and blurb (fixtures only invent progress). */
+function contentOf(trackId: string): { group: string; blurb: string } {
+  const t = CONTENT.get(trackId);
+  return { group: t?.group ?? 'Chords', blurb: t?.blurb ?? '' };
+}
+
 function card(
   trackId: string,
   title: string,
@@ -166,6 +175,7 @@ function card(
   return {
     trackId,
     title,
+    ...contentOf(trackId),
     map: 'circle-of-fifths',
     available: true,
     enrolled: status === 'in_progress',
@@ -181,15 +191,6 @@ function card(
   };
 }
 
-const ADDABLE: TrackSummary[] = [
-  {
-    id: 'minor-diatonic-chords',
-    title: 'Minor diatonic chords',
-    map: 'circle-of-fifths',
-    available: true,
-  },
-];
-
 function isMidiKind(k: string | null): k is MidiStatus['kind'] {
   return k !== null && k in midiStatuses;
 }
@@ -203,8 +204,6 @@ function TodayDevScreen() {
   const done = Math.min(3, Math.max(0, Number(params.get('done') ?? '1') || 0));
   const midiKind = params.get('midi');
   const midi = midiStatuses[isMidiKind(midiKind) ? midiKind : 'connected'];
-  const [adding, setAdding] = useState(params.get('add') === '1');
-  const close = useCallback(() => setAdding(false), []);
   return (
     <TodayView
       greeting={user.greeting}
@@ -217,10 +216,7 @@ function TodayDevScreen() {
       midi={midi}
       midiOverride={midi}
       onCta={() => undefined}
-      onAddTrack={() => setAdding(true)}
-    >
-      {adding && <AddTrackDialog tracks={ADDABLE} onPick={close} onClose={close} />}
-    </TodayView>
+    />
   );
 }
 

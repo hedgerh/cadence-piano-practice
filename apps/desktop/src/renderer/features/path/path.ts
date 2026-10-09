@@ -10,9 +10,16 @@ import type { TrackDto, TrackOverviewDto, TrackSummary } from '../shared/hooks';
 export const trackRoute = (trackId: string) => `/tracks/${trackId}`;
 export const lessonRoute = (trackId: string) => `/tracks/${trackId}/lesson`;
 
-/** Path:41–47 — active ink pill, available outlined link, locked (`available:false`) span. */
+export const LIBRARY_ROUTE = '/tracks';
+
+/**
+ * Path:41–47 — active ink pill, available outlined link, locked (`available:false`) span, for
+ * the tracks in the active track's group only (the library lists every group).
+ */
 export function trackPills(tracks: readonly TrackSummary[], activeId: string): TrackPill[] {
-  return tracks.map((t) => ({
+  const group = tracks.find((t) => t.id === activeId)?.group;
+  const mates = group === undefined ? tracks : tracks.filter((t) => t.group === group);
+  return mates.map((t) => ({
     id: t.id,
     label: t.title,
     state: t.id === activeId ? 'active' : t.available ? 'available' : 'locked',

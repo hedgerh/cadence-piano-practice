@@ -20,6 +20,7 @@ import {
   upNextTitle,
 } from './LadderModel';
 import styles from './LadderPathPage.module.css';
+import { LIBRARY_ROUTE } from './path';
 import { ReplayLevels } from './ReplayLevels';
 
 export interface LadderPathViewProps {
@@ -62,7 +63,7 @@ export function LadderPathView({
     <div className={styles.page} data-testid="ladder-path">
       <AppHeader active="tracks" streakDays={streakDays} xp={xp} />
       <main className={styles.main}>
-        <TrackPills pills={trackPills(tracks, trackId)} />
+        <TrackPills pills={trackPills(tracks, trackId)} allTracksTo={LIBRARY_ROUTE} />
 
         {overview && (
           <div className={styles.grid}>

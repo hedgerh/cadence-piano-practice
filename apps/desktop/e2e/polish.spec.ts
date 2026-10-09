@@ -239,7 +239,7 @@ test('Today with no active tracks: the CTA picks something to learn', async () =
     await expect(page.getByTestId('today-cta-note')).toHaveCount(0);
     await page.screenshot({ path: 'e2e/screenshots/16-today-no-tracks.png' });
     await cta.click();
-    await expect(page.getByTestId('add-track-dialog')).toBeVisible();
+    await expect(page.getByTestId('library')).toBeVisible();
   } finally {
     await app.close();
   }

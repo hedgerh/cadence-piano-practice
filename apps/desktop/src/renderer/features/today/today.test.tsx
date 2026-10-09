@@ -2,17 +2,16 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { connectedMidi, midiStatuses } from '../../dev/fixtures/user';
-import { AddTrackDialog } from './AddTrackDialog';
 import { fixtureToday, fixtureTodayVariant } from './dev';
 import { Onboarding } from './Onboarding';
 import {
-  addableTracks,
   blockStates,
   ctaAction,
   ctaNote,
   greetingFor,
   ALL_COMPLETE_SUBTITLE,
   NO_TRACKS_SUBTITLE,
+  isJoined,
   partitionTracks,
   resumeOffer,
   resumeProgress,
@@ -80,25 +79,19 @@ describe('ctaAction (engine.md §4 PlanService step 8)', () => {
 });
 
 describe('tracks', () => {
-  it('circle tracks that are available get cards; ladder and unavailable tracks are rows', () => {
+  // decisions.md 2026-10-08 "Track library": Your tracks = joined tracks only.
+  it('only joined tracks: circle tracks get cards, ladder tracks rows', () => {
     const { cards, rows } = partitionTracks(fixtureToday(1).tracks);
-    expect(cards.map((c) => c.title)).toEqual(['Major diatonic chords', 'Minor diatonic chords']);
-    expect(rows.map((c) => c.title)).toEqual([
-      'Minor scales',
-      'Inversions & voice leading',
-      'Ear training',
-    ]);
+    expect(cards.map((c) => c.title)).toEqual(['Major diatonic chords']);
+    expect(rows.map((c) => c.title)).toEqual(['Ear training']);
   });
 
-  it('addable = available and not active', () => {
-    const summaries = [
-      { id: 'a', title: 'A', map: 'ladder' as const, available: true },
-      { id: 'b', title: 'B', map: 'ladder' as const, available: true },
-      { id: 'c', title: 'C', map: 'ladder' as const, available: false },
-    ];
-    expect(addableTracks(summaries, [{ trackId: 'a', active: true }]).map((t) => t.id)).toEqual([
-      'b',
-    ]);
+  it('isJoined = available, enrolled and active', () => {
+    const t = { available: true, enrolled: true, active: true };
+    expect(isJoined(t)).toBe(true);
+    expect(isJoined({ ...t, active: false })).toBe(false);
+    expect(isJoined({ ...t, enrolled: false })).toBe(false);
+    expect(isJoined({ ...t, available: false })).toBe(false);
   });
 
   it('ctaNote follows MIDI and the all-done streak (Main:109, ui.md §3)', () => {
@@ -125,7 +118,6 @@ function renderView(done: number, onCta = vi.fn()) {
         midi={connectedMidi}
         midiOverride={connectedMidi}
         onCta={onCta}
-        onAddTrack={() => undefined}
       />
     </MemoryRouter>,
   );
@@ -149,7 +141,9 @@ describe('TodayView states (ui.md §3: 0/1/2/3 done)', () => {
     expect(screen.getByTestId('track-row-ear-training').textContent).toContain(
       'Intervals · Level 3',
     );
-    expect(screen.getByTestId('track-row-minor-scales').tagName).toBe('DIV');
+    expect(screen.queryByTestId('track-card-minor-diatonic-chords')).toBeNull();
+    expect(screen.getByTestId('all-tracks').getAttribute('href')).toBe('/tracks');
+    expect(screen.getByTestId('add-track').getAttribute('href')).toBe('/tracks');
   });
 
   it('done=0 starts the warm-up', () => {
@@ -193,36 +187,6 @@ describe('Onboarding', () => {
   });
 });
 
-describe('AddTrackDialog', () => {
-  it('picks a track and closes on Escape', () => {
-    const onPick = vi.fn();
-    const onClose = vi.fn();
-    render(
-      <AddTrackDialog
-        tracks={[
-          {
-            id: 'minor-diatonic-chords',
-            title: 'Minor diatonic chords',
-            map: 'circle-of-fifths',
-            available: true,
-          },
-        ]}
-        onPick={onPick}
-        onClose={onClose}
-      />,
-    );
-    fireEvent.click(screen.getByTestId('add-track-minor-diatonic-chords'));
-    expect(onPick).toHaveBeenCalledWith('minor-diatonic-chords');
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it('says so when nothing is left to add', () => {
-    render(<AddTrackDialog tracks={[]} onPick={() => undefined} onClose={() => undefined} />);
-    expect(screen.getByTestId('add-track-dialog').textContent).toMatch(/already learning/);
-  });
-});
-
 // Task 16 edge states.
 describe('Today edge states (Task 16)', () => {
   it('todayMode: no active tracks / every active track complete / a plan', () => {
@@ -255,7 +219,7 @@ describe('Today edge states (Task 16)', () => {
     );
   });
 
-  function renderToday(today: TodayDto, onAddTrack = vi.fn()) {
+  function renderToday(today: TodayDto) {
     render(
       <MemoryRouter>
         <TodayView
@@ -266,11 +230,9 @@ describe('Today edge states (Task 16)', () => {
           midi={connectedMidi}
           midiOverride={connectedMidi}
           onCta={() => undefined}
-          onAddTrack={onAddTrack}
         />
       </MemoryRouter>,
     );
-    return onAddTrack;
   }
 
   it('renders "Resume Intervals · Level 3" linking to the session route', () => {
@@ -282,13 +244,12 @@ describe('Today edge states (Task 16)', () => {
     expect(link.getAttribute('href')).toBe('/ear/intervals-3?session=fixture-session');
   });
 
-  it('no active tracks: no plan card, and the CTA opens "Add something to learn"', () => {
-    const onAdd = renderToday(fixtureTodayVariant(1, { state: 'no-tracks' }));
+  it('no active tracks: no plan card, and the CTA opens the track library', () => {
+    renderToday(fixtureTodayVariant(1, { state: 'no-tracks' }));
     expect(screen.queryByTestId('today-plan')).toBeNull();
     expect(screen.queryByTestId('today-cta-note')).toBeNull();
     const cta = screen.getByTestId('today-cta');
     expect(cta.textContent).toContain('Pick something to learn');
-    fireEvent.click(cta);
-    expect(onAdd).toHaveBeenCalledOnce();
+    expect(cta.getAttribute('href')).toBe('/tracks');
   });
 });

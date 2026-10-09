@@ -1,5 +1,5 @@
 // docs/engine.md §5 Practice reducer and §6 defaults 1–7 (HANDOFF §5 practice loop).
-import { keyLevel, minorScaleLevel } from '@cadence/content';
+import { keyLevel, scaleLevel } from '@cadence/content';
 import { noteToMidi, type Midi, type Note } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
 import {
@@ -390,8 +390,8 @@ describe('withRetry (recordStep posts)', () => {
 // HANDOFF §5: "Sequence matches accept notes one at a time in order; a wrong note resets the
 // sequence silently." The minor-scales track (decisions.md 2026-10-03) runs on this.
 describe('scale levels (sequence steps fed by NOTE_ON)', () => {
-  const scaleLevel = minorScaleLevel({ tonic: 'A', mode: 'minor' });
-  const scaleSteps = scaleLevel.steps.map((s) => ({
+  const aMinorScale = scaleLevel({ tonic: 'A', mode: 'minor' });
+  const scaleSteps = aMinorScale.steps.map((s) => ({
     ...s,
     lastResult: null,
     dueOn: null,

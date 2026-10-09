@@ -2,6 +2,7 @@ import { majorDiatonicChords, minorDiatonicChords } from '@cadence/content';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { TrackPills } from '../../components/ui/TrackPills';
 import type { TrackOverviewDto } from '../shared/hooks';
 import { minorReadyOverview } from './dev';
 import {
@@ -11,6 +12,7 @@ import {
   finishedKeys,
   innerRing,
   isCompactLabel,
+  LIBRARY_ROUTE,
   planBlockFor,
   primaryAction,
   trackEyebrow,
@@ -62,20 +64,37 @@ function majorDay8(): TrackOverviewDto {
 }
 
 describe('trackPills (Path:41–47)', () => {
+  const summaries = [
+    { id: 'a', title: 'A', group: 'G1', map: 'circle-of-fifths' as const, available: true },
+    { id: 'x', title: 'X', group: 'G2', map: 'circle-of-fifths' as const, available: true },
+    { id: 'b', title: 'B', group: 'G1', map: 'circle-of-fifths' as const, available: true },
+    { id: 'c', title: 'C', group: 'G1', map: 'circle-of-fifths' as const, available: false },
+  ];
+
   it('active ink pill, available links, locked spans for available:false', () => {
-    const pills = trackPills(
-      [
-        { id: 'a', title: 'A', map: 'circle-of-fifths', available: true },
-        { id: 'b', title: 'B', map: 'circle-of-fifths', available: true },
-        { id: 'c', title: 'C', map: 'circle-of-fifths', available: false },
-      ],
-      'b',
-    );
+    const pills = trackPills(summaries, 'b');
     expect(pills.map((p) => [p.id, p.state, p.to])).toEqual([
       ['a', 'available', '/tracks/a'],
       ['b', 'active', '/tracks/b'],
       ['c', 'locked', '/tracks/c'],
     ]);
+  });
+
+  // decisions.md 2026-10-08 "Track library": the row holds the active track's group only.
+  it("shows only the active track's group", () => {
+    expect(trackPills(summaries, 'x').map((p) => p.id)).toEqual(['x']);
+    expect(trackPills(summaries, 'nope').map((p) => p.id)).toEqual(['a', 'x', 'b', 'c']);
+  });
+
+  it('the pill row leads with an "All tracks" link to the library', () => {
+    render(
+      <MemoryRouter>
+        <TrackPills pills={trackPills(summaries, 'a')} allTracksTo={LIBRARY_ROUTE} />
+      </MemoryRouter>,
+    );
+    const link = screen.getByTestId('all-tracks-link');
+    expect(link.textContent).toBe('All tracks');
+    expect(link.getAttribute('href')).toBe('/tracks');
   });
 });
 
@@ -231,6 +250,7 @@ describe('PathView', () => {
               {
                 id: 'major-diatonic-chords',
                 title: 'Major diatonic chords',
+                group: 'Chords',
                 map: 'circle-of-fifths',
                 available: true,
               },

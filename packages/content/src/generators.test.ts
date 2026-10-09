@@ -4,28 +4,31 @@ import { type MatchSpec, hintFor, noteToMidi, pcNumber, scale } from '@cadence/m
 import { describe, expect, it } from 'vitest';
 import { intervalAnchor, spellTriad } from './generators/earTrack';
 import { numeralAscii, stepKey } from './ids';
-import { buildTracks, stepNoun, stepNounPlural } from './index';
+import { buildTracks, groupTracks, stepNoun, stepNounPlural } from './index';
 import { allLevels, allSteps, at, stageById, trackById } from './testUtils';
 import { validateTracks } from './validate';
 
 const tracks = buildTracks();
 const majorTrack = trackById(tracks, 'major-diatonic-chords');
 const minorTrack = trackById(tracks, 'minor-diatonic-chords');
+const majorScalesTrack = trackById(tracks, 'major-scales');
 const scalesTrack = trackById(tracks, 'minor-scales');
 const inversionsTrack = trackById(tracks, 'inversions-voice-leading');
 const ear = trackById(tracks, 'ear-training');
 
 describe('buildTracks', () => {
-  it('returns the five tracks in display order', () => {
+  it('returns every track in display order', () => {
     expect(tracks.map((t) => t.id)).toEqual([
       'major-diatonic-chords',
       'minor-diatonic-chords',
-      'minor-scales',
       'inversions-voice-leading',
+      'major-scales',
+      'minor-scales',
       'ear-training',
     ]);
-    expect(tracks.map((t) => t.available)).toEqual([true, true, true, false, true]);
+    expect(tracks.map((t) => t.available)).toEqual([true, true, false, true, true, true]);
     expect(tracks.map((t) => t.map)).toEqual([
+      'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
@@ -211,6 +214,73 @@ describe('minor-scales', () => {
     expect(eb.blurb).toBe(
       'Six flats: B♭ · E♭ · A♭ · D♭ · G♭ · C♭. Notes: E♭ · F · G♭ · A♭ · B♭ · C♭ · D♭',
     );
+  });
+});
+
+describe('major-scales', () => {
+  it('12 levels clockwise from C major, up/down like the minor scales', () => {
+    expect(majorScalesTrack.available).toBe(true);
+    expect(majorScalesTrack.levels?.map((l) => l.id)).toEqual(
+      ['c', 'g', 'd', 'a', 'e', 'b', 'gb', 'db', 'ab', 'eb', 'bb', 'f'].map(
+        (t) => `${t}-major-scale`,
+      ),
+    );
+    const g = at(majorScalesTrack.levels, 1);
+    expect(g.title).toBe('G major');
+    expect(g.blurb).toBe('One sharp: F♯. Notes: G · A · B · C · D · E · F♯');
+    expect(at(g.steps, 0)).toMatchObject({
+      id: 'up',
+      name: 'G major scale, going up',
+      match: {
+        type: 'sequence',
+        notes: ['G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F#4', 'G4'],
+        direction: 'up',
+        anyOctave: true,
+      },
+    });
+    expect(at(g.steps, 1).match).toMatchObject({
+      notes: ['G4', 'F#4', 'E4', 'D4', 'C4', 'B3', 'A3', 'G3'],
+    });
+  });
+
+  it('every placed scale stays on the two-octave practice keyboard (C3..B4)', () => {
+    for (const level of [...(majorScalesTrack.levels ?? []), ...(scalesTrack.levels ?? [])]) {
+      for (const step of level.steps) {
+        if (step.match.type !== 'sequence') throw new Error('scale steps are sequences');
+        for (const n of step.match.notes) {
+          expect(noteToMidi(n)).toBeGreaterThanOrEqual(48);
+          expect(noteToMidi(n)).toBeLessThanOrEqual(71);
+        }
+      }
+    }
+  });
+});
+
+describe('groups (library sections)', () => {
+  it('every track names a group; tracks of a group are adjacent in display order', () => {
+    expect(groupTracks(tracks).map((g) => [g.group, g.tracks.map((t) => t.id)])).toEqual([
+      ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords', 'inversions-voice-leading']],
+      ['Scales', ['major-scales', 'minor-scales']],
+      ['Ear training', ['ear-training']],
+    ]);
+    const order = tracks.map((t) => t.group);
+    const seen = new Set<string>();
+    order.forEach((g, i) => {
+      if (i > 0 && order[i - 1] !== g) expect(seen.has(g)).toBe(false);
+      seen.add(g);
+    });
+  });
+
+  it('groupTracks keeps first-appearance order for any list', () => {
+    const list = [
+      { id: 'a', group: 'X' },
+      { id: 'b', group: 'Y' },
+      { id: 'c', group: 'X' },
+    ];
+    expect(groupTracks(list).map((g) => [g.group, g.tracks.map((t) => t.id)])).toEqual([
+      ['X', ['a', 'c']],
+      ['Y', ['b']],
+    ]);
   });
 });
 

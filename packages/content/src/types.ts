@@ -129,6 +129,12 @@ export const TrackSchema = z.object({
   id: z.string().min(1),
   title: z.string(),
   blurb: z.string(),
+  /**
+   * Library section the track is listed under ("Chords", "Scales", "Ear training"). Sections
+   * appear in the order their first track appears in `buildTracks()`; the map's pills show the
+   * current track's group only (decisions.md 2026-10-08 "Track library").
+   */
+  group: z.string().min(1),
   map: z.enum(['circle-of-fifths', 'ladder']),
   /** false = shown as locked "coming soon" in the pills. */
   available: z.boolean(),

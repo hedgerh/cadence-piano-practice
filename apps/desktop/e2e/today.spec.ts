@@ -66,9 +66,8 @@ test('Today (seed day8): blocks, CTA, probes, starts the learn session', async (
       'href',
       '#/tracks/major-diatonic-chords',
     );
-    await expect(page.getByTestId('track-card-minor-diatonic-chords')).toContainText(
-      'Ready to start',
-    );
+    // decisions.md 2026-10-08 "Track library": only joined tracks; the rest live in /tracks.
+    await expect(page.getByTestId('track-card-minor-diatonic-chords')).toHaveCount(0);
     await expect(page.getByTestId('track-row-ear-training')).toContainText('Intervals · Level 3');
 
     // ---- fidelity probes (docs/ui.md §5) ----
@@ -120,17 +119,19 @@ test('Today (seed day8): blocks, CTA, probes, starts the learn session', async (
   }
 });
 
-test('Add something to learn enrolls a track', async () => {
+test('Add something to learn opens the library; starting a track there joins it', async () => {
   const { app, page } = await launchCadence();
   try {
     await seed(page, 'day8');
     await page.getByTestId('add-track').click();
-    const dialog = page.getByTestId('add-track-dialog');
-    await expect(dialog).toBeVisible();
-    await dialog.getByTestId('add-track-minor-diatonic-chords').click();
-    await expect(dialog).toBeHidden();
-    await page.getByTestId('add-track').click();
-    await expect(page.getByTestId('add-track-minor-diatonic-chords')).toHaveCount(0);
+    await expect(page).toHaveURL(/#\/tracks$/);
+    await page.getByTestId('library-card-major-scales').click();
+    await expect(page).toHaveURL(/#\/tracks\/major-scales$/);
+    await page.getByTestId('path-cta').click();
+    await expect(page).toHaveURL(/#\/practice\/c-major-scale\?session=/);
+    await expect(page.getByTestId('chord-name')).toHaveText('C major scale, going up');
+    await go(page, '/');
+    await expect(page.getByTestId('track-card-major-scales')).toBeVisible();
   } finally {
     await app.close();
   }

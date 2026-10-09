@@ -74,6 +74,7 @@ export function inversionsVoiceLeading(): Track {
     title: 'Inversions & voice leading',
     blurb:
       'Play I, IV and V in root position and both inversions, exactly as shown, one key per level.',
+    group: 'Chords',
     map: 'circle-of-fifths',
     available: false,
     levels: CIRCLE_MAJOR.map((tonic) => inversionsLevel({ tonic, mode: 'major' })),

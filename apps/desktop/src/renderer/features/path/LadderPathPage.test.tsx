@@ -78,13 +78,9 @@ describe('ladder helpers', () => {
     expect(upNext && upNextTitle({ ...upNext, stageTitle: null })).toBe('Level 3');
   });
 
-  it('trackPills: active / available / locked (Path:42–46)', () => {
-    expect(trackPills(FIXTURE_TRACKS, 'ear-training').map((p) => p.state)).toEqual([
-      'available',
-      'available',
-      'locked',
-      'locked',
-      'active',
+  it('trackPills: the Ear training group only, active (decisions.md 2026-10-08)', () => {
+    expect(trackPills(FIXTURE_TRACKS, 'ear-training').map((p) => [p.id, p.state])).toEqual([
+      ['ear-training', 'active'],
     ]);
   });
 });

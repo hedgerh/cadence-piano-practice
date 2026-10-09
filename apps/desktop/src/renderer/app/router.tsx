@@ -1,6 +1,7 @@
 import { createHashRouter, Navigate, type RouteObject } from 'react-router';
 import { devRoutes } from '../dev/routes';
 import { TodayPage } from '../features/today/TodayPage';
+import { LibraryPage } from '../features/library/LibraryPage';
 import { TracksRoute } from '../features/path/TracksRoute';
 import { LearnPage } from '../features/learn/LearnPage';
 import { PracticePage } from '../features/practice/PracticePage';
@@ -20,7 +21,7 @@ export interface RouterOptions {
 export function createAppRouter(opts: RouterOptions) {
   const routes: RouteObject[] = [
     { path: '/', element: <TodayPage /> },
-    { path: '/tracks', element: <TracksRoute /> },
+    { path: '/tracks', element: <LibraryPage /> },
     { path: '/tracks/:trackId', element: <TracksRoute /> },
     { path: '/tracks/:trackId/lesson', element: <LearnPage /> },
     { path: '/practice/:levelId', element: <PracticePage /> },

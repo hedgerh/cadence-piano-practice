@@ -26,9 +26,9 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
     ).toHaveAttribute('aria-current', 'page');
     const pills = page.getByTestId('track-pills');
     await expect(pills.locator('[data-state="active"]')).toHaveText('Ear training');
-    await expect(pills.locator('span[data-state="locked"]')).toHaveText([
-      'Inversions & voice leading',
-    ]);
+    // decisions.md 2026-10-08 "Track library": the row holds the Ear training group only.
+    await expect(pills.locator('[data-state]')).toHaveCount(1);
+    await expect(page.getByTestId('all-tracks-link')).toHaveAttribute('href', '#/tracks');
 
     // ---- intro + cards (EarPath:52–77) ----
     await expect(page.getByTestId('ladder-eyebrow')).toHaveText('Track · stage 1 of 5');

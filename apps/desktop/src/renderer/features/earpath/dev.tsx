@@ -3,7 +3,7 @@
 // degrees and Chord quality are open — exercises `done` rows and two open stages),
 // ?replay=<stageId> (that stage's "Replay a level" list starts open, e.g. ?replay=intervals).
 // Lives in its own feature folder because features/path/dev.tsx belongs to Task 10.
-import { earTraining } from '@cadence/content';
+import { buildTracks, earTraining } from '@cadence/content';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
@@ -23,29 +23,14 @@ const STAGE_IDS = [
 ] as const;
 const LEVEL_COUNTS = [6, 4, 3, 4, 3] as const;
 
-/** Path:42–46 — the five track pills. */
-export const FIXTURE_TRACKS: TrackSummary[] = [
-  {
-    id: 'major-diatonic-chords',
-    title: 'Major diatonic chords',
-    map: 'circle-of-fifths',
-    available: true,
-  },
-  {
-    id: 'minor-diatonic-chords',
-    title: 'Minor diatonic chords',
-    map: 'circle-of-fifths',
-    available: true,
-  },
-  { id: 'minor-scales', title: 'Minor scales', map: 'circle-of-fifths', available: false },
-  {
-    id: 'inversions-voice-leading',
-    title: 'Inversions & voice leading',
-    map: 'circle-of-fifths',
-    available: false,
-  },
-  { id: 'ear-training', title: 'Ear training', map: 'ladder', available: true },
-];
+/** `content.tracks` as main returns it: every real track, so the pills stay in step with content. */
+export const FIXTURE_TRACKS: TrackSummary[] = buildTracks().map((t) => ({
+  id: t.id,
+  title: t.title,
+  group: t.group,
+  map: t.map,
+  available: t.available,
+}));
 
 let blurbs: ReadonlyMap<string, string> | null = null;
 /** Level blurbs from content (engine.md §4 trackOverview passes them through). */

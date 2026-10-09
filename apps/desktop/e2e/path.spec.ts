@@ -63,18 +63,18 @@ test('Path (seed day8): pills, circle geometry, up next, probes, review a finish
     await expect(page.getByTestId('streak-pill')).toHaveText('8 day streak');
     await expect(page.getByTestId('xp-pill')).toHaveText('1,240 XP');
 
-    // ---- pills from content.tracks (Path:41–47) ----
+    // ---- pills from content.tracks (Path:41–47): the Chords group only, after "All tracks"
+    // (decisions.md 2026-10-08 "Track library") ----
+    await expect(page.getByTestId('all-tracks-link')).toHaveAttribute('href', '#/tracks');
     const pills = page.getByTestId('track-pills').locator('[data-state]');
     await expect(pills).toHaveText([
       'Major diatonic chords',
       'Minor diatonic chords',
-      'Minor scales',
       'Inversions & voice leading',
-      'Ear training',
     ]);
     const states = await pills.evaluateAll((els) => els.map((e) => e.getAttribute('data-state')));
-    expect(states).toEqual(['active', 'available', 'available', 'locked', 'available']);
-    await expect(pills.nth(3)).toHaveJSProperty('tagName', 'SPAN');
+    expect(states).toEqual(['active', 'available', 'locked']);
+    await expect(pills.nth(2)).toHaveJSProperty('tagName', 'SPAN');
     await expectSize(pills.nth(0), { height: 44 });
     await expectStyle(pills.nth(0), { backgroundColor: INK, color: PAPER, fontSize: '15px' });
     await expectStyle(pills.nth(1), {
@@ -82,7 +82,7 @@ test('Path (seed day8): pills, circle geometry, up next, probes, review a finish
       borderTopColor: LINE_STRONG,
       borderTopWidth: '2px',
     });
-    await expectStyle(pills.nth(3), { borderTopColor: LINE, color: 'rgb(107, 97, 90)' });
+    await expectStyle(pills.nth(2), { borderTopColor: LINE, color: 'rgb(107, 97, 90)' });
 
     // ---- intro + pattern (Path:53–76) ----
     await expect(page.getByTestId('path-eyebrow')).toHaveText('Track · 3 of 12 keys');
@@ -203,11 +203,12 @@ test('Path: "Review a finished key" card starts a review of the picked key', asy
   }
 });
 
-test('Path: primary CTA starts the learn session; /tracks redirects to the first track', async () => {
+test('Path: primary CTA starts the learn session; the library opens the map', async () => {
   const { app, page } = await launchCadence();
   try {
     await seed(page, 'day8');
     await go(page, '/tracks');
+    await page.getByTestId('library-card-major-diatonic-chords').click();
     await expect(page).toHaveURL(/#\/tracks\/major-diatonic-chords$/);
     await page.getByTestId('path-cta').click();
     await expect(page).toHaveURL(/#\/practice\/a-major\?session=[^&]+$/);

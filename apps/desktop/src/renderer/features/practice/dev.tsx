@@ -3,7 +3,7 @@
 // Knobs: ?hint=0|1|2 &vis=num|name|all &midi=none|denied &finished=1 &auto=1 (hands-free
 // auto-finish; the dev screen has no session, so it ends in the finish error)
 // &level=scale (A minor scale, nothing done yet: the minor-scales track)
-import { keyLevel, minorScaleLevel } from '@cadence/content';
+import { keyLevel, scaleLevel } from '@cadence/content';
 import type { ComponentType } from 'react';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router';
@@ -30,7 +30,7 @@ export function practiceSessionFixture(opts: {
   scale?: boolean;
 }): PracticeSession {
   const level = opts.scale
-    ? minorScaleLevel({ tonic: 'A', mode: 'minor' })
+    ? scaleLevel({ tonic: 'A', mode: 'minor' })
     : keyLevel({ tonic: 'A', mode: 'major' });
   const steps = level.steps.map((s) => ({ ...s, lastResult: null, dueOn: null, intervalDays: 0 }));
   return {

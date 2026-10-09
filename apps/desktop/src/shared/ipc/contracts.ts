@@ -94,6 +94,7 @@ export const MeUpdateSchema = z.object({
 export const TrackSummarySchema = z.object({
   id: z.string(),
   title: z.string(),
+  group: z.string(),
   map: MapSchema,
   available: z.boolean(),
 });
@@ -151,6 +152,8 @@ const CtaSchema = z.object({
 const TrackCardSchema = z.object({
   trackId: z.string(),
   title: z.string(),
+  group: z.string(),
+  blurb: z.string(),
   map: MapSchema,
   available: z.boolean(),
   enrolled: z.boolean(),

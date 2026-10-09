@@ -328,6 +328,8 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
     return {
       trackId,
       title: track.title,
+      group: track.group,
+      blurb: track.blurb,
       map: track.map,
       available: track.available,
       enrolled: row !== null,

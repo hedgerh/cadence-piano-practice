@@ -6,7 +6,6 @@ import type { MidiStatus } from '../../midi/MidiInput';
 export type TodayDto = ChannelOutput<'plan.getToday'>;
 export type PlanBlockDto = TodayDto['blocks'][number];
 export type TrackCardDto = TodayDto['tracks'][number];
-export type TrackSummary = ChannelOutput<'content.tracks'>[number];
 
 /** Task 07 Acceptance: morning < 12, afternoon < 18, evening otherwise (local hour). */
 export function greetingFor(name: string, hour: number): string {
@@ -47,26 +46,26 @@ export function ctaAction(today: Pick<TodayDto, 'cta' | 'blocks'>): CtaAction {
   };
 }
 
+/** On the learner's daily plan: available, enrolled and not paused. */
+export const isJoined = (t: Pick<TrackCardDto, 'available' | 'enrolled' | 'active'>): boolean =>
+  t.available && t.enrolled && t.active;
+
 /**
- * Main:119–160 — available circle tracks get the full card (progress bar); everything else
- * (ladder tracks, tracks not yet available) is a compact row.
+ * Main:119–160 "Your tracks" — only joined tracks (decisions.md 2026-10-08 "Track library": every
+ * other track lives in the library at `/tracks`). Circle tracks get the full card (progress bar);
+ * ladder tracks a compact row.
  */
 export function partitionTracks(tracks: readonly TrackCardDto[]): {
   cards: TrackCardDto[];
   rows: TrackCardDto[];
 } {
-  const isCard = (t: TrackCardDto) => t.available && t.map === 'circle-of-fifths';
-  return { cards: tracks.filter(isCard), rows: tracks.filter((t) => !isCard(t)) };
+  const mine = tracks.filter(isJoined);
+  const isCard = (t: TrackCardDto) => t.map === 'circle-of-fifths';
+  return { cards: mine.filter(isCard), rows: mine.filter((t) => !isCard(t)) };
 }
 
-/** Tracks "Add something to learn" can enroll: available and not active yet. */
-export function addableTracks(
-  summaries: readonly TrackSummary[],
-  cards: readonly Pick<TrackCardDto, 'trackId' | 'active'>[],
-): TrackSummary[] {
-  const active = new Set(cards.filter((c) => c.active).map((c) => c.trackId));
-  return summaries.filter((t) => t.available && !active.has(t.id));
-}
+/** "Add something to learn" / "Pick something to learn" open the track library. */
+export const LIBRARY_ROUTE = '/tracks';
 
 /** Main:109 beside the CTA; ui.md §3 all-done variant shows the kept streak instead. */
 export function ctaNote(opts: { allDone: boolean; streakDays: number; midi: MidiStatus }): string {
@@ -84,7 +83,7 @@ export function ctaNote(opts: { allDone: boolean; streakDays: number; midi: Midi
 export type TodayMode = 'plan' | 'no-tracks' | 'all-complete';
 
 export function todayMode(today: Pick<TodayDto, 'tracks' | 'blocks'>): TodayMode {
-  const active = today.tracks.filter((t) => t.available && t.active);
+  const active = today.tracks.filter(isJoined);
   if (active.length === 0) return today.blocks.length === 0 ? 'no-tracks' : 'plan';
   if (active.every((t) => t.status === 'complete')) return 'all-complete';
   return 'plan';

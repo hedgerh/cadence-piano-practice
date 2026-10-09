@@ -3,8 +3,7 @@
 // (docs/engine.md §4 trackOverview, §6.9); nothing here knows the ear-training content.
 import type { Segment } from '../../components/ui/SegmentedProgress';
 import type { StageRowProps } from '../../components/ui/StageRow';
-import type { TrackPill } from '../../components/ui/TrackPills';
-import type { TrackOverviewDto, TrackSummary } from '../shared/hooks';
+import type { TrackOverviewDto } from '../shared/hooks';
 
 export type StageDto = NonNullable<TrackOverviewDto['stages']>[number];
 export type LadderLevelDto = StageDto['levels'][number];
@@ -22,15 +21,8 @@ export const HOW_A_LEVEL_WORKS = [
   "8 of 10 passes the level. Misses come back in tomorrow's review.",
 ] as const;
 
-/** Path:41–47 — active ink · available white link · unavailable muted span. */
-export function trackPills(tracks: readonly TrackSummary[], activeId: string): TrackPill[] {
-  return tracks.map((t) => ({
-    id: t.id,
-    label: t.title,
-    state: t.id === activeId ? 'active' : t.available ? 'available' : 'locked',
-    to: `/tracks/${t.id}`,
-  }));
-}
+/** Path:41–47 — the same group-scoped switcher as the circle map. */
+export { trackPills } from './path';
 
 /** EarPath:93–100 — done teal · current tangerine · everything else empty (sand-deep). */
 export function levelSegment(state: LadderLevelDto['state']): Segment {
