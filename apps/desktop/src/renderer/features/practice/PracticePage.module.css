@@ -77,6 +77,10 @@
   gap: 10px;
   margin: 8px 0 4px;
 }
+/* RomanChip fills its row (flex 1 1 0); here the row has no width, so each chip gets one. */
+.parts > * {
+  flex: 0 0 88px;
+}
 
 /* The right chord with a too-big jump: lavender, never red. */
 .nudge {
