@@ -30,7 +30,7 @@ import {
 } from '@cadence/music';
 import { numeralAscii, pcSlug, stepKey } from '../ids';
 import type { Level, Pass, Stage, Step, Track } from '../types';
-import { invertedTriadNotes } from './inversionsTrack';
+import { invertedTriadNotes } from './inversions';
 import { type PhraseEnd, phrase } from './phrase';
 
 const PASS_TEN: Pass = { correct: 8, of: 10 };

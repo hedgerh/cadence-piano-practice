@@ -15,11 +15,20 @@ const byId = (id: string): TrackCardDto => {
   return t;
 };
 
+/** Every content track is available today, so "coming soon" is tested with a made-up one. */
+const comingSoon: TrackCardDto = {
+  ...byId('bass-and-chords'),
+  trackId: 'modes',
+  title: 'Modes',
+  available: false,
+};
+
 describe('librarySections', () => {
   it('one section per content group, in content order, holding every track', () => {
     const sections = librarySections(libraryFixture());
     expect(sections.map((s) => [s.group, s.cards.map((c) => c.trackId)])).toEqual([
-      ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords', 'inversions-voice-leading']],
+      ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
+      ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
       ['Scales', ['major-scales', 'minor-scales']],
       ['Ear training', ['ear-training']],
     ]);
@@ -61,7 +70,7 @@ describe('libraryCard', () => {
   });
 
   it('unavailable: muted "Coming soon", no link, no bar', () => {
-    expect(libraryCard(byId('inversions-voice-leading'))).toMatchObject({
+    expect(libraryCard(comingSoon)).toMatchObject({
       to: null,
       status: 'Coming soon',
       tone: 'muted',
@@ -73,9 +82,10 @@ describe('libraryCard', () => {
 
 describe('LibraryView', () => {
   function renderLibrary() {
+    const cards = [...libraryFixture(), comingSoon];
     render(
       <MemoryRouter>
-        <LibraryView streakDays={8} xp={1240} sections={librarySections(libraryFixture())} />
+        <LibraryView streakDays={8} xp={1240} sections={librarySections(cards)} />
       </MemoryRouter>,
     );
   }
@@ -85,6 +95,7 @@ describe('LibraryView', () => {
     const sections = screen.getAllByTestId('library-section');
     expect(sections.map((s) => within(s).getByRole('heading').textContent)).toEqual([
       'Chords',
+      'Voice leading',
       'Scales',
       'Ear training',
     ]);
@@ -100,7 +111,7 @@ describe('LibraryView', () => {
       within(screen.getByTestId('library-card-minor-scales')).getByTestId('library-card-joined')
         .textContent,
     ).toBe('In your daily plan');
-    const soon = screen.getByTestId('library-card-inversions-voice-leading');
+    const soon = screen.getByTestId('library-card-modes');
     expect(soon.tagName).toBe('DIV');
     expect(soon.textContent).toContain('Coming soon');
   });

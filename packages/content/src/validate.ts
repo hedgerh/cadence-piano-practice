@@ -112,6 +112,15 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
     if (match.chords.length < 2) err(`${path}.chords`, 'a progression has at least 2 chords');
     match.chords.forEach((chord, c) => {
       const cp = `${path}.chords[${c}]`;
+      const prev = match.chords[c - 1];
+      if (
+        prev !== undefined &&
+        prev.bass === chord.bass &&
+        new Set(prev.notes.map(pcNumber)).size === chord.notes.length &&
+        chord.notes.every((n) => prev.notes.some((p) => pcNumber(p) === pcNumber(n)))
+      ) {
+        err(cp, 'a chord cannot repeat the one before it');
+      }
       checkInKey(chord.notes, `${cp}.notes`, key);
       checkBass(chord.notes, chord.bass, cp);
       if (match.freeBass === true && chord.bass === undefined) {
@@ -123,8 +132,9 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
     const free = match.freeBass === true;
     path0.forEach((voicing, c) => {
       const upper = free ? voicing.slice(1) : voicing;
-      const range = free ? TWO_HAND_RANGE : PRACTICE_RANGE;
-      if (voicing.some((m) => m < range.low || m > range.high)) {
+      const offKeyboard = voicing.some((m) => m < TWO_HAND_RANGE.low || m > TWO_HAND_RANGE.high);
+      const handsCross = free && upper.some((m) => m < PRACTICE_RANGE.low);
+      if (offKeyboard || handsCross) {
         err(`${path}.chords[${c}]`, 'the shown voicing falls off the practice keyboard');
       }
       const before = path0[c - 1];
@@ -179,6 +189,12 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
 
   const checkStep = (step: Step, path: string, level: Level): void => {
     checkMatch(step.match, `${path}.match`, level.key);
+    if (step.parts) {
+      const chords = step.match.type === 'progression' ? step.match.chords.length : -1;
+      if (step.parts.length !== chords) {
+        err(`${path}.parts`, 'parts are one chip per chord of a progression');
+      }
+    }
     if (step.play) checkSound(step.play, `${path}.play`);
     if (step.context) checkSound(step.context, `${path}.context`);
     if (step.hint) checkSound(step.hint, `${path}.hint`);
@@ -336,6 +352,14 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
           err(`${cp}.numeral`, `"${chip.numeral}" is not a numeral of ${keyTitle(row.key)}`);
         else if (triad.quality !== chip.quality) {
           err(`${cp}.quality`, `${chip.numeral} in ${keyTitle(row.key)} is ${triad.quality}`);
+        }
+      });
+    });
+    lesson.voicings?.forEach((voicing, v) => {
+      voicing.notes.forEach((note, n) => {
+        const m = noteToMidi(note);
+        if (m < PRACTICE_RANGE.low || m > PRACTICE_RANGE.high) {
+          err(`${tp}.lesson.voicings[${v}].notes[${n}]`, `${note} is off the practice keyboard`);
         }
       });
     });

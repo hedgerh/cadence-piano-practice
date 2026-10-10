@@ -261,6 +261,36 @@ describe('sessions.finish', () => {
     expect(done.track).toMatchObject({ id: 'minor-scales', unit: 'keys', nextTitle: 'E minor' });
   });
 
+  // decisions.md 2026-10-10 "Voice leading": progression levels and mixed levels get their own copy.
+  it('a smooth-progressions level completes with progression copy; a shapes level with steps', () => {
+    const { services } = onboarded();
+    const finish = (levelId: string) => {
+      const s = services.progress.startLevel(levelId, 'learn');
+      s.steps.forEach((step, ordinal) =>
+        services.progress.recordStep({
+          sessionId: s.sessionId,
+          stepId: step.id,
+          ordinal,
+          result: 'clean',
+          hintLevel: 0,
+        }),
+      );
+      return services.progress.finishSession({ sessionId: s.sessionId, durationMs: 60_000 });
+    };
+    expect(finish('c-major-smooth')).toMatchObject({
+      completed: true,
+      stepNoun: 'progression',
+      total: 8,
+      title: 'C major, complete',
+      subtitle: "All eight progressions, every move smooth. That's your first key on the circle.",
+    });
+    expect(finish('c-major-shapes')).toMatchObject({
+      stepNoun: 'step',
+      total: 12,
+      subtitle: "All twelve steps. That's your first key on the circle.",
+    });
+  });
+
   it('an incomplete chord level is not completed and earns no level XP', () => {
     const { services } = onboarded();
     const s = services.progress.startLevel('c-major', 'learn');

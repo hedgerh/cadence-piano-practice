@@ -57,6 +57,7 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
     if (stepNoun(steps) === 'scale') {
       return `${ref.level.title} · scale, ${joinAnd(steps.map((s) => s.label.toLowerCase()))}`;
     }
+    if (stepNoun(steps) === 'progression') return `${ref.level.title} · ${n} progressions`;
     return `${ref.level.title} · ${n} steps`;
   };
 

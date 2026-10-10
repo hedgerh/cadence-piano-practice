@@ -2,13 +2,17 @@
 // the match types so the engine and renderer never special-case a track id.
 import type { Step } from './types';
 
-export type StepNoun = 'chord' | 'scale' | 'step';
+export type StepNoun = 'chord' | 'scale' | 'progression' | 'step';
 
-/** `chord` / `voicing` steps are chords, `sequence` steps are scales; anything else is a step. */
+/**
+ * `chord` / `voicing` steps are chords, `sequence` steps are scales, `progression` steps are
+ * progressions; a mix (or anything else) is steps.
+ */
 export function stepNoun(steps: readonly Pick<Step, 'match'>[]): StepNoun {
   if (steps.length === 0) return 'step';
   if (steps.every((s) => s.match.type === 'chord' || s.match.type === 'voicing')) return 'chord';
   if (steps.every((s) => s.match.type === 'sequence')) return 'scale';
+  if (steps.every((s) => s.match.type === 'progression')) return 'progression';
   return 'step';
 }
 

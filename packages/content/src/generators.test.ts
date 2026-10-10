@@ -1,6 +1,14 @@
 // engine.md §2.2 generators — expectations from docs/tasks/02-content.md Acceptance and the
 // designs (Practice.dc.html 140–146, Path.dc.html, Learn.dc.html, EarPath/EarInterval/EarChord).
-import { type MatchSpec, hintFor, noteToMidi, pcNumber, scale } from '@cadence/music';
+import {
+  type MatchSpec,
+  hintFor,
+  noteToMidi,
+  pcNumber,
+  progressionPath,
+  scale,
+  voiceMotion,
+} from '@cadence/music';
 import { describe, expect, it } from 'vitest';
 import { intervalAnchor, spellTriad } from './generators/earTrack';
 import { numeralAscii, stepKey } from './ids';
@@ -13,7 +21,9 @@ const majorTrack = trackById(tracks, 'major-diatonic-chords');
 const minorTrack = trackById(tracks, 'minor-diatonic-chords');
 const majorScalesTrack = trackById(tracks, 'major-scales');
 const scalesTrack = trackById(tracks, 'minor-scales');
-const inversionsTrack = trackById(tracks, 'inversions-voice-leading');
+const shapesTrack = trackById(tracks, 'inversion-shapes');
+const smoothTrack = trackById(tracks, 'smooth-progressions');
+const bassTrack = trackById(tracks, 'bass-and-chords');
 const ear = trackById(tracks, 'ear-training');
 
 describe('buildTracks', () => {
@@ -21,13 +31,17 @@ describe('buildTracks', () => {
     expect(tracks.map((t) => t.id)).toEqual([
       'major-diatonic-chords',
       'minor-diatonic-chords',
-      'inversions-voice-leading',
+      'inversion-shapes',
+      'smooth-progressions',
+      'bass-and-chords',
       'major-scales',
       'minor-scales',
       'ear-training',
     ]);
-    expect(tracks.map((t) => t.available)).toEqual([true, true, false, true, true, true]);
+    expect(tracks.every((t) => t.available)).toBe(true);
     expect(tracks.map((t) => t.map)).toEqual([
+      'circle-of-fifths',
+      'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
@@ -178,8 +192,12 @@ describe('minor-diatonic-chords', () => {
     expect(at(lesson?.hear?.sounds, 7)).toEqual({ type: 'chord', notes: ['A3', 'C4', 'E4'] });
   });
 
-  it('only the minor track has a lesson', () => {
-    expect(tracks.filter((t) => t.lesson).map((t) => t.id)).toEqual(['minor-diatonic-chords']);
+  it('lessons: the minor pattern, inversion shapes and smooth moves', () => {
+    expect(tracks.filter((t) => t.lesson).map((t) => t.id)).toEqual([
+      'minor-diatonic-chords',
+      'inversion-shapes',
+      'smooth-progressions',
+    ]);
   });
 });
 
@@ -286,7 +304,8 @@ describe('major-scales', () => {
 describe('groups (library sections)', () => {
   it('every track names a group; tracks of a group are adjacent in display order', () => {
     expect(groupTracks(tracks).map((g) => [g.group, g.tracks.map((t) => t.id)])).toEqual([
-      ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords', 'inversions-voice-leading']],
+      ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
+      ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
       ['Scales', ['major-scales', 'minor-scales']],
       ['Ear training', ['ear-training']],
     ]);
@@ -312,9 +331,11 @@ describe('groups (library sections)', () => {
 });
 
 describe('stepNoun', () => {
-  it('chords for chord/voicing levels, scales for sequence levels, steps otherwise', () => {
+  it('chords for chord/voicing levels, scales for sequence levels, progressions, steps otherwise', () => {
     expect(stepNoun(at(majorTrack.levels, 0).steps)).toBe('chord');
-    expect(stepNoun(at(inversionsTrack.levels, 0).steps)).toBe('chord');
+    expect(stepNoun([{ match: { type: 'voicing', notes: ['C4', 'E4', 'G4'] } }])).toBe('chord');
+    expect(stepNoun(at(smoothTrack.levels, 0).steps)).toBe('progression');
+    expect(stepNoun(at(shapesTrack.levels, 0).steps)).toBe('step');
     expect(stepNoun(at(scalesTrack.levels, 0).steps)).toBe('scale');
     expect(stepNoun([])).toBe('step');
     expect(stepNoun([{ match: { type: 'choice', answer: 'a', options: ['a'] } }])).toBe('step');
@@ -322,37 +343,101 @@ describe('stepNoun', () => {
   });
 });
 
-describe('inversions-voice-leading', () => {
-  it('12 major levels × 9 voicing steps, bass note per inversion', () => {
-    expect(inversionsTrack.levels).toHaveLength(12);
-    const c = at(inversionsTrack.levels, 0);
-    expect(c.id).toBe('c-major-inversions');
-    expect(c.steps.map((s) => s.id)).toEqual([
-      'I-root',
-      'I-first',
-      'I-second',
-      'IV-root',
-      'IV-first',
-      'IV-second',
-      'V-root',
-      'V-first',
-      'V-second',
-    ]);
-    expect(c.steps.slice(0, 3).map((s) => s.match)).toEqual<MatchSpec[]>([
-      { type: 'voicing', notes: ['C4', 'E4', 'G4'] },
-      { type: 'voicing', notes: ['E3', 'G3', 'C4'] },
-      { type: 'voicing', notes: ['G3', 'C4', 'E4'] },
-    ]);
+// decisions.md 2026-10-10 "Voice leading".
+describe('voice leading tracks', () => {
+  const progressionSteps = [shapesTrack, smoothTrack, bassTrack].flatMap((t) =>
+    (t.levels ?? []).flatMap((l) => l.steps.filter((st) => st.match.type === 'progression')),
+  );
+
+  it('three 12-key major tracks with globally unique level ids', () => {
+    for (const t of [shapesTrack, smoothTrack, bassTrack]) {
+      expect(t.group).toBe('Voice leading');
+      expect(t.levels?.map((l) => l.key)).toEqual(majorTrack.levels?.map((l) => l.key));
+    }
+    expect(at(shapesTrack.levels, 0).id).toBe('c-major-shapes');
+    expect(at(smoothTrack.levels, 0).id).toBe('c-major-smooth');
+    expect(at(bassTrack.levels, 0).id).toBe('c-major-bass');
   });
 
-  it('every voicing stays on the practice keyboard C3..B4', () => {
-    for (const level of inversionsTrack.levels ?? []) {
-      for (const step of level.steps) {
-        if (step.match.type !== 'voicing') throw new Error('expected voicing');
-        for (const n of step.match.notes) {
-          expect(noteToMidi(n)).toBeGreaterThanOrEqual(48);
-          expect(noteToMidi(n)).toBeLessThanOrEqual(71);
-        }
+  it('inversion shapes: climb I, IV, V, vi, then every inversion by name', () => {
+    const c = at(shapesTrack.levels, 0);
+    expect(c.steps.map((st) => st.label)).toEqual([
+      'I climb',
+      'IV climb',
+      'V climb',
+      'vi climb',
+      'I⁶',
+      'V⁶₄',
+      'IV⁶',
+      'vi⁶₄',
+      'V⁶',
+      'I⁶₄',
+      'vi⁶',
+      'IV⁶₄',
+    ]);
+    expect(at(c.steps, 0).match).toEqual<MatchSpec>({
+      type: 'progression',
+      chords: [
+        { notes: ['C', 'E', 'G'], bass: 'C' },
+        { notes: ['C', 'E', 'G'], bass: 'E' },
+        { notes: ['C', 'E', 'G'], bass: 'G' },
+        { notes: ['C', 'E', 'G'], bass: 'C' },
+      ],
+    });
+    expect(at(c.steps, 0).parts?.map((p) => p.label)).toEqual(['I', 'I⁶', 'I⁶₄', 'I']);
+    expect(at(c.steps, 4)).toMatchObject({
+      name: 'C major, E in the bass',
+      match: { type: 'chord', notes: ['C', 'E', 'G'], bass: 'E' },
+    });
+  });
+
+  it('smooth progressions: I–IV–V–I from each inversion of I, then the songs', () => {
+    const c = at(smoothTrack.levels, 0);
+    expect(c.steps.map((st) => st.id)).toEqual([
+      'I-IV-I',
+      'I-V-I',
+      'I-IV-V-I',
+      'I-IV-V-I-first',
+      'I-IV-V-I-second',
+      'I-V-vi-IV',
+      'I-vi-IV-V',
+      'ii-V-I',
+    ]);
+    const fromFirst = at(c.steps, 3);
+    expect(fromFirst.parts?.map((p) => p.label)).toEqual(['I⁶', 'IV', 'V', 'I']);
+    expect(fromFirst.match).toMatchObject({
+      type: 'progression',
+      maxMove: 2,
+      chords: [{ notes: ['C', 'E', 'G'], bass: 'E' }, { notes: ['F', 'A', 'C'] }, {}, {}],
+    });
+  });
+
+  it('bass & chords: every chord has its root as a free left-hand bass', () => {
+    const c = at(bassTrack.levels, 0);
+    expect(c.steps).toHaveLength(6);
+    for (const st of c.steps) {
+      if (st.match.type !== 'progression') throw new Error('expected progression');
+      expect(st.match.freeBass).toBe(true);
+      for (const chord of st.match.chords) expect(chord.bass).toBe(chord.notes[0]);
+    }
+  });
+
+  it('every progression can be played as shown: smooth, and on the C2..B4 keyboard', () => {
+    expect(progressionSteps.length).toBe(12 * (4 + 8 + 6));
+    for (const st of progressionSteps) {
+      if (st.match.type !== 'progression') continue;
+      const path = progressionPath(st.match);
+      const free = st.match.freeBass === true;
+      for (const v of path) {
+        expect(Math.min(...v)).toBeGreaterThanOrEqual(36);
+        expect(Math.max(...v)).toBeLessThanOrEqual(71);
+      }
+      if (st.match.maxMove === undefined) continue;
+      for (let i = 1; i < path.length; i++) {
+        const before = path[i - 1] ?? [];
+        const after = path[i] ?? [];
+        const moves = voiceMotion(free ? before.slice(1) : before, free ? after.slice(1) : after);
+        expect(Math.max(...(moves ?? [99]).map(Math.abs))).toBeLessThanOrEqual(2);
       }
     }
   });

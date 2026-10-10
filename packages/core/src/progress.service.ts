@@ -690,12 +690,15 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
     } else if (success) {
       title = `${ref.level.title}, complete`;
       const steps = ref.level.steps;
+      const noun = stepNoun(steps);
       const what =
-        stepNoun(steps) === 'scale'
+        noun === 'scale'
           ? `${capitalize(joinAnd(steps.map((s) => s.label.toLowerCase())))}, every note in order.`
-          : ref.track.map === 'circle-of-fifths'
-            ? `All ${numberWord(total)} diatonic chords.`
-            : `All ${numberWord(total)} steps.`;
+          : noun === 'progression'
+            ? `All ${numberWord(total)} progressions, every move smooth.`
+            : noun === 'chord' && ref.track.map === 'circle-of-fifths'
+              ? `All ${numberWord(total)} diatonic chords.`
+              : `All ${numberWord(total)} steps.`;
       const where =
         ref.track.map === 'circle-of-fifths'
           ? done === 1

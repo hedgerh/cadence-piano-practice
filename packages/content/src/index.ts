@@ -1,9 +1,13 @@
 // @cadence/content — the content model (zod), track generators, lesson and validator.
 // engine.md §2: content is generated at runtime from code and validated at startup.
 import { earTraining } from './generators/earTrack';
-import { inversionsVoiceLeading } from './generators/inversionsTrack';
 import { majorDiatonicChords, minorDiatonicChords } from './generators/keyTrack';
 import { majorScales, minorScales } from './generators/scaleTrack';
+import {
+  bassAndChords,
+  inversionShapes,
+  smoothProgressions,
+} from './generators/voiceLeadingTracks';
 import type { Track } from './types';
 
 export * from './types';
@@ -11,10 +15,13 @@ export * from './ids';
 export * from './validate';
 export * from './generators/keyTrack';
 export * from './generators/scaleTrack';
-export * from './generators/inversionsTrack';
+export * from './generators/inversions';
+export * from './generators/voiceLeadingTracks';
 export * from './generators/earTrack';
 export * from './generators/phrase';
 export * from './lessons/minorPattern';
+export * from './lessons/inversionShapes';
+export * from './lessons/smoothMoves';
 export * from './stepNoun';
 
 /**
@@ -25,7 +32,9 @@ export function buildTracks(): Track[] {
   return [
     majorDiatonicChords(),
     minorDiatonicChords(),
-    inversionsVoiceLeading(),
+    inversionShapes(),
+    smoothProgressions(),
+    bassAndChords(),
     majorScales(),
     minorScales(),
     earTraining(),

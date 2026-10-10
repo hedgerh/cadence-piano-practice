@@ -19,6 +19,7 @@ test('library: grouped sections, cards open maps, group pills lead back', async 
     await expect(page.getByTestId('library')).toBeVisible();
     await expect(page.getByTestId('library-section').getByRole('heading')).toHaveText([
       'Chords',
+      'Voice leading',
       'Scales',
       'Ear training',
     ]);
@@ -31,9 +32,11 @@ test('library: grouped sections, cards open maps, group pills lead back', async 
     await expect(page.getByTestId('library-card-major-scales')).not.toContainText(
       'In your daily plan',
     );
-    const soon = page.getByTestId('library-card-inversions-voice-leading');
-    await expect(soon).toContainText('Coming soon');
-    await expect(soon).toHaveJSProperty('tagName', 'DIV');
+    // decisions.md 2026-10-10 "Voice leading": the Voice leading section, every track ready.
+    await expect(page.getByTestId('library-card-smooth-progressions')).toContainText(
+      'Ready to start',
+    );
+    await expect(page.getByText('Coming soon')).toHaveCount(0);
     await page.screenshot({ path: 'e2e/screenshots/19-library.png' });
 
     // Major scales: its map, with only the Scales pills.

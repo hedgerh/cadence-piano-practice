@@ -10,7 +10,11 @@ export interface ChordTarget {
   bass?: Pc;
 }
 
-/** Two-hand keyboard: C2 (36) .. B4 (71). The left-hand bass sits in C2..B2. */
+/**
+ * The three-octave keyboard progressions are shown on: C2 (36) .. B4 (71). A left-hand bass
+ * sits in C2..B2 under a right hand in C3..B4; a one-hand climb through all three inversions
+ * spans more than the two-octave keyboard, so it uses the whole range.
+ */
 export const TWO_HAND_RANGE: Readonly<{ low: Midi; high: Midi }> = { low: 36, high: 71 };
 export const BASS_OCTAVE_LOW: Midi = 36;
 
@@ -105,8 +109,9 @@ export function nextVoicing(
 
 /**
  * A whole voice-led path: the first chord placed (`placeChord`), each next one the smoothest.
- * The upper voices are then shifted by octaves, if needed, to sit on the practice keyboard
- * (C3..B4), so hints and play-backs never fall off it.
+ * The voices are then shifted by octaves, if needed, so hints and play-backs stay on the
+ * keyboard: the right hand of a two-hand path in C3..B4, a one-hand path in C2..B4 (moved
+ * down only as far as needed, so it stays in C3..B4 whenever it fits there).
  */
 export function voiceLead(chords: readonly ChordTarget[], freeBass = false): Midi[][] {
   const path: Midi[][] = [];
@@ -117,11 +122,12 @@ export function voiceLead(chords: readonly ChordTarget[], freeBass = false): Mid
   }
   const upper = path.flatMap((v) => (freeBass ? ascending(v).slice(1) : v));
   if (upper.length === 0) return path;
+  const range = freeBass ? PRACTICE_RANGE : TWO_HAND_RANGE;
   const top = Math.max(...upper);
   const bottom = Math.min(...upper);
   let shift = 0;
-  if (top > PRACTICE_RANGE.high) shift = -12 * Math.ceil((top - PRACTICE_RANGE.high) / 12);
-  else if (bottom < PRACTICE_RANGE.low) shift = 12 * Math.ceil((PRACTICE_RANGE.low - bottom) / 12);
+  if (top > range.high) shift = -12 * Math.ceil((top - range.high) / 12);
+  else if (bottom < range.low) shift = 12 * Math.ceil((range.low - bottom) / 12);
   if (shift === 0) return path;
   return path.map((v) => {
     const sorted = ascending(v);

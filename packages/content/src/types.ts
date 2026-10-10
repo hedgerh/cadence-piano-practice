@@ -78,6 +78,13 @@ export const StepSchema = z.object({
   explain: z.string().exactOptional(),
   /** Triad quality, for quality-colored chips. */
   quality: QualitySchema.exactOptional(),
+  /**
+   * Progression steps: one chip per chord ("I", "IV⁶"), in order, for the progress row
+   * (decisions.md 2026-10-10 "Voice leading"). Same length as the match's `chords`.
+   */
+  parts: z
+    .array(z.object({ label: z.string(), quality: QualitySchema.exactOptional() }))
+    .exactOptional(),
 });
 
 export const PassSchema = z.object({ correct: z.number().int(), of: z.number().int() });
@@ -136,6 +143,13 @@ export const LessonSchema = z.object({
   eyebrow: z.string(),
   intro: z.string(),
   rows: z.array(LessonRowSchema),
+  /**
+   * Chord shapes drawn on the practice keyboard, one row each (inversions lesson). Every note
+   * stays on C3..B4.
+   */
+  voicings: z
+    .array(z.object({ label: z.string(), caption: z.string(), notes: z.array(NoteSchema) }))
+    .exactOptional(),
   /** Callout between the rows; `**x**` marks bold text. */
   bridge: z.string(),
   cta: z.string(),
