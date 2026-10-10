@@ -6,6 +6,7 @@ type Call = [string, ...unknown[]];
 
 function fakeContext() {
   const log: Call[] = [];
+  const gains: { gain: { value: number } }[] = [];
   const param = (name: string) => ({
     value: 0,
     setValueAtTime: (v: number, t: number) => log.push([`${name}.set`, v, t]),
@@ -29,6 +30,8 @@ function fakeContext() {
     createBuffer: (_c: number, length: number) => ({
       getChannelData: () => new Float32Array(length),
     }),
+    createChannelSplitter: () => node('splitter'),
+    createChannelMerger: () => node('merger'),
     createBiquadFilter: () => ({
       ...node('filter'),
       type: '',
@@ -38,7 +41,11 @@ function fakeContext() {
     state: 'running',
     destination: { kind: 'destination' },
     resume: () => Promise.resolve(),
-    createGain: () => ({ ...node('gain'), gain: param('gain') }),
+    createGain: () => {
+      const g = { ...node('gain'), gain: param('gain') };
+      gains.push(g);
+      return g;
+    },
     createDynamicsCompressor: () => compressor,
     createOscillator: () => {
       const osc = {
@@ -63,7 +70,7 @@ function fakeContext() {
       return src;
     },
   };
-  return { ctx, log, compressor };
+  return { ctx, log, compressor, gains };
 }
 
 /** No samples: the oscillator voice. */
@@ -131,6 +138,28 @@ describe('WebAudioSynth', () => {
           ['gain.set', 0.9, 3.7],
           ['gain.exp', 0.0001, 3.7 + 0.4],
           ['src.stop', 3.7 + 0.4 + 0.05],
+        ]),
+      );
+    });
+
+    // decisions.md 2026-10-12 "Sample loudness": baked per-channel gains (D♯4: [1.262, 0.958]).
+    it("applies the sample's baked left/right gains through a splitter and merger", async () => {
+      const { ctx, log, gains } = fakeContext();
+      const stereo = { numberOfChannels: 2 } as unknown as AudioBuffer;
+      const synth = new WebAudioSynth(
+        () => ctx as unknown as AudioContext,
+        () => Promise.resolve(new Map([[63, stereo]])),
+      );
+      await synth.unlock();
+      const before = gains.length;
+      synth.playMidi([63], 3, 0.7);
+      const values = gains.slice(before).map((g) => g.gain.value);
+      expect(values).toEqual(expect.arrayContaining([1.262, 0.958]));
+      expect(log).toEqual(
+        expect.arrayContaining([
+          ['src.connect', 'splitter'],
+          ['gain.connect', 'merger'],
+          ['merger.connect', 'gain'],
         ]),
       );
     });

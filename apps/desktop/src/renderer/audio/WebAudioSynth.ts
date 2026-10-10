@@ -15,6 +15,7 @@ import {
   type SampleBank,
   type SampleLoader,
 } from './pianoSamples';
+import { sampleGains } from './pianoGains';
 import { playSynthPiano } from './pianoSynth';
 import { playSound } from './player';
 import type { PlayOptions, Synth } from './Synth';
@@ -128,7 +129,48 @@ export class WebAudioSynth implements Synth {
     gain.gain.setValueAtTime(PIANO_GAIN, at);
     gain.gain.setValueAtTime(PIANO_GAIN, at + dur);
     gain.gain.exponentialRampToValueAtTime(FLOOR_GAIN, at + dur + DAMPER);
-    this.start(src, gain, master, at, at + dur + DAMPER + RELEASE_TAIL);
+    // decisions.md 2026-10-12: the sample's baked [left, right] gains even out its loudness and
+    // centre it (src → splitter → per-channel gain → merger → envelope).
+    const [left, right] = sampleGains(root);
+    const balanced = this.balance(ctx, src, buffer.numberOfChannels, left, right);
+    balanced.connect(gain);
+    gain.connect(master);
+    src.onended = () => {
+      this.active.delete(src);
+      balanced.disconnect();
+      gain.disconnect();
+    };
+    this.active.add(src);
+    src.start(at);
+    src.stop(at + dur + DAMPER + RELEASE_TAIL);
+  }
+
+  /** Per-channel gains on `src` (a mono buffer gets their mean); returns the node to connect on. */
+  private balance(
+    ctx: AudioContext,
+    src: AudioNode,
+    channels: number,
+    left: number,
+    right: number,
+  ): AudioNode {
+    if (channels < 2) {
+      const g = ctx.createGain();
+      g.gain.value = (left + right) / 2;
+      src.connect(g);
+      return g;
+    }
+    const split = ctx.createChannelSplitter(2);
+    const merge = ctx.createChannelMerger(2);
+    const gl = ctx.createGain();
+    const gr = ctx.createGain();
+    gl.gain.value = left;
+    gr.gain.value = right;
+    src.connect(split);
+    split.connect(gl, 0);
+    split.connect(gr, 1);
+    gl.connect(merge, 0, 0);
+    gr.connect(merge, 0, 1);
+    return merge;
   }
 
   /** EarInterval:105–117 tone(): triangle, 20 ms attack, exponential decay over `dur`. */

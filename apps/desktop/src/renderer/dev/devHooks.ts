@@ -1,6 +1,7 @@
 import type { Midi } from '@cadence/music';
 import type { SoundVoice } from '@shared/ipc/contracts';
 import { appSynth } from '../audio/useAudio';
+import { measureSampleGains } from '../audio/pianoSamples';
 import { WebAudioSynth } from '../audio/WebAudioSynth';
 import type { RuntimeMode } from '../lib/runtimeMode';
 import type { FakeMidiInput } from '../midi/FakeMidiInput';
@@ -35,6 +36,11 @@ export interface CadenceDevHooks {
   audio: {
     /** Unlocks the synth (decoding the piano samples) and reports the voice that will play. */
     voice(): Promise<SoundVoice | 'silent'>;
+    /**
+     * decisions.md 2026-10-12: decode the bundled samples and return the recommended [left,
+     * right] gains per file, to paste into audio/pianoGains.ts when the samples change.
+     */
+    measureSamples(): Promise<Record<string, number[]>>;
   };
   /** Set by the ear drill while mounted (features/ear/useEarDrill.ts); e2e reads the target. */
   ear?: {
@@ -89,6 +95,7 @@ export function installDevHooks(input: FakeMidiInput, mode: RuntimeMode): void {
         await appSynth.unlock();
         return appSynth.voice;
       },
+      measureSamples: () => measureSampleGains(new OfflineAudioContext(2, 1, 44_100)),
     },
   };
 }
