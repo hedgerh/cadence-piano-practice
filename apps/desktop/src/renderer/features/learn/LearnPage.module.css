@@ -93,6 +93,47 @@
   white-space: nowrap;
 }
 
+/* Beyond the design (decisions.md 2026-10-10 "Voice leading"): chord-shape tiles over one
+   shared two-octave keyboard. */
+.shapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.tileOn {
+  border-color: var(--ink);
+  background: var(--sand);
+}
+.tile:focus-visible {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 2px;
+}
+.tileLabel {
+  font-size: 15px;
+  font-weight: 800;
+}
+
 /* Learn:41 */
 .rowCaption {
   font-size: 13px;

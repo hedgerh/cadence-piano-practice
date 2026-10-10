@@ -71,6 +71,24 @@
 }
 
 /* Practice:63 */
+/* decisions.md 2026-10-10 "Voice leading": a progression's chords, in place of the numeral. */
+.parts {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0 4px;
+}
+
+/* The right chord with a too-big jump: lavender, never red. */
+.nudge {
+  margin-top: 6px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--lavender-tint);
+  color: var(--lavender-deep);
+  font-size: 16px;
+  font-weight: 800;
+}
+
 .numeral {
   font-family: var(--font-display);
   font-weight: 700;

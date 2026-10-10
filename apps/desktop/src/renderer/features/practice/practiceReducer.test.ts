@@ -1,5 +1,10 @@
 // docs/engine.md §5 Practice reducer and §6 defaults 1–7 (HANDOFF §5 practice loop).
-import { keyLevel, scaleLevel } from '@cadence/content';
+import {
+  inversionShapesLevel,
+  keyLevel,
+  scaleLevel,
+  smoothProgressionsLevel,
+} from '@cadence/content';
 import { noteToMidi, type Midi, type Note } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
 import {
@@ -19,9 +24,13 @@ import {
   eyebrowFor,
   finishCopy,
   hintNames,
+  keyboardCaption,
   keyboardStates,
+  keyboardVariant,
   markPlayedMode,
+  movedTooFar,
   practiceNoun,
+  progressionParts,
   progressSegments,
 } from './practiceSelectors';
 import { withRetry } from './retry';
@@ -493,5 +502,83 @@ describe('scale levels (sequence steps fed by NOTE_ON)', () => {
       body: 'The A minor scale is in your hands now.',
     });
     expect(practiceNoun(s)).toBe('scale');
+  });
+});
+
+// decisions.md 2026-10-10 "Voice leading": progression steps match chord after chord on the held
+// set, and the screen shows the chips, the chord just played and any voice that moved too far.
+describe('progression steps (Smooth progressions, C major)', () => {
+  const c = smoothProgressionsLevel({ tonic: 'C', mode: 'major' });
+  const progSteps = c.steps.map((st) => ({
+    ...st,
+    lastResult: null,
+    dueOn: null,
+    intervalDays: 0,
+  }));
+  const start = (): PracticeState =>
+    initialPracticeState({ steps: progSteps, results: [], visibility: 'all' });
+
+  it('I–IV–I: shared C stays down; matches after the last chord', () => {
+    let s = start();
+    expect(progressionParts(s).map((p) => p.state)).toEqual(['current', 'upcoming', 'upcoming']);
+    s = run([press(0, 'C4', 'E4', 'G4')], s);
+    expect(s.phase).toBe('listening');
+    expect(progressionParts(s).map((p) => [p.label, p.state])).toEqual([
+      ['I', 'done'],
+      ['IV', 'current'],
+      ['I', 'upcoming'],
+    ]);
+    // The chord just played is outlined; the held keys draw over it.
+    expect(keyboardStates(s)).toEqual({ 60: 'previous', 64: 'previous', 67: 'previous' });
+    // Legato: C stays down while E→F and G→A.
+    s = run([press(10, 'C4', 'G4'), press(11, 'C4', 'F4', 'A4')], s);
+    expect(s.match.index).toBe(2);
+    s = run([press(20, 'C4', 'E4', 'G4')], s);
+    expect(s.phase).toBe('matched');
+    expect(s.results).toEqual([expect.objectContaining({ stepId: 'I-IV-I', result: 'clean' })]);
+  });
+
+  it('a big jump to IV is flagged in lavender and does not advance', () => {
+    let s = run([press(0, 'C4', 'E4', 'G4'), releaseAll(1), press(2, 'F3', 'A3', 'C4')], start());
+    expect(s.match.index).toBe(1);
+    expect(movedTooFar(s)).toBe(true);
+    expect(keyboardStates(s)).toMatchObject({ 53: 'far', 57: 'far', 60: 'far' });
+    s = run([releaseAll(3), press(4, 'C4', 'F4', 'A4')], s);
+    expect(movedTooFar(s)).toBe(false);
+    expect(s.match.index).toBe(2);
+  });
+
+  it('hint 2 lights the next chord nearest to what was played', () => {
+    const s = run(
+      [press(0, 'C3', 'E3', 'G3'), { type: 'HINT', at: 1 }, { type: 'HINT', at: 2 }],
+      start(),
+    );
+    expect(keyboardStates(s)).toMatchObject({ 48: 'hint', 53: 'hint', 57: 'hint' });
+    expect(hintNames(s)).toEqual(['F', 'A', 'C']);
+  });
+
+  it('progression levels use the three-octave keyboard and their own wording', () => {
+    const s = start();
+    expect(keyboardVariant(s)).toBe('three-octave');
+    expect(keyboardVariant(initialPracticeState(session()))).toBe('two-octave');
+    expect(practiceNoun(s)).toBe('progression');
+    expect(keyboardCaption(s)).toMatch(/shared notes/);
+  });
+
+  it('a named inversion (shapes recall) wants that note lowest, any octave', () => {
+    const shapes = inversionShapesLevel({ tonic: 'C', mode: 'major' });
+    const recall = shapes.steps.slice(4).map((st) => ({
+      ...st,
+      lastResult: null,
+      dueOn: null,
+      intervalDays: 0,
+    }));
+    let s = initialPracticeState({ steps: recall, results: [], visibility: 'all' });
+    expect(currentStep(s)?.label).toBe('I⁶');
+    expect(keyboardCaption(s)).toMatch(/bottom/);
+    s = run([press(0, 'C4', 'E4', 'G4')], s);
+    expect(s.phase).toBe('listening');
+    s = run([releaseAll(1), press(2, 'E5', 'G5', 'C6')], s);
+    expect(s.phase).toBe('matched');
   });
 });

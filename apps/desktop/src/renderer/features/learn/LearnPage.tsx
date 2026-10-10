@@ -1,5 +1,7 @@
 import type { Lesson } from '@cadence/content';
+import { noteToMidi } from '@cadence/music';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useContext } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { api, queryKey } from '../../lib/api';
 import { planBlockFor, trackRoute } from '../path/path';
@@ -12,6 +14,9 @@ import {
   type TodayDto,
   type TrackOverviewDto,
 } from '../shared/hooks';
+import { CHORD_DUR, LEAD_IN } from '../../audio/player';
+import { SynthContext } from '../../audio/useAudio';
+import { voicingForSound } from './lessonVoicings';
 import { LessonView } from './LessonView';
 import styles from './LearnPage.module.css';
 import { useLessonPlayback } from './useLessonPlayback';
@@ -47,6 +52,7 @@ function useLessonSeen() {
 
 function LessonScreen({ lesson, overview }: { lesson: Lesson; overview: TrackOverviewDto }) {
   const navigate = useNavigate();
+  const synth = useContext(SynthContext);
   const qc = useQueryClient();
   const playback = useLessonPlayback(lesson.hear?.sounds ?? []);
   const seen = useLessonSeen();
@@ -86,6 +92,15 @@ function LessonScreen({ lesson, overview }: { lesson: Lesson; overview: TrackOve
       sounding={playback.sounding}
       playing={playback.playing}
       onHear={playback.play}
+      soundingVoicing={voicingForSound(lesson, playback.sounding)}
+      onVoicing={(i) => {
+        const notes = lesson.voicings?.[i]?.notes;
+        if (!notes || playback.playing) return;
+        void synth
+          .unlock()
+          .then(() => synth.playMidi(notes.map(noteToMidi), synth.now() + LEAD_IN, CHORD_DUR))
+          .catch(() => undefined);
+      }}
       onCta={onCta}
       ctaBusy={busy}
     />

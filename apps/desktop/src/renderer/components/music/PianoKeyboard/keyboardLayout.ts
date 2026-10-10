@@ -3,7 +3,7 @@
 // EarInterval:81, 166–167 (one octave, 332px).
 import { midiToPc, pcName, type Midi } from '@cadence/music';
 
-export type KeyboardVariant = 'two-octave' | 'one-octave';
+export type KeyboardVariant = 'three-octave' | 'two-octave' | 'one-octave';
 
 export interface KeyboardGeometry {
   octaves: number;
@@ -18,6 +18,18 @@ export interface KeyboardGeometry {
 }
 
 export const KEYBOARD_GEOMETRY: Readonly<Record<KeyboardVariant, KeyboardGeometry>> = {
+  // Beyond the designs (decisions.md 2026-10-10 "Voice leading"): the two-octave keys with a
+  // third octave below, C2 (36) .. B4 (71), for a left-hand bass and full inversion climbs.
+  'three-octave': {
+    octaves: 3,
+    startMidi: 36,
+    whiteWidth: 44,
+    whiteHeight: 150,
+    blackWidth: 28,
+    blackHeight: 95,
+    gap: 3,
+    padding: 3,
+  },
   // Practice:90, 163, 170 — C3 (48) .. B4 (71).
   'two-octave': {
     octaves: 2,
@@ -63,7 +75,7 @@ export interface BlackKey {
   leftPx: number;
 }
 
-/** Total container width: whites + gaps + padding (661 / 332). */
+/** Total container width: whites + gaps + padding (990 / 661 / 332). */
 export function keyboardWidth(variant: KeyboardVariant): number {
   const g = KEYBOARD_GEOMETRY[variant];
   const whites = g.octaves * 7;

@@ -3,7 +3,7 @@
 import { pretty } from '@cadence/music';
 import { PianoKeyboard } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import { renderBold } from '../../components/ui/Callout';
-import { BulbIcon } from '../../components/ui/icons';
+import { BulbIcon, PlayIcon } from '../../components/ui/icons';
 import { NoteChips } from '../../components/ui/NoteChips';
 import { OutlineInkButton } from '../../components/ui/OutlineInkButton';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
@@ -27,8 +27,12 @@ import {
   chordStates,
   finishCopy,
   hintNames,
+  keyboardCaption,
   keyboardStates,
+  keyboardVariant,
+  movedTooFar,
   practiceNoun,
+  progressionParts,
   progressSegments,
   type MarkPlayedMode,
 } from './practiceSelectors';
@@ -56,6 +60,9 @@ export interface PracticeViewProps {
   autoFinishing?: boolean;
   /** Task 09: "+5 XP" after each recorded step. */
   xpToast?: XpToast | null;
+  /** Progression steps: play the voice-led path ("Hear it"); omitted = no button. */
+  onHear?: (() => void) | undefined;
+  hearing?: boolean;
 }
 
 export function PracticeView({
@@ -75,6 +82,8 @@ export function PracticeView({
   finishError = null,
   autoFinishing = false,
   xpToast = null,
+  onHear,
+  hearing = false,
 }: PracticeViewProps) {
   const total = state.steps.length;
   const finished = state.phase === 'finished';
@@ -87,6 +96,8 @@ export function PracticeView({
   const noun = practiceNoun(state);
   const chordLevel = noun === 'chord';
   const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
+  const parts = progressionParts(state);
+  const variant = keyboardVariant(state);
 
   return (
     <div
@@ -126,9 +137,25 @@ export function PracticeView({
               <span className={styles.chordNo} data-testid="chord-no">
                 {Noun} {state.current + 1} of {total}
               </span>
-              <span className={styles.numeral} data-testid="numeral">
-                {step.label}
-              </span>
+              {parts.length > 0 ? (
+                // decisions.md 2026-10-10 "Voice leading": one chip per chord, in order.
+                <div className={styles.parts} data-testid="progression-parts">
+                  {parts.map((p, i) => (
+                    <RomanChip
+                      key={i}
+                      mode="state"
+                      size={64}
+                      numeral={p.label}
+                      state={p.state}
+                      data-testid={`part-${i}`}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <span className={styles.numeral} data-testid="numeral">
+                  {step.label}
+                </span>
+              )}
               {(state.vis !== 'num' || !chordLevel) && (
                 <span className={styles.name} data-testid="chord-name">
                   {pretty(step.name)}
@@ -141,6 +168,11 @@ export function PracticeView({
               )}
             </div>
             {names.length > 0 && <NoteChips notes={names} />}
+            {movedTooFar(state) && (
+              <span className={styles.nudge} role="status" data-testid="too-far">
+                Right chord, big jump: move the lavender notes less and keep shared notes down.
+              </span>
+            )}
           </>
         )}
 
@@ -168,15 +200,13 @@ export function PracticeView({
 
         <div className={styles.keys}>
           <PianoKeyboard
-            variant="two-octave"
+            variant={variant}
             live
             states={keyboardStates(state)}
             data-testid="practice-keyboard"
           />
           <span className={styles.caption} data-testid="keyboard-caption">
-            {chordLevel
-              ? 'Keys light up as you play. Hints light up the target.'
-              : 'One note at a time, any octave. Each right note stays lit; a wrong one starts the run again.'}
+            {keyboardCaption(state)}
           </span>
         </div>
 
@@ -192,6 +222,16 @@ export function PracticeView({
               >
                 {HINT_LABELS[state.hint]}
               </OutlineInkButton>
+              {onHear !== undefined && parts.length > 0 && (
+                <OutlineInkButton
+                  icon={<PlayIcon size={18} />}
+                  onClick={onHear}
+                  disabled={hearing}
+                  data-testid="hear-progression"
+                >
+                  Hear it
+                </OutlineInkButton>
+              )}
               {markPlayed === 'text' && (
                 <TextButton underline onClick={onMarkPlayed} data-testid="mark-played">
                   No keyboard? Mark as played

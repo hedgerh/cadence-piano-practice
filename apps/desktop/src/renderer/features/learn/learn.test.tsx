@@ -1,4 +1,9 @@
-import { minorPatternLesson, type Lesson } from '@cadence/content';
+import {
+  inversionShapesLesson,
+  minorPatternLesson,
+  smoothMovesLesson,
+  type Lesson,
+} from '@cadence/content';
 import { noteToMidi } from '@cadence/music';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
@@ -7,6 +12,7 @@ import { NullSynth } from '../../audio/NullSynth';
 import { CHORD_DUR, LEAD_IN } from '../../audio/player';
 import { SynthContext } from '../../audio/useAudio';
 import { fixtureLesson } from './dev';
+import { voicingForSound } from './lessonVoicings';
 import { LessonView, soundingInRow } from './LessonView';
 import {
   HEAR_SPACING,
@@ -125,5 +131,75 @@ describe('LessonView (Learn.dc.html)', () => {
     });
     expect(hear.disabled).toBe(false);
     expect(screen.getByTestId('lesson-chips-1').hasAttribute('data-sounding')).toBe(false);
+  });
+});
+
+// decisions.md 2026-10-10 "Voice leading": chord-shape tiles over one shared keyboard.
+describe('lesson voicings (Inversion shapes, Smooth progressions)', () => {
+  const shapes = inversionShapesLesson();
+  const lit = () =>
+    [...screen.getByTestId('lesson-keyboard').querySelectorAll('[data-state]')]
+      .filter((k) => k.getAttribute('data-state') !== 'idle')
+      .map((k) => [Number(k.getAttribute('data-midi')), k.getAttribute('data-state')]);
+
+  function renderShapes(props: {
+    soundingVoicing?: number | null;
+    onVoicing?: (i: number) => void;
+  }) {
+    render(
+      <MemoryRouter>
+        <LessonView
+          lesson={shapes}
+          backTo="/tracks/inversion-shapes"
+          sounding={null}
+          playing={false}
+          onHear={() => undefined}
+          onCta={() => undefined}
+          {...props}
+        />
+      </MemoryRouter>,
+    );
+  }
+
+  it('shows one tile per shape and the picked shape on the keyboard; no quality legend', () => {
+    const onVoicing = vi.fn();
+    renderShapes({ onVoicing });
+    expect(screen.getAllByTestId(/^lesson-voicing-\d$/)).toHaveLength(3);
+    expect(lit()).toEqual([
+      [48, 'hint'],
+      [52, 'hint'],
+      [55, 'hint'],
+    ]);
+    fireEvent.click(screen.getByTestId('lesson-voicing-1'));
+    expect(onVoicing).toHaveBeenCalledWith(1);
+    expect(screen.getByTestId('lesson-voicing-1').getAttribute('aria-pressed')).toBe('true');
+    expect(lit()).toEqual([
+      [52, 'hint'],
+      [55, 'hint'],
+      [60, 'hint'],
+    ]);
+    expect(screen.queryByText('diminished')).toBeNull();
+  });
+
+  it('while "Hear" plays, the sounding shape lights teal', () => {
+    renderShapes({ soundingVoicing: 2 });
+    expect(lit()).toEqual([
+      [55, 'correct'],
+      [60, 'correct'],
+      [64, 'correct'],
+    ]);
+  });
+
+  it('voicingForSound maps each hear sound onto its shape (I–IV–I–V–I → 0, 1, 0, 2, 0)', () => {
+    const smooth = smoothMovesLesson();
+    expect([0, 1, 2, 3, 4, null].map((i) => voicingForSound(smooth, i))).toEqual([
+      0,
+      1,
+      0,
+      2,
+      0,
+      null,
+    ]);
+    expect(voicingForSound(lesson, 0)).toBeNull();
   });
 });

@@ -4,18 +4,30 @@ import { useHeldNotes } from '../../../midi/hooks';
 import { blackKeys, whiteKeys, type KeyboardVariant } from './keyboardLayout';
 import styles from './PianoKeyboard.module.css';
 
-export type KeyState = 'idle' | 'held' | 'hint' | 'correct' | 'tried' | 'home';
+/**
+ * `previous`: the chord just played (progressions), drawn faintly; `far`: a held key that moved
+ * too far from it (decisions.md 2026-10-10 "Voice leading").
+ */
+export type KeyState = 'idle' | 'held' | 'hint' | 'correct' | 'tried' | 'home' | 'previous' | 'far';
 /** Lighting per MIDI number (enharmonic-safe; build from notes with `keyStates`). */
 export type KeyStates = Readonly<Partial<Record<Midi, KeyState>>>;
 
-/** docs/ui.md §2: correct > home > hint > held > tried. */
+/** docs/ui.md §2: correct > home/far > hint > held > tried/previous. */
 const PRIORITY: Readonly<Record<KeyState, number>> = {
   idle: 0,
   tried: 1,
+  previous: 1,
   held: 2,
   hint: 3,
   home: 4,
+  far: 4,
   correct: 5,
+};
+
+const VARIANT_CLASS: Readonly<Record<KeyboardVariant, string | undefined>> = {
+  'three-octave': styles.threeOctave,
+  'two-octave': styles.twoOctave,
+  'one-octave': styles.oneOctave,
 };
 
 export function resolveKeyState(explicit: KeyState | undefined, held: boolean): KeyState {
@@ -31,7 +43,10 @@ export function keyStates(notes: readonly Note[], state: KeyState): Record<Midi,
 }
 
 export interface PianoKeyboardProps {
-  /** two-octave C3–B4 661px (Practice:90) · one-octave 332px (EarInterval:81). */
+  /**
+   * three-octave C2–B4 990px (voice leading) · two-octave C3–B4 661px (Practice:90) ·
+   * one-octave 332px (EarInterval:81).
+   */
   variant: KeyboardVariant;
   states?: KeyStates;
   /** Extra held notes (e.g. a fixture). */
@@ -57,10 +72,7 @@ export function PianoKeyboard({
   const isHeld = (m: Midi) => held.has(m) || (live && liveHeld.has(m));
   return (
     <div
-      className={cx(
-        styles.keyboard,
-        variant === 'two-octave' ? styles.twoOctave : styles.oneOctave,
-      )}
+      className={cx(styles.keyboard, VARIANT_CLASS[variant])}
       data-testid={testId}
       data-variant={variant}
       role="img"

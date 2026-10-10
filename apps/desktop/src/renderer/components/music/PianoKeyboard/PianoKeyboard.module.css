@@ -13,6 +13,12 @@
   width: 661px;
   box-shadow: var(--sh-keyboard);
 }
+/* decisions.md 2026-10-10 "Voice leading" — three-octave: the two-octave keys, 990px. */
+.threeOctave {
+  border-radius: 10px;
+  width: 990px;
+  box-shadow: var(--sh-keyboard);
+}
 /* EarInterval:81 — one-octave: 332px, r8, no shadow. */
 .oneOctave {
   border-radius: 8px;
@@ -73,19 +79,29 @@
   background: var(--key-held);
 }
 .white.tried,
-.black.tried {
+.black.tried,
+.white.previous,
+.black.previous {
   background: var(--sand);
+}
+/* A voice that moved too far (no red anywhere: a miss is lavender). */
+.white.far,
+.black.far {
+  background: var(--lavender);
 }
 .white.hint,
 .white.correct,
 .white.home,
-.white.held {
+.white.held,
+.white.far {
   color: var(--ink);
 }
 .black.hint,
 .black.correct,
 .black.home,
 .black.held,
-.black.tried {
+.black.tried,
+.black.previous,
+.black.far {
   box-shadow: inset 0 0 0 3px var(--ink);
 }

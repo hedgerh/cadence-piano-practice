@@ -1,4 +1,7 @@
 import type { LessonChip } from '@cadence/content';
+import type { Note } from '@cadence/music';
+import { useState } from 'react';
+import { keyStates, PianoKeyboard } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import { Callout } from '../../components/ui/Callout';
 import { PlayIcon } from '../../components/ui/icons';
 import { LegendSwatches } from '../../components/ui/LegendSwatches';
@@ -15,6 +18,8 @@ export interface LessonContent {
   eyebrow: string;
   intro: string;
   rows: readonly { label: string; caption: string; chips: readonly LessonChip[] }[];
+  /** Chord shapes, one tile each over a shared keyboard (decisions.md 2026-10-10). */
+  voicings?: readonly { label: string; caption: string; notes: readonly Note[] }[] | undefined;
   /** `**x**` marks bold text. */
   bridge: string;
   cta: string;
@@ -31,6 +36,10 @@ export interface LessonViewProps {
   onHear: () => void;
   onCta: () => void;
   ctaBusy?: boolean;
+  /** Index of the voicing whose chord is sounding (from "Hear"), or null. */
+  soundingVoicing?: number | null;
+  /** A voicing tile was picked: play that shape. */
+  onVoicing?: (index: number) => void;
 }
 
 /** Header eyebrow (Learn:25). */
@@ -57,7 +66,41 @@ export function LessonView({
   onHear,
   onCta,
   ctaBusy = false,
+  soundingVoicing = null,
+  onVoicing,
 }: LessonViewProps) {
+  const [picked, setPicked] = useState(0);
+  const voicings = lesson.voicings ?? [];
+  const shown = soundingVoicing ?? picked;
+  const shownNotes = voicings[shown]?.notes ?? [];
+  const shapes = voicings.length > 0 && (
+    <div className={styles.shapes} data-testid="lesson-voicings">
+      <div className={styles.tiles}>
+        {voicings.map((v, i) => (
+          <button
+            key={i}
+            type="button"
+            className={cx(styles.tile, i === shown && styles.tileOn)}
+            aria-pressed={i === shown}
+            onClick={() => {
+              setPicked(i);
+              onVoicing?.(i);
+            }}
+            data-testid={`lesson-voicing-${i}`}
+          >
+            <span className={styles.tileLabel}>{v.label}</span>
+            <span className={styles.rowCaption}>{v.caption}</span>
+          </button>
+        ))}
+      </div>
+      <PianoKeyboard
+        variant="two-octave"
+        states={keyStates(shownNotes, soundingVoicing !== null ? 'correct' : 'hint')}
+        data-testid="lesson-keyboard"
+      />
+    </div>
+  );
+
   const rows = lesson.rows.map((row, r) => {
     const active = soundingInRow(lesson.rows, r, sounding);
     return (
@@ -110,11 +153,12 @@ export function LessonView({
         </div>
 
         <div className={styles.card} data-testid="lesson-card">
+          {shapes}
           {rows[0]}
-          {/* Learn:54 — the bridge sits between the first two rows. */}
+          {/* Learn:54 — the bridge sits between the first two rows (after the shapes). */}
           <Callout text={lesson.bridge} />
           {rows.slice(1)}
-          <LegendSwatches size="md" />
+          {rows.length > 0 && <LegendSwatches size="md" />}
         </div>
 
         <div className={styles.actions}>

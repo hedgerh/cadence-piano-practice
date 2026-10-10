@@ -3,6 +3,7 @@
 import { stepNoun, type StepNoun } from '@cadence/content';
 import { hintFor, pretty, type Midi, type PitchClass } from '@cadence/music';
 import type { KeyState } from '../../components/music/PianoKeyboard/PianoKeyboard';
+import type { KeyboardVariant } from '../../components/music/PianoKeyboard/keyboardLayout';
 import type { EyebrowTone } from '../../components/ui/TaskHeader';
 import type { RomanChipState } from '../../components/ui/RomanChip';
 import type { Segment } from '../../components/ui/SegmentedProgress';
@@ -44,17 +45,24 @@ export function practiceNoun(state: Pick<PracticeState, 'steps'>): StepNoun {
 /**
  * Practice:159–170 + engine.md §5: hint 2 lights the target tangerine; a match flashes teal.
  * A scale lights each note teal as it is accepted, so the run so far stays visible (a wrong
- * note clears it: HANDOFF §5 resets silently).
+ * note clears it: HANDOFF §5 resets silently). A progression draws the chord just played
+ * faintly and a voice that moved too far in lavender (decisions.md 2026-10-10).
  */
 export function keyboardStates(state: PracticeState): Record<Midi, KeyState> {
   const out: Record<Midi, KeyState> = {};
   if (state.phase === 'finished') return out;
   const step = currentStep(state);
+  if (state.phase === 'listening' && step?.match.type === 'progression') {
+    for (const m of state.match.played) out[m] = 'previous';
+  }
   if (state.hint >= 2 && step) {
-    for (const m of hintFor(step.match)?.keys ?? []) out[m] = 'hint';
+    for (const m of hintFor(step.match, state.match)?.keys ?? []) out[m] = 'hint';
   }
   if (state.phase === 'listening' && step?.match.type === 'sequence') {
     for (const m of state.match.played) out[m] = 'correct';
+  }
+  if (state.phase === 'listening' && step?.match.type === 'progression') {
+    for (const m of state.match.tooFar) out[m] = 'far';
   }
   if (state.phase === 'matched' || state.phase === 'advancing') {
     for (const m of state.flash) out[m] = 'correct';
@@ -66,7 +74,50 @@ export function keyboardStates(state: PracticeState): Record<Midi, KeyState> {
 export function hintNames(state: PracticeState): string[] {
   const step = currentStep(state);
   if (!step || state.phase === 'finished' || state.hint < 1) return [];
-  return hintFor(step.match)?.names ?? [];
+  return hintFor(step.match, state.match)?.names ?? [];
+}
+
+/** Progressions and two-hand work need the three-octave keyboard, for the whole level. */
+export function keyboardVariant(state: Pick<PracticeState, 'steps'>): KeyboardVariant {
+  return state.steps.some((s) => s.match.type === 'progression') ? 'three-octave' : 'two-octave';
+}
+
+export interface ProgressionPart {
+  label: string;
+  state: RomanChipState;
+}
+
+/** A progression step's chord chips: played teal, the one to play tangerine, the rest white. */
+export function progressionParts(state: PracticeState): ProgressionPart[] {
+  const step = currentStep(state);
+  if (!step?.parts || step.match.type !== 'progression') return [];
+  const done = state.phase === 'listening' ? state.match.index : step.parts.length;
+  return step.parts.map((p, i) => ({
+    label: p.label,
+    state: i < done ? 'done' : i === done ? 'current' : 'upcoming',
+  }));
+}
+
+/** True when the right chord was played but a voice moved too far. */
+export function movedTooFar(state: PracticeState): boolean {
+  return state.phase === 'listening' && state.match.tooFar.length > 0;
+}
+
+/** The caption under the keyboard, by what the current step asks for. */
+export function keyboardCaption(state: PracticeState): string {
+  const match = currentStep(state)?.match;
+  if (match?.type === 'sequence') {
+    return 'One note at a time, any octave. Each right note stays lit; a wrong one starts the run again.';
+  }
+  if (match?.type === 'progression') {
+    return match.freeBass === true
+      ? 'Left hand: each root, low. Right hand: keep shared notes down, step to the rest.'
+      : 'Keep shared notes down and step to the rest. Your last chord stays outlined.';
+  }
+  if (match?.type === 'chord' && match.bass !== undefined) {
+    return 'Any octave — just put the right note at the bottom.';
+  }
+  return 'Keys light up as you play. Hints light up the target.';
 }
 
 const QUALITY_SUFFIX = { major: '', minor: 'm', diminished: '°' } as const;

@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router';
 import { useMidiStatus } from '../../midi/hooks';
 import { useInvalidateProgress, useMe } from '../shared/hooks';
 import styles from './PracticePage.module.css';
-import type { PracticeSession } from './practiceReducer';
+import { currentStep, type PracticeSession } from './practiceReducer';
 import { eyebrowFor, markPlayedMode } from './practiceSelectors';
 import { PracticeView } from './PracticeView';
+import { useHearProgression } from './useHearProgression';
 import {
   useLivePracticeIo,
   usePracticeLoader,
@@ -43,6 +44,7 @@ function LivePractice({ session }: { session: PracticeSession }) {
     // decisions.md 2026-10-01 "Hands-free key loop" (off until me.get has loaded).
     autoFinish: me.data?.settings.autoContinue ?? false,
   });
+  const hear = useHearProgression(currentStep(practice.state)?.match);
   return (
     <PracticeView
       state={practice.state}
@@ -60,6 +62,8 @@ function LivePractice({ session }: { session: PracticeSession }) {
       finishError={practice.finishError}
       autoFinishing={practice.autoFinishing}
       xpToast={practice.xpToast}
+      onHear={hear.available ? hear.play : undefined}
+      hearing={hear.playing}
     />
   );
 }
