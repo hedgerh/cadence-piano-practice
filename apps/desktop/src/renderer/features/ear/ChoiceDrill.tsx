@@ -47,6 +47,8 @@ export interface ChoiceDrillProps {
   visibility?: Visibility | undefined;
   /** The session's focus (`'misses'` → "Focus · the ones you missed" eyebrow). */
   focus?: string | null;
+  /** Right end of the progress bar: the Sound setting (decisions.md 2026-10-11); live drills only. */
+  soundControl?: ReactNode;
 }
 
 /** EarInterval:143–156 — chip state per option. */
@@ -74,6 +76,7 @@ export function ChoiceDrill({
   midiStatus,
   visibility,
   focus = null,
+  soundControl,
 }: ChoiceDrillProps) {
   const { state, question } = drill;
   const copy = stageCopy(kind, state.questions, question);
@@ -161,6 +164,7 @@ export function ChoiceDrill({
         <span className={styles.count} data-testid="ear-count">
           {progressLabel(state)}
         </span>
+        {soundControl !== undefined && <div className={styles.sound}>{soundControl}</div>}
       </div>
 
       <main className={styles.main}>

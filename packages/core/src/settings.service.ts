@@ -72,6 +72,7 @@ export function createSettingsService(ctx: ServiceContext, streak: StreakService
       settings: {
         showMarkPlayedAlways: p?.showMarkPlayedAlways ?? false,
         autoContinue: p?.autoContinue ?? true,
+        voice: p?.voice ?? 'samples',
       },
       firstRun: p === null,
     };
@@ -110,6 +111,7 @@ export function createSettingsService(ctx: ServiceContext, streak: StreakService
         if (patch.settings?.autoContinue !== undefined) {
           p.autoContinue = patch.settings.autoContinue;
         }
+        if (patch.settings?.voice !== undefined) p.voice = patch.settings.voice;
         if (Object.keys(p).length > 0) repos.profile.update(p, clock.now());
       });
       return me();

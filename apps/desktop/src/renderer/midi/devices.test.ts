@@ -159,7 +159,7 @@ function me(over: Partial<MeDto> = {}): MeDto {
     xpTotal: 0,
     streak: { days: 0, keptToday: false, atRisk: true },
     midi: {},
-    settings: { showMarkPlayedAlways: false, autoContinue: true },
+    settings: { showMarkPlayedAlways: false, autoContinue: true, voice: 'samples' },
     firstRun: false,
     ...over,
   };

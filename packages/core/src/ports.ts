@@ -35,6 +35,12 @@ export type PlanBlockStatus = 'pending' | 'in_progress' | 'done';
 // Rows
 // ---------------------------------------------------------------------------
 
+/**
+ * The app synth's voice (decisions.md 2026-10-11 "Sound setting"): the original triangle tone,
+ * a synthesized piano, or the recorded piano samples.
+ */
+export type SoundVoice = 'tone' | 'synth' | 'samples';
+
 export interface ProfileRow {
   /** Always 'local' (single local profile). */
   id: string;
@@ -46,6 +52,7 @@ export interface ProfileRow {
   showMarkPlayedAlways: boolean;
   /** Hands-free key loop: auto-finish + auto-advance (decisions.md 2026-10-01). */
   autoContinue: boolean;
+  voice: SoundVoice;
   createdAt: number;
   updatedAt: number;
 }
@@ -196,6 +203,7 @@ export type ProfilePatch = Partial<
     | 'midiDeviceName'
     | 'showMarkPlayedAlways'
     | 'autoContinue'
+    | 'voice'
   >
 >;
 

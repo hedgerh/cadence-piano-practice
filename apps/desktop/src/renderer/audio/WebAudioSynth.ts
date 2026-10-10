@@ -1,16 +1,21 @@
 // docs/engine.md §7 — voices routed through a master gain and a DynamicsCompressor (−12 dB,
-// ratio 4) so chords don't clip. The voice is a sampled grand piano (decisions.md 2026-10-07
-// "Piano voice"): the nearest sample, pitched by playbackRate, held for `dur` and then damped.
-// Until the samples are decoded (or if they fail), the design's own tone() plays instead
-// (EarInterval:105–117: a triangle oscillator).
+// ratio 4) so chords don't clip. Three voices, picked by the profile's Sound setting
+// (decisions.md 2026-10-11 "Sound setting"):
+//   samples — the recorded grand piano (decisions.md 2026-10-07 "Piano voice"): the nearest
+//             sample, pitched by playbackRate, held for `dur` and then damped; until the samples
+//             are decoded (or if they fail) the tone plays instead;
+//   synth   — the additive piano in pianoSynth.ts;
+//   tone    — the design's own tone() (EarInterval:105–117: a triangle oscillator).
 import type { Sound } from '@cadence/content';
 import { midiToFrequency, type Midi } from '@cadence/music';
+import type { SoundVoice } from '@shared/ipc/contracts';
 import {
   loadPianoSamples,
   nearestSample,
   type SampleBank,
   type SampleLoader,
 } from './pianoSamples';
+import { playSynthPiano } from './pianoSynth';
 import { playSound } from './player';
 import type { PlayOptions, Synth } from './Synth';
 
@@ -37,6 +42,7 @@ export class WebAudioSynth implements Synth {
   private readonly active = new Set<AudioScheduledSourceNode>();
   private readonly pending = new Set<() => void>();
   private volume = 1;
+  private voiceSetting: SoundVoice = 'samples';
 
   constructor(
     private readonly createContext: ContextFactory = defaultFactory,
@@ -71,9 +77,15 @@ export class WebAudioSynth implements Synth {
     await this.loading;
   }
 
-  /** Which voice `playMidi` uses right now (dev hooks / e2e). */
-  get voice(): 'piano' | 'tone' {
-    return this.samples ? 'piano' : 'tone';
+  /** The Sound setting; takes effect from the next note. */
+  setVoice(voice: SoundVoice): void {
+    this.voiceSetting = voice;
+  }
+
+  /** The voice `playMidi` uses right now: the setting, or `tone` while samples are missing. */
+  get voice(): SoundVoice {
+    if (this.voiceSetting === 'samples' && !this.samples) return 'tone';
+    return this.voiceSetting;
   }
 
   now(): number {
@@ -82,9 +94,15 @@ export class WebAudioSynth implements Synth {
 
   playMidi(notes: readonly Midi[], at: number, dur: number): void {
     const { ctx, master } = this.ensure();
+    const voice = this.voice;
     for (const midi of notes) {
-      if (this.samples) this.pianoVoice(ctx, master, this.samples, midi, at, dur);
-      else this.toneVoice(ctx, master, midi, at, dur);
+      if (voice === 'samples' && this.samples) {
+        this.pianoVoice(ctx, master, this.samples, midi, at, dur);
+      } else if (voice === 'synth') {
+        playSynthPiano(ctx, master, midi, at, dur, this.track);
+      } else {
+        this.toneVoice(ctx, master, midi, at, dur);
+      }
     }
   }
 
@@ -124,6 +142,12 @@ export class WebAudioSynth implements Synth {
     gain.gain.exponentialRampToValueAtTime(FLOOR_GAIN, at + dur);
     this.start(osc, gain, master, at, at + dur + RELEASE_TAIL);
   }
+
+  /** Register a source for `stop()`; the returned callback forgets it once it has ended. */
+  private readonly track = (src: AudioScheduledSourceNode): (() => void) => {
+    this.active.add(src);
+    return () => this.active.delete(src);
+  };
 
   private start(
     src: AudioScheduledSourceNode,

@@ -1,6 +1,7 @@
 // Find the key (EarKey.dc.html, Task 15). Hear an 8-note phrase, hunt for its home note on the
 // MIDI keyboard (tries show faintly, home stays lit in every octave), then call it major or
 // minor. EarDrillPage routes levels whose steps use a `root` match here.
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { PianoKeyboard } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import { FeedbackPanel } from '../../components/ui/FeedbackPanel';
@@ -12,6 +13,7 @@ import { TaskHeader } from '../../components/ui/TaskHeader';
 import { TextButton } from '../../components/ui/TextButton';
 import type { MidiStatus } from '../../midi/MidiInput';
 import { useInvalidateProgress } from '../shared/hooks';
+import { SoundSetting } from '../shared/SoundSetting';
 import { drillEyebrow } from './choiceModel';
 import { earSegments, type EarSession } from './earDrillReducer';
 import styles from './KeyDrill.module.css';
@@ -55,7 +57,13 @@ function LiveKeyDrill({ session, backTo }: KeyDrillProps) {
     },
   });
   return (
-    <KeyDrillView drill={drill} title={session.shortTitle} backTo={backTo} focus={session.focus} />
+    <KeyDrillView
+      drill={drill}
+      title={session.shortTitle}
+      backTo={backTo}
+      focus={session.focus}
+      soundControl={<SoundSetting />}
+    />
   );
 }
 
@@ -69,6 +77,8 @@ export interface KeyDrillViewProps {
   midiStatus?: MidiStatus | undefined;
   /** The session's focus (`'misses'` → "Focus · the ones you missed" eyebrow). */
   focus?: string | null;
+  /** Right end of the progress bar: the Sound setting (decisions.md 2026-10-11); live drills only. */
+  soundControl?: ReactNode;
 }
 
 export function KeyDrillView({
@@ -78,6 +88,7 @@ export function KeyDrillView({
   backLabel = 'Ear training',
   midiStatus,
   focus = null,
+  soundControl,
 }: KeyDrillViewProps) {
   const { state, question } = drill;
   const key = questionKey(question);
@@ -118,6 +129,7 @@ export function KeyDrillView({
         <span className={styles.count} data-testid="ear-count">
           {keyProgressLabel(state)}
         </span>
+        {soundControl !== undefined && <div className={styles.sound}>{soundControl}</div>}
       </div>
 
       <main className={styles.main}>

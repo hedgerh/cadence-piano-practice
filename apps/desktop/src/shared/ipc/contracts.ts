@@ -59,6 +59,10 @@ const StreakSchema = z.object({
   atRisk: z.boolean(),
 });
 
+/** The app synth's voice (decisions.md 2026-10-11 "Sound setting"). */
+export const SoundVoiceSchema = z.enum(['tone', 'synth', 'samples']);
+export type SoundVoice = z.infer<typeof SoundVoiceSchema>;
+
 export const MeSchema = z.object({
   name: z.string(),
   timezone: z.string(),
@@ -68,7 +72,11 @@ export const MeSchema = z.object({
     deviceId: z.string().exactOptional(),
     deviceName: z.string().exactOptional(),
   }),
-  settings: z.object({ showMarkPlayedAlways: z.boolean(), autoContinue: z.boolean() }),
+  settings: z.object({
+    showMarkPlayedAlways: z.boolean(),
+    autoContinue: z.boolean(),
+    voice: SoundVoiceSchema,
+  }),
   firstRun: z.boolean(),
 });
 
@@ -85,6 +93,7 @@ export const MeUpdateSchema = z.object({
     .object({
       showMarkPlayedAlways: z.boolean().exactOptional(),
       autoContinue: z.boolean().exactOptional(),
+      voice: SoundVoiceSchema.exactOptional(),
     })
     .exactOptional(),
 });

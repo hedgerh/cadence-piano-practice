@@ -5,6 +5,7 @@ import type { Level, Stage, Track } from '@cadence/content';
 import { useNavigate, useParams } from 'react-router';
 import { usePracticeLoader } from '../practice/usePracticeSession';
 import { useInvalidateProgress, useTrack, useTrackOverview } from '../shared/hooks';
+import { SoundSetting } from '../shared/SoundSetting';
 import { ChoiceDrill } from './ChoiceDrill';
 import styles from './ChoiceDrill.module.css';
 import { stageKindOf } from './choiceModel';
@@ -108,6 +109,7 @@ function LiveChoiceDrill({
       backTo={backTo}
       visibility={visibility}
       focus={session.focus}
+      soundControl={<SoundSetting />}
     />
   );
 }

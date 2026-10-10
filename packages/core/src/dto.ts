@@ -10,6 +10,7 @@ import type {
   SessionFocus,
   SessionKind,
   SessionRun,
+  SoundVoice,
   StepResult,
   Visibility,
 } from './ports';
@@ -30,7 +31,7 @@ export interface MeDto {
   xpTotal: number;
   streak: StreakDto;
   midi: { deviceId?: string; deviceName?: string };
-  settings: { showMarkPlayedAlways: boolean; autoContinue: boolean };
+  settings: { showMarkPlayedAlways: boolean; autoContinue: boolean; voice: SoundVoice };
   /** No profile yet: the renderer shows onboarding. */
   firstRun: boolean;
 }
@@ -40,7 +41,7 @@ export interface MeUpdate {
   name?: string;
   timezone?: string;
   midi?: { deviceId?: string | null; deviceName?: string | null };
-  settings?: { showMarkPlayedAlways?: boolean; autoContinue?: boolean };
+  settings?: { showMarkPlayedAlways?: boolean; autoContinue?: boolean; voice?: SoundVoice };
 }
 
 // ---------------------------------------------------------------- content.tracks

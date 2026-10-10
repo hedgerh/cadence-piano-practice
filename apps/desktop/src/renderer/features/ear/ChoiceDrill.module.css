@@ -26,6 +26,19 @@
   gap: 14px;
 }
 
+/* decisions.md 2026-10-11 "Sound setting" — the Sound control at the bar's right end (where
+   Practice:48 puts Show me). It is 52px tall but hangs 32px into the empty space below, so the
+   bar keeps its designed ~20px height and the screens still fit 1280×820. Stacked above <main>
+   (which follows it in the DOM) so the overhanging half stays clickable. */
+.sound {
+  margin-left: auto;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-bottom: -32px;
+  position: relative;
+  z-index: 1;
+}
+
 /* EarInterval:45 */
 .count {
   font-size: 14px;

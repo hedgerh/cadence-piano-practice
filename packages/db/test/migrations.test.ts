@@ -84,6 +84,21 @@ describe('migrations', () => {
     expect(sqlite.prepare('SELECT auto_continue AS v FROM profile').get()).toEqual({ v: 1 });
   });
 
+  // decisions.md 2026-10-11 "Sound setting": existing profiles keep the recorded piano.
+  it("0004 adds profile.voice defaulting to 'samples' for an existing profile", () => {
+    const files = readMigrationFiles({ migrationsFolder: MIGRATIONS });
+    expect(files.length).toBeGreaterThanOrEqual(5);
+    const { sqlite } = openDatabase(':memory:');
+    for (const m of files.slice(0, 4)) for (const stmt of m.sql) if (stmt.trim()) sqlite.exec(stmt);
+    sqlite
+      .prepare(
+        `INSERT INTO profile (id, name, timezone, created_at, updated_at) VALUES ('local', 'Harry', 'UTC', 1, 1)`,
+      )
+      .run();
+    for (const stmt of files[4]?.sql ?? []) if (stmt.trim()) sqlite.exec(stmt);
+    expect(sqlite.prepare('SELECT voice AS v FROM profile').get()).toEqual({ v: 'samples' });
+  });
+
   it('enables foreign keys; memory databases skip WAL', () => {
     const { sqlite } = freshDb();
     expect(sqlite.pragma('foreign_keys', { simple: true })).toBe(1);

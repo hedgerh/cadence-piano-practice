@@ -1,6 +1,7 @@
 import type { Sound } from '@cadence/content';
 import type { Midi } from '@cadence/music';
 import { playSound } from './player';
+import type { SoundVoice } from '@shared/ipc/contracts';
 import type { PlayOptions, Synth } from './Synth';
 
 export interface RecordedNote {
@@ -15,6 +16,7 @@ export class NullSynth implements Synth {
   readonly calls: RecordedNote[] = [];
   readonly sounds: Sound[] = [];
   volume = 1;
+  voice: SoundVoice = 'samples';
   unlocked = false;
   /** Synth clock; tests may set it. */
   time = 0;
@@ -41,6 +43,10 @@ export class NullSynth implements Synth {
 
   stop(): void {
     // Nothing is sounding.
+  }
+
+  setVoice(voice: SoundVoice): void {
+    this.voice = voice;
   }
 
   setVolume(volume: number): void {

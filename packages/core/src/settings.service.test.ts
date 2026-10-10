@@ -46,6 +46,18 @@ describe('SettingsService', () => {
     );
   });
 
+  // decisions.md 2026-10-11 "Sound setting": the recorded piano by default; me.update switches.
+  it('voice defaults to samples and me.update persists tone / synth', () => {
+    expect(createHarness().services.settings.me().settings.voice).toBe('samples');
+    const { services } = onboarded();
+    expect(services.settings.updateMe({ settings: { voice: 'synth' } }).settings.voice).toBe(
+      'synth',
+    );
+    services.settings.updateMe({ settings: { voice: 'tone' } });
+    expect(services.settings.me().settings.voice).toBe('tone');
+    expect(services.settings.me().settings.autoContinue).toBe(true);
+  });
+
   // decisions.md 2026-10-01 "Hands-free key loop": autoContinue defaults on and persists.
   it('autoContinue defaults to true (even before onboarding) and me.update toggles it', () => {
     expect(createHarness().services.settings.me().settings.autoContinue).toBe(true);
@@ -53,9 +65,14 @@ describe('SettingsService', () => {
     expect(services.settings.me().settings).toEqual({
       showMarkPlayedAlways: false,
       autoContinue: true,
+      voice: 'samples',
     });
     const off = services.settings.updateMe({ settings: { autoContinue: false } });
-    expect(off.settings).toEqual({ showMarkPlayedAlways: false, autoContinue: false });
+    expect(off.settings).toEqual({
+      showMarkPlayedAlways: false,
+      autoContinue: false,
+      voice: 'samples',
+    });
     expect(services.settings.me().settings.autoContinue).toBe(false);
     expect(
       services.settings.updateMe({ settings: { autoContinue: true } }).settings.autoContinue,

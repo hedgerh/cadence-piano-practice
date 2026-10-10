@@ -1,4 +1,5 @@
 import type { Midi } from '@cadence/music';
+import type { SoundVoice } from '@shared/ipc/contracts';
 import { appSynth } from '../audio/useAudio';
 import { WebAudioSynth } from '../audio/WebAudioSynth';
 import type { RuntimeMode } from '../lib/runtimeMode';
@@ -33,7 +34,7 @@ export interface CadenceDevHooks {
   };
   audio: {
     /** Unlocks the synth (decoding the piano samples) and reports the voice that will play. */
-    voice(): Promise<'piano' | 'tone' | 'silent'>;
+    voice(): Promise<SoundVoice | 'silent'>;
   };
   /** Set by the ear drill while mounted (features/ear/useEarDrill.ts); e2e reads the target. */
   ear?: {

@@ -16,12 +16,14 @@ import type {
   SessionFocus,
   SessionKind,
   SessionRun,
+  SoundVoice,
   StepResult,
   Visibility,
   XpReason,
 } from '@cadence/core';
 
 const VISIBILITY = ['num', 'name', 'all'] as const satisfies readonly Visibility[];
+const VOICE = ['tone', 'synth', 'samples'] as const satisfies readonly SoundVoice[];
 const LEVEL_STATUS = [
   'available',
   'in_progress',
@@ -61,6 +63,7 @@ export const profile = sqliteTable('profile', {
   midiDeviceName: text('midi_device_name'),
   showMarkPlayedAlways: bool('show_mark_played_always').notNull().default(false),
   autoContinue: bool('auto_continue').notNull().default(true),
+  voice: text('voice', { enum: VOICE }).notNull().default('samples'),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 });

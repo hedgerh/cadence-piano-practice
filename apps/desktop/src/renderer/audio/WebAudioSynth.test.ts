@@ -10,6 +10,8 @@ function fakeContext() {
     value: 0,
     setValueAtTime: (v: number, t: number) => log.push([`${name}.set`, v, t]),
     exponentialRampToValueAtTime: (v: number, t: number) => log.push([`${name}.exp`, v, t]),
+    linearRampToValueAtTime: (v: number, t: number) => log.push([`${name}.lin`, v, t]),
+    setTargetAtTime: (v: number, t: number, tc: number) => log.push([`${name}.target`, v, t, tc]),
   });
   const node = (kind: string) => ({
     connect: (to: { kind?: string }) => log.push([`${kind}.connect`, to.kind]),
@@ -23,19 +25,32 @@ function fakeContext() {
   };
   const ctx = {
     currentTime: 2,
+    sampleRate: 48_000,
+    createBuffer: (_c: number, length: number) => ({
+      getChannelData: () => new Float32Array(length),
+    }),
+    createBiquadFilter: () => ({
+      ...node('filter'),
+      type: '',
+      frequency: { value: 0 },
+      Q: { value: 0 },
+    }),
     state: 'running',
     destination: { kind: 'destination' },
     resume: () => Promise.resolve(),
     createGain: () => ({ ...node('gain'), gain: param('gain') }),
     createDynamicsCompressor: () => compressor,
-    createOscillator: () => ({
-      ...node('osc'),
-      type: '',
-      frequency: { value: 0 },
-      onended: null,
-      start: (t: number) => log.push(['osc.start', t]),
-      stop: (t: number) => log.push(['osc.stop', t]),
-    }),
+    createOscillator: () => {
+      const osc = {
+        ...node('osc'),
+        type: '',
+        frequency: { value: 0 },
+        onended: null,
+        start: (t: number) => log.push(['osc.start', t, osc.type, osc.frequency.value]),
+        stop: (t: number) => log.push(['osc.stop', t]),
+      };
+      return osc;
+    },
     createBufferSource: () => {
       const src = {
         ...node('src'),
@@ -74,7 +89,7 @@ describe('WebAudioSynth', () => {
         ['gain.set', 0.0001, 3],
         ['gain.exp', 0.25, 3.02],
         ['gain.exp', 0.0001, 3.7],
-        ['osc.start', 3],
+        ['osc.start', 3, 'triangle', 440],
         ['osc.stop', 3.75],
       ]),
     );
@@ -130,6 +145,43 @@ describe('WebAudioSynth', () => {
       synth.playMidi([60], 3, 0.7);
       expect(log.some(([k]) => k === 'osc.start')).toBe(true);
       expect(log.some(([k]) => k === 'src.start')).toBe(false);
+    });
+  });
+
+  // decisions.md 2026-10-11 "Sound setting".
+  describe('voice setting', () => {
+    const bank = () => Promise.resolve(new Map([[60, {} as AudioBuffer]]));
+
+    it('samples (default) → buffer source; tone → triangle; synth → sine partials + hammer', async () => {
+      const { ctx, log } = fakeContext();
+      const synth = new WebAudioSynth(() => ctx as unknown as AudioContext, bank);
+      await synth.unlock();
+      expect(synth.voice).toBe('samples');
+      synth.playMidi([60], 3, 0.7);
+      expect(log.filter(([k]) => k === 'src.start')).toHaveLength(1);
+
+      synth.setVoice('tone');
+      expect(synth.voice).toBe('tone');
+      log.length = 0;
+      synth.playMidi([60], 3, 0.7);
+      expect(log.filter(([k]) => k === 'osc.start').map((e) => e[2])).toEqual(['triangle']);
+      expect(log.some(([k]) => k === 'src.start')).toBe(false);
+
+      synth.setVoice('synth');
+      expect(synth.voice).toBe('synth');
+      log.length = 0;
+      synth.playMidi([60], 3, 0.7);
+      const oscs = log.filter(([k]) => k === 'osc.start');
+      expect(oscs.length).toBe(13); // 10 partials, the lowest 3 on two strings
+      expect(oscs.every((e) => e[2] === 'sine')).toBe(true);
+      expect(log.filter(([k]) => k === 'src.start')).toHaveLength(1); // the hammer noise
+    });
+
+    it('samples without decoded samples falls back to the tone', async () => {
+      const { ctx } = fakeContext();
+      const synth = new WebAudioSynth(() => ctx as unknown as AudioContext, noSamples);
+      await synth.unlock();
+      expect(synth.voice).toBe('tone');
     });
   });
 });

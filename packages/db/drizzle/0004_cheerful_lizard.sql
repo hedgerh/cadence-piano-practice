@@ -1,0 +1,1 @@
+ALTER TABLE `profile` ADD `voice` text DEFAULT 'samples' NOT NULL;

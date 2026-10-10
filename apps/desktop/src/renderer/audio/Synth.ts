@@ -1,6 +1,7 @@
 // docs/engine.md §7 — the synth port. WebAudioSynth plays; NullSynth records for tests.
 import type { Sound } from '@cadence/content';
 import type { Midi } from '@cadence/music';
+import type { SoundVoice } from '@shared/ipc/contracts';
 
 export interface PlayOptions {
   /** Called when the sound's last note has finished (or `stop()` cut it short). */
@@ -20,4 +21,6 @@ export interface Synth {
   stop(): void;
   /** Master volume, 0..1. */
   setVolume(volume: number): void;
+  /** The Sound setting: recorded piano, synthesized piano or the basic tone. */
+  setVoice(voice: SoundVoice): void;
 }

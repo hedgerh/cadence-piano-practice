@@ -20,6 +20,7 @@ describe('ProfileRepo', () => {
       midiDeviceName: null,
       showMarkPlayedAlways: false,
       autoContinue: true,
+      voice: 'samples',
       createdAt: T0,
       updatedAt: T0,
     });
@@ -35,6 +36,7 @@ describe('ProfileRepo', () => {
         midiDeviceName: 'Keystation',
         showMarkPlayedAlways: true,
         autoContinue: false,
+        voice: 'synth',
       },
       T0 + 5,
     );
@@ -44,6 +46,7 @@ describe('ProfileRepo', () => {
       midiDeviceName: 'Keystation',
       showMarkPlayedAlways: true,
       autoContinue: false,
+      voice: 'synth',
       createdAt: T0,
       updatedAt: T0 + 5,
     });

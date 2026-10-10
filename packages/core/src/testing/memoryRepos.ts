@@ -106,6 +106,7 @@ export function createMemoryRepos(): Repos {
         midiDeviceName: null,
         showMarkPlayedAlways: false,
         autoContinue: true,
+        voice: 'samples',
         createdAt: now,
         updatedAt: now,
       };

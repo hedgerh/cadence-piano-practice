@@ -29,13 +29,13 @@ test('app boots, IPC answers, Web MIDI is permitted, fonts are local', async () 
     expect(families).toMatch(/Nunito/);
 
     // decisions.md 2026-10-07 "Piano voice": the bundled samples decode from the built app
-    // (file://, strict CSP), so the synth plays the piano rather than the fallback tone.
+    // (file://, strict CSP), so the default Sound setting plays the samples, not the fallback tone.
     const voice = await page.evaluate(() => {
       const dev = (window as { __cadenceDev?: { audio: { voice(): Promise<string> } } })
         .__cadenceDev;
       return dev ? dev.audio.voice() : 'no dev hooks';
     });
-    expect(voice).toBe('piano');
+    expect(voice).toBe('samples');
 
     await page.setViewportSize({ width: 1280, height: 820 });
     await page.screenshot({ path: 'e2e/screenshots/00-scaffold.png' });
