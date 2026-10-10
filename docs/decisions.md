@@ -145,3 +145,28 @@ Append-only. One entry per architectural or product decision agents must follow.
 - **What**: `audio/pianoGains.ts` holds a baked `[left, right]` gain per sample file, measured once with `measureSampleGains` (each channel's RMS over 0.5 s from the onset, brought to the median channel level ≈ −22.3 dBFS; boost capped at 2.5× (+8 dB) so quiet far-microphone channels don't raise MP3 noise; peaks kept < 0.98). The piano voice routes each sample through splitter → per-channel gain → merger → the existing envelope. No audio analysis at runtime; the MP3 files are untouched (re-encoding would cost a lossy generation).
 - **Result** (rendered offline through the real graph, G3–G5): left/right balance 0 dB on every note except D5–E5 (−4.8 dB, was −13.5, limited by the cap); loudness spread 4.5 → 2.3 dB (all within ±0.3 dB except D5–E5, ~1.5 dB softer).
 - **Re-measuring**: `__cadenceDev.audio.measureSamples()` (dev/e2e builds) returns the table to paste if the sample files change; a unit test requires one entry per bundled file.
+
+## 2026-10-10 — Voice leading
+
+- **Why**: the owner's new goal is to improvise (string chords together, make up melodies). Fluid inversions and voice leading come first (`docs/roadmap.md` phase 1). The stub track, 9 exact-octave `voicing` steps per key, drilled shapes but never the _move_ between chords.
+- **Matching** (`@cadence/music`):
+  - `chord.bass` names an inversion in any octave.
+  - The new `progression` match grades chords held in order. Each voice may move at most `maxMove` semitones (2 = a whole step), measured from **the voicing the learner actually played**, not a prescribed answer, so any smooth path counts. Voices pair low to high (`voiceMotion`).
+  - Lifting keys between chords never resets. Mid-change shapes made of the previous and next chords' notes are `partial`, not misses. The right chord with a too-big jump is `wrong` with `tooFar` (shown in lavender, never red).
+  - `freeBass` adds a left-hand bass: the lowest note is the chord's `bass` and may jump, and only the notes above it are measured.
+- **Voice-leading math** (`voiceLeading.ts`): `smoothestVoicing` = the close-position voicing with the least total motion, then the most common tones, then the smallest single move. `voiceLead` builds the path used for hints and "Hear it":
+  - the first chord is placed like a hint;
+  - two-hand paths keep the right hand in C3..B4 over a bass in C2..B2;
+  - one-hand paths shift down by octaves only as far as needed to stay on C2..B4.
+- **Tracks**: a "Voice leading" library group with Inversion shapes, Smooth progressions and Bass & chords, 12 major keys each (contents in engine.md §2.2). The validator proves every progression can be played as shown within `maxMove` on the C2..B4 keyboard, and forbids a chord repeating the one before it (the held chord would count twice).
+- **Content model**:
+  - `Step.parts` (one chip per chord).
+  - `Lesson.voicings` (chord shapes on the keyboard; `rows` may be empty).
+  - `stepNoun` "progression" (mirrored in `contracts.ts`). Mixed levels say "steps".
+  - Completion copy: "All eight progressions, every move smooth."
+- **UI** (beyond the designs):
+  - Progression steps show their chips in place of the big numeral, outline the previous chord (`previous` key state), and light too-far voices `far`, with a lavender nudge.
+  - "Hear it" plays the path (not a hint: it lights no keys). Hint 2 lights the next chord nearest to what was played.
+  - Levels with progressions use a three-octave keyboard (C2–B4, 990px, the two-octave key sizes).
+  - Lessons show chord shapes as tiles over one shared keyboard: picking a tile plays it, and "Hear" lights each shape as it sounds.
+- **Not yet**: minor keys and 7th chords (phase 2), and Jam / tempo (phase 3).

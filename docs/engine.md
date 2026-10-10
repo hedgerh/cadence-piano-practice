@@ -18,7 +18,7 @@ Conventions: notes are ASCII in data (`"C#4"`, `"Bb3"`), rendered with `♯`/`�
   type MatchInput = { type:'held'; held: ReadonlySet<Midi> } | { type:'noteOn'; midi } | { type:'choose'; option }
   initialMatchState(spec); reduceMatch(spec, state, input)
   ```
-  chord = pitch-class set equality (any octave, inversion, doubling); voicing = exact MIDI set; sequence = ordered note-ons, wrong note resets silently (if the wrong note is `target[0]`, restart at index 1), option `anyOctave` for ear play-backs and scales (with `anyOctave` and `direction`, each note after the first must also move that way; `MatchState.played` holds the accepted MIDI notes); root = note-on pitch class equals tonic (tries recorded), then chains into `then`; choice = string equality. `hintFor(spec)` → `{ names: string[], keys: Midi[] } | null` — derived, never authored (level 1 shows names, level 2 lights keys; `choice` → null).
+  chord = pitch-class set equality (any octave, inversion, doubling), with optional `bass` = that chord tone must be the lowest held note; voicing = exact MIDI set; progression = chords held in order, each with exactly its notes (and `bass` lowest), each voice moving ≤ `maxMove` semitones from the voicing actually played (`MatchState.played`; a too-far move is `wrong` with `tooFar`; letting go keeps your place; `freeBass` = an extra left-hand bass that may jump) — decisions.md 2026-10-10 "Voice leading", math in `voiceLeading.ts`; sequence = ordered note-ons, wrong note resets silently (if the wrong note is `target[0]`, restart at index 1), option `anyOctave` for ear play-backs and scales (with `anyOctave` and `direction`, each note after the first must also move that way; `MatchState.played` holds the accepted MIDI notes); root = note-on pitch class equals tonic (tries recorded), then chains into `then`; choice = string equality. `hintFor(spec, state?)` → `{ names: string[], keys: Midi[] } | null` — derived, never authored (level 1 shows names, level 2 lights keys; `choice` → null; a progression's hint is the next chord voiced nearest to what was just played).
 
 Tests (§1.T): all 24 keys' scales/triads/signatures with hand tables for C, A, G♭, B major and A, E♭, G♯ minor (E♭ minor → `Ebm F° Gb Abm Bbm Cb Db`); `placeTriad` reproduces the four design voicings; matcher table (C major matched by `E3 G3 C4`, by `C4 E4 G4 C5`, not by `C4 E4 G4 A4`, partial on `C4 E4`; voicing rejects inversion; sequence reset semantics; root any octave); `midiToFrequency(69) === 440`.
 
@@ -31,9 +31,9 @@ Track  = { id, title, +blurb, map:'circle-of-fifths'|'ladder', +available: boole
 Stage  = { id, title, blurb, unlock?: Unlock, levels: Level[] }
 Unlock = { stage, level }           // satisfied when level (N−1) of <stage> is passed; N = levels.length+1 ⇒ stage complete
 Level  = { id, title, +key?: {tonic, mode}, +blurb?, pass?: {correct, of}, steps: Step[], pool?: Step[], +activeOptions?: string[] }
-Step   = { +id, label, name, match: MatchSpec, play?: Sound, +context?: Sound, +hint?: Sound, +explain?: string, +quality? }
+Step   = { +id, label, name, match: MatchSpec, play?: Sound, +context?: Sound, +hint?: Sound, +explain?: string, +quality?, +parts?: [{label, quality?}] /* one chip per progression chord */ }
 Sound  = notes{notes, gapMs} | chord{notes} | cadence{key, mode} | phrase{notes}
-Lesson = { title, eyebrow, intro, rows: [{label, caption, chips:[{numeral, quality, pivot?}]}], bridge, cta, hear?: {label, sounds: Sound[]} }
+Lesson = { title, eyebrow, intro, rows: [{label, caption, chips:[{numeral, quality, pivot?}]}], +voicings?: [{label, caption, notes}], bridge, cta, hear?: {label, sounds: Sound[]} }
 ```
 
 Progress key for a step = `${levelId}/${stepId}`. `pass.of` is the question count (10 default; 5 for find-the-key).
@@ -44,7 +44,7 @@ Content is generated **at runtime in main** from code and validated at startup. 
 
 - `major-diatonic-chords`, `minor-diatonic-chords`: 12 levels over `CIRCLE_MAJOR` / `CIRCLE_MINOR` (minor starts at A minor). `level.id = keySlug`, `title = keyTitle`, `blurb = keySignatureText + " Chords: " + shorts.join(' · ')`. Steps `d1..d7`: `{ label: numeral, name, quality, match:{type:'chord', notes:[root,third,fifth]} }`. The minor track carries the `Lesson` from Learn.dc.html (C major row with pivot `vi`; A minor row with pivot `i`; `hear` = both triad sets).
 - `minor-scales` (available): 12 levels; steps `up`/`down` `sequence` via `placeScale`, `anyOctave` with `direction` (decisions.md 2026-10-03 "Minor scales track").
-- `inversions-voice-leading` (`available:false`): 12 levels; I/IV/V × root/1st/2nd inversion = 9 `voicing` steps.
+- Voice leading group (decisions.md 2026-10-10 "Voice leading", task 18), 12 major levels each: `inversion-shapes` (`${keySlug}-shapes`: 4 climb `progression` steps + 8 `chord`+`bass` steps; lesson), `smooth-progressions` (`${keySlug}-smooth`: 8 `progression` steps, `maxMove` 2; lesson), `bass-and-chords` (`${keySlug}-bass`: 6 `progression` steps with `freeBass`). They replaced the unavailable `inversions-voice-leading` stub.
 - `ear-training` ladder:
 
 | Stage id        | Unlock               | Levels                                                                                                                                                                                                                                                                                                 | pass |
