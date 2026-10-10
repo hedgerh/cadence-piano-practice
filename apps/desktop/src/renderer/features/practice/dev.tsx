@@ -41,6 +41,7 @@ export function practiceSessionFixture(opts: {
     trackTitle: opts.scale ? 'Minor scales' : 'Major diatonic chords',
     levelId: level.id,
     levelTitle: level.title,
+    levelNote: level.note ?? null,
     shortTitle: level.title,
     stageTitle: null,
     kind: 'learn',
@@ -126,6 +127,7 @@ function DevPracticeScreen({ search }: { search: string }) {
     <PracticeView
       state={practice.state}
       title={session.levelTitle}
+      note={session.levelNote}
       eyebrow={eyebrowFor(session)}
       midiStatus={midi}
       headerMidiStatus={midi}

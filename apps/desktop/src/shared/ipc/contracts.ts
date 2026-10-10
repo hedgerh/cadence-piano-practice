@@ -285,6 +285,7 @@ export const SessionSchema = z.object({
   trackTitle: z.string(),
   levelId: z.string(),
   levelTitle: z.string(),
+  levelNote: z.string().nullable(),
   shortTitle: z.string(),
   stageTitle: z.string().nullable(),
   kind: SessionKindSchema,

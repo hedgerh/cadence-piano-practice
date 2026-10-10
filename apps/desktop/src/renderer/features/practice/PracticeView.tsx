@@ -2,6 +2,7 @@
 // screen (fixture) both render this from a PracticeState.
 import { pretty } from '@cadence/music';
 import { PianoKeyboard } from '../../components/music/PianoKeyboard/PianoKeyboard';
+import { renderBold } from '../../components/ui/Callout';
 import { BulbIcon } from '../../components/ui/icons';
 import { NoteChips } from '../../components/ui/NoteChips';
 import { OutlineInkButton } from '../../components/ui/OutlineInkButton';
@@ -37,6 +38,8 @@ export interface PracticeViewProps {
   state: PracticeState;
   /** Header title and the finish copy's key name ("A major"). */
   title: string;
+  /** The level's content note ("Relative major: **C major**. …"), shown under the prompt. */
+  note?: string | null;
   eyebrow: { text: string; tone: EyebrowTone };
   midiStatus: MidiStatus;
   /** Fixed header pill (dev fixtures). The live page omits it: the pill opens the device picker. */
@@ -58,6 +61,7 @@ export interface PracticeViewProps {
 export function PracticeView({
   state,
   title,
+  note = null,
   eyebrow,
   midiStatus,
   headerMidiStatus,
@@ -128,6 +132,11 @@ export function PracticeView({
               {(state.vis !== 'num' || !chordLevel) && (
                 <span className={styles.name} data-testid="chord-name">
                   {pretty(step.name)}
+                </span>
+              )}
+              {note !== null && (
+                <span className={styles.note} data-testid="level-note">
+                  {renderBold(note)}
                 </span>
               )}
             </div>

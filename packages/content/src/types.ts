@@ -76,6 +76,11 @@ export const LevelSchema = z.object({
   title: z.string(),
   key: KeySchema.exactOptional(),
   blurb: z.string().exactOptional(),
+  /**
+   * A tip shown on the Practice screen while this level is played ("Relative major: **C major**.
+   * …"); `**x**` marks bold text (decisions.md 2026-10-10 "Relative key on scale practice").
+   */
+  note: z.string().exactOptional(),
   /** Ear levels: 8 of 10 by default; 4 of 5 for find-the-key. */
   pass: PassSchema.exactOptional(),
   /** Chord levels: 7 steps, one per diatonic chord. Ear levels: empty. */

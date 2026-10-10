@@ -287,6 +287,8 @@ export interface SessionDto {
   trackTitle: string;
   levelId: string;
   levelTitle: string;
+  /** Content `Level.note`: a tip the Practice screen shows ("Relative major: **C major**. …"). */
+  levelNote: string | null;
   /** "A major" · "Intervals · Level 3". */
   shortTitle: string;
   stageTitle: string | null;

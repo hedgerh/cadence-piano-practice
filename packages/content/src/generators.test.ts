@@ -243,6 +243,33 @@ describe('major-scales', () => {
     });
   });
 
+  // decisions.md 2026-10-10 "Relative key on scale practice".
+  it('each scale level notes its relative key, spelled from the scale', () => {
+    expect(at(majorScalesTrack.levels, 0).note).toBe(
+      'Relative minor: **A minor**. Same seven notes, starting on A.',
+    );
+    expect(at(majorScalesTrack.levels, 6).note).toBe(
+      'Relative minor: **E♭ minor**. Same seven notes, starting on E♭.',
+    );
+    expect(at(scalesTrack.levels, 0).note).toBe(
+      'Relative major: **C major**. Same seven notes, starting on C.',
+    );
+    expect(scalesTrack.levels?.map((l) => /\*\*(.+)\*\*/.exec(l.note ?? '')?.[1])).toEqual([
+      'C major',
+      'G major',
+      'D major',
+      'A major',
+      'E major',
+      'B major',
+      'G♭ major',
+      'D♭ major',
+      'A♭ major',
+      'E♭ major',
+      'B♭ major',
+      'F major',
+    ]);
+  });
+
   it('every placed scale stays on the two-octave practice keyboard (C3..B4)', () => {
     for (const level of [...(majorScalesTrack.levels ?? []), ...(scalesTrack.levels ?? [])]) {
       for (const step of level.steps) {

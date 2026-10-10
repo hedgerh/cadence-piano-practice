@@ -47,6 +47,7 @@ function LivePractice({ session }: { session: PracticeSession }) {
     <PracticeView
       state={practice.state}
       title={session.levelTitle}
+      note={session.levelNote}
       eyebrow={eyebrowFor(session)}
       midiStatus={status}
       markPlayed={markPlayedMode(status, me.data?.settings.showMarkPlayedAlways ?? false)}

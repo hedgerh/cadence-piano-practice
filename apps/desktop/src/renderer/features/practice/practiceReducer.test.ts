@@ -38,6 +38,7 @@ function session(results: PracticeSession['results'] = []): PracticeSession {
     trackTitle: 'Major diatonic chords',
     levelId: level.id,
     levelTitle: level.title,
+    levelNote: level.note ?? null,
     shortTitle: level.title,
     stageTitle: null,
     kind: 'learn',

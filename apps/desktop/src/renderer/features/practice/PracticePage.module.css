@@ -87,6 +87,22 @@
   line-height: 1.1;
 }
 
+/* Not in Practice.dc.html — the level's content note (scales: the relative key), a sand pill
+   (Path:58 flat-card colours) under the step name; the key name is bold ink. */
+.note {
+  margin-top: 10px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 700;
+}
+.note strong {
+  color: var(--ink);
+  font-weight: 800;
+}
+
 /* Practice:79 */
 .finished {
   display: flex;

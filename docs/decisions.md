@@ -123,3 +123,9 @@ Append-only. One entry per architectural or product decision agents must follow.
 - **Track map**: `trackPills` (shared by the circle and ladder maps) keeps only the active track's group. `TrackPills` takes `allTracksTo` and leads with a muted "All tracks" back link (TaskHeader's back style, 44px tall). An unknown `/tracks/:id` goes to the library.
 - **Today**: "Your tracks" lists joined tracks only (`isJoined`: available ∧ enrolled ∧ active). The header link reads "All tracks". "Add something to learn" and the no-tracks CTA "Pick something to learn" link to the library. The AddTrackDialog is removed. Starting a track from its map already enrolls it.
 - **Adding a track** is still: write a generator in `packages/content`, give it a `group`, and add it to `buildTracks()`. Tests that picked tracks by position (validator fixtures) now look them up by id.
+
+## 2026-10-10 — Relative key on scale practice
+
+- **Why**: the owner asked to see the relative minor/major of the scale being played.
+- **Content**: `Level.note` (optional; `**x**` marks bold) is a tip the Practice screen shows while the level is played. Scale levels set it with `relativeKeyNote(key)`: "Relative major: **C major**. Same seven notes, starting on C." / "Relative minor: **A minor**. …". The relative key is the scale's own 3rd (minor) or 6th (major) degree, so spellings follow the key (E♭ minor ↔ G♭ major).
+- **Engine/UI**: `SessionDto.levelNote` (mirrored in `contracts.ts`) carries it. `PracticeView` renders any non-null note under the step name as a sand pill, with the key name in bold ink (`renderBold`). Levels without a note (every chord level) render nothing. Not in Practice.dc.html. Any future track can use the field with no renderer change.

@@ -41,6 +41,7 @@ export function keySessionFixture(
     trackTitle: 'Ear training',
     levelId,
     levelTitle: level.title,
+    levelNote: level.note ?? null,
     shortTitle: `Find the key · ${level.title}`,
     stageTitle: 'Find the key',
     kind: 'learn',

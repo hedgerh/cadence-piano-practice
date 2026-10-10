@@ -237,6 +237,9 @@ describe('sessions.finish', () => {
     const { services } = onboarded();
     const s = services.progress.startLevel('a-minor-scale', 'learn');
     expect(s.steps.map((step) => step.id)).toEqual(['up', 'down']);
+    // decisions.md 2026-10-10: the content note rides on the session for the Practice screen.
+    expect(s.levelNote).toBe('Relative major: **C major**. Same seven notes, starting on C.');
+    expect(services.progress.startLevel('c-major', 'learn').levelNote).toBeNull();
     s.steps.forEach((step, ordinal) =>
       services.progress.recordStep({
         sessionId: s.sessionId,

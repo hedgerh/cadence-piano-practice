@@ -10,9 +10,20 @@ import {
   keyTitle,
   placeScale,
   pretty,
+  relativeMajor,
+  relativeMinor,
   scale,
 } from '@cadence/music';
 import type { Level, Track } from '../types';
+
+/**
+ * "Relative major: **C major**. Same seven notes, starting on C." — the key sharing this scale's
+ * notes (a minor key's 3rd degree, a major key's 6th), spelled from the scale itself.
+ */
+export function relativeKeyNote(key: Key): string {
+  const rel = key.mode === 'minor' ? relativeMajor(key) : relativeMinor(key);
+  return `Relative ${rel.mode}: **${keyTitle(rel)}**. Same seven notes, starting on ${pretty(rel.tonic)}.`;
+}
 
 /** One key's scale, up then down: id `${keySlug}-scale` ("a-minor-scale", "c-major-scale"). */
 export function scaleLevel(key: Key): Level {
@@ -24,6 +35,7 @@ export function scaleLevel(key: Key): Level {
     title,
     key: { tonic: key.tonic, mode: key.mode },
     blurb: `${keySignatureText(key).replace(/, /g, ' · ')} Notes: ${scale(key).map(pretty).join(' · ')}`,
+    note: relativeKeyNote(key),
     steps: [
       {
         id: 'up',

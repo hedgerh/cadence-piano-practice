@@ -40,6 +40,7 @@ export function earSessionFixture(
     trackTitle: 'Ear training',
     levelId,
     levelTitle: level.title,
+    levelNote: level.note ?? null,
     shortTitle: `${stage.title} · ${level.title}`,
     stageTitle: stage.title,
     kind: 'learn',

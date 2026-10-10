@@ -375,6 +375,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       trackTitle: ref.track.title,
       levelId: session.levelId,
       levelTitle: ref.level.title,
+      levelNote: ref.level.note ?? null,
       shortTitle: content.shortTitle(session.levelId),
       stageTitle: ref.stage?.title ?? null,
       kind: session.kind,

@@ -52,6 +52,9 @@ test('minor scales: play A minor up and down, then finish with scale copy', asyn
     const sessionId = sessionIdFrom(page);
     await expect(page.getByTestId('chord-no')).toHaveText('Scale 1 of 2');
     await expect(page.getByTestId('chord-name')).toHaveText('A minor scale, going up');
+    await expect(page.getByTestId('level-note')).toHaveText(
+      'Relative major: C major. Same seven notes, starting on C.',
+    );
     await expect(page.getByTestId('practice-count')).toHaveText('0 of 2 scales');
     await expect(page.getByTestId('show-me')).toHaveCount(0);
 

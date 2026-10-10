@@ -22,6 +22,7 @@ function renderScale(hint = 0) {
       <PracticeView
         state={state}
         title={session.levelTitle}
+        note={session.levelNote}
         eyebrow={eyebrowFor(session)}
         midiStatus={{ kind: 'connected', deviceName: 'Keys', deviceId: 'k' }}
         markPlayed="hidden"
@@ -45,6 +46,14 @@ describe('Practice on a minor-scale level', () => {
     expect(screen.queryByTestId('show-me')).toBeNull();
     expect(screen.queryByTestId('practice-strip')).toBeNull();
     expect(screen.getByTestId('keyboard-caption').textContent).toMatch(/One note at a time/);
+  });
+
+  // decisions.md 2026-10-10 "Relative key on scale practice".
+  it('shows the relative major under the step name, key name in bold', () => {
+    renderScale();
+    const note = screen.getByTestId('level-note');
+    expect(note.textContent).toBe('Relative major: C major. Same seven notes, starting on C.');
+    expect(note.querySelector('strong')?.textContent).toBe('C major');
   });
 
   it('eyebrow is "Learn · scales"', () => {
