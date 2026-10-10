@@ -43,12 +43,14 @@ describe('initialMatchState', () => {
       { type: 'sequence', notes: ['C4', 'D4'] },
       { type: 'choice', answer: 'a', options: ['a', 'b'] },
       { type: 'root', note: 'C' },
+      { type: 'progression', chords: [{ notes: ['C', 'E', 'G'] }], maxMove: 2 },
     ];
     for (const spec of specs) {
       expect(initialMatchState(spec)).toEqual({
         status: 'idle',
         index: 0,
         played: [],
+        tooFar: [],
         tries: [],
         found: false,
         then: null,
@@ -273,5 +275,100 @@ describe('hintFor — derived, never authored (HANDOFF §4)', () => {
 
   it('choice: null (the hint is "hear it again")', () => {
     expect(hintFor({ type: 'choice', answer: 'a', options: ['a'] })).toBeNull();
+  });
+});
+
+describe('chord with bass — a named inversion in any octave', () => {
+  const firstInv: MatchSpec = { type: 'chord', notes: ['C', 'E', 'G'], bass: 'E' };
+  it('matches when the bass is the lowest note, in any octave', () => {
+    expect(statusOf(firstInv, held('E3', 'G3', 'C4'))).toBe('matched');
+    expect(statusOf(firstInv, held('E4', 'G4', 'C5'))).toBe('matched');
+  });
+  it('the right notes over the wrong bass are wrong', () => {
+    expect(statusOf(firstInv, held('C4', 'E4', 'G4'))).toBe('wrong');
+  });
+  it('the hint names the bass first and stacks above it', () => {
+    expect(hintFor(firstInv)).toEqual({ names: ['E', 'G', 'C'], keys: [52, 55, 60] });
+  });
+});
+
+// decisions.md 2026-10-10 "Voice leading": measured from the voicing the learner played.
+describe('progression — chords in order, each voice moving at most maxMove', () => {
+  const C: Note[] = ['C4', 'E4', 'G4'];
+  const F: Note[] = ['C4', 'F4', 'A4'];
+  const oneFourOne: MatchSpec = {
+    type: 'progression',
+    chords: [{ notes: ['C', 'E', 'G'] }, { notes: ['F', 'A', 'C'] }, { notes: ['C', 'E', 'G'] }],
+    maxMove: 2,
+  };
+
+  it('advances chord by chord, and matches after the last', () => {
+    const { states, last } = run(oneFourOne, [held(...C), held(...F), held(...C)]);
+    expect(states.map((s) => s.status)).toEqual(['partial', 'partial', 'matched']);
+    expect(states.map((s) => s.index)).toEqual([1, 2, 3]);
+    expect(last.played).toEqual([60, 64, 67]);
+  });
+
+  it('a too-far jump is wrong and names the keys that moved too far; fixing it advances', () => {
+    const { states } = run(oneFourOne, [held(...C), held('F3', 'A3', 'C4'), held(...F)]);
+    expect(states[1]).toMatchObject({ status: 'wrong', index: 1, tooFar: [53, 57, 60] });
+    expect(states[2]).toMatchObject({ status: 'partial', index: 2, tooFar: [] });
+  });
+
+  it('mid-change shapes are partial, letting go keeps your place, a stray note is wrong', () => {
+    const { states } = run(oneFourOne, [
+      held(...C),
+      held('C4', 'G4'),
+      held('C4', 'E4', 'F4', 'G4'),
+      { type: 'held', held: new Set() },
+      held('C#4'),
+      held(...F),
+    ]);
+    expect(states.map((s) => s.status)).toEqual([
+      'partial',
+      'partial',
+      'partial',
+      'partial',
+      'wrong',
+      'partial',
+    ]);
+    expect(states[5]?.index).toBe(2);
+  });
+
+  it('the first chord can require an inversion', () => {
+    const fromFirst: MatchSpec = {
+      type: 'progression',
+      chords: [{ notes: ['C', 'E', 'G'], bass: 'E' }, { notes: ['F', 'A', 'C'] }],
+      maxMove: 2,
+    };
+    expect(statusOf(fromFirst, held(...C))).toBe('partial');
+    expect(stateOf(fromFirst, held('E3', 'G3', 'C4')).index).toBe(1);
+  });
+
+  it('freeBass: a left-hand bass may jump; only the notes above it are measured', () => {
+    const twoHands: MatchSpec = {
+      type: 'progression',
+      chords: [
+        { notes: ['C', 'E', 'G'], bass: 'C' },
+        { notes: ['F', 'A', 'C'], bass: 'F' },
+      ],
+      maxMove: 2,
+      freeBass: true,
+    };
+    expect(run(twoHands, [held('C2', ...C), held('F2', ...F)]).last.status).toBe('matched');
+    expect(run(twoHands, [held('C2', ...C), held(...F)]).last).toMatchObject({
+      status: 'partial',
+      index: 1,
+    });
+    expect(run(twoHands, [held('C2', ...C), held('F2', 'F3', 'A3', 'C4')]).last).toMatchObject({
+      status: 'wrong',
+      tooFar: [53, 57, 60],
+    });
+  });
+
+  it('the hint shows the next chord voiced nearest to what was played', () => {
+    expect(hintFor(oneFourOne)).toEqual({ names: ['C', 'E', 'G'], keys: [60, 64, 67] });
+    const afterI = stateOf(oneFourOne, held('C4', 'E4', 'G4'));
+    expect(hintFor(oneFourOne, afterI)).toEqual({ names: ['F', 'A', 'C'], keys: [60, 65, 69] });
   });
 });

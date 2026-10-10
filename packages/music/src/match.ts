@@ -10,11 +10,22 @@ import {
   pcNumber,
   pretty,
 } from './pitch';
-import { PRACTICE_RANGE, placeRoot, stackAbove } from './voicing';
+import { type ChordTarget, nextVoicing, placeChord, voiceLead, voiceMotion } from './voiceLeading';
+import { PRACTICE_RANGE } from './voicing';
+
+/** One chord of a `progression`. */
+export interface ProgressionChord {
+  notes: readonly PitchClass[];
+  /** This chord tone must be the lowest note (an inversion, or the left-hand bass). */
+  bass?: PitchClass;
+}
 
 export type MatchSpec =
-  /** Any octave, any inversion, any doubling: held pitch-class set equals the target. */
-  | { type: 'chord'; notes: readonly PitchClass[] }
+  /**
+   * Any octave, any doubling: held pitch-class set equals the target. With `bass`, that chord
+   * tone must also be the lowest held note (a named inversion, in any octave).
+   */
+  | { type: 'chord'; notes: readonly PitchClass[]; bass?: PitchClass }
   /** Exact notes (inversions / voice leading): held MIDI set equals the target. */
   | { type: 'voicing'; notes: readonly Note[] }
   /** Ordered note-ons (scales, ear play-backs). A wrong note resets silently. */
@@ -32,16 +43,34 @@ export type MatchSpec =
   /** Name it from a list. */
   | { type: 'choice'; answer: string; options: readonly string[] }
   /** Find the key: hit the tonic in any octave, then (optionally) answer `then`. */
-  | { type: 'root'; note: PitchClass; then?: MatchSpec };
+  | { type: 'root'; note: PitchClass; then?: MatchSpec }
+  /**
+   * Chords in order, held one after another (common tones may stay down; letting go is fine).
+   * Each must have exactly its notes (one voice per note) and its `bass` lowest. With `maxMove`,
+   * every voice may move at most that many semitones from the voicing the learner actually
+   * played before it. With `freeBass`, the lowest note is an extra left-hand bass (the chord's
+   * `bass`): it may jump, and only the notes above it are measured.
+   */
+  | {
+      type: 'progression';
+      chords: readonly ProgressionChord[];
+      maxMove?: number;
+      freeBass?: boolean;
+    };
 
 export type MatchStatus = 'idle' | 'partial' | 'matched' | 'wrong';
 
 export interface MatchState {
   status: MatchStatus;
-  /** sequence: how many target notes have been played in order. */
+  /** sequence: how many target notes have been played in order; progression: chords done. */
   index: number;
-  /** sequence: the MIDI notes accepted so far (`index` of them), as actually played. */
+  /**
+   * sequence: the MIDI notes accepted so far (`index` of them), as actually played.
+   * progression: the last accepted voicing, ascending.
+   */
   played: readonly Midi[];
+  /** progression: the right chord, but these held keys moved more than `maxMove`. */
+  tooFar: readonly Midi[];
   /** root: MIDI notes played before the tonic was found. */
   tries: readonly Midi[];
   /** root: the tonic has been hit. */
@@ -62,6 +91,7 @@ export function initialMatchState(_spec: MatchSpec): MatchState {
     status: 'idle',
     index: 0,
     played: [],
+    tooFar: [],
     tries: [],
     found: false,
     then: null,
@@ -93,8 +123,13 @@ export function reduceMatch(spec: MatchSpec, state: MatchState, input: MatchInpu
       if (input.type !== 'held') return state;
       const held = new Set([...input.held].map(midiToPc));
       const target = new Set(spec.notes.map(pcNumber));
-      return { ...state, status: heldStatus(held, target) };
+      const status = heldStatus(held, target);
+      if (status !== 'matched' || spec.bass === undefined) return { ...state, status };
+      const lowest = Math.min(...input.held);
+      return { ...state, status: midiToPc(lowest) === pcNumber(spec.bass) ? 'matched' : 'wrong' };
     }
+    case 'progression':
+      return reduceProgression(spec, state, input);
     case 'voicing': {
       if (input.type !== 'held') return state;
       const target = new Set(spec.notes.map(noteToMidi));
@@ -153,6 +188,70 @@ export function reduceMatch(spec: MatchSpec, state: MatchState, input: MatchInpu
   }
 }
 
+function reduceProgression(
+  spec: Extract<MatchSpec, { type: 'progression' }>,
+  state: MatchState,
+  input: MatchInput,
+): MatchState {
+  if (input.type !== 'held' || state.status === 'matched') return state;
+  const held = [...input.held].sort((a, b) => a - b);
+  if (held.length === 0) {
+    return { ...state, status: state.index === 0 ? 'idle' : 'partial', tooFar: [] };
+  }
+  const chord = spec.chords[state.index];
+  if (chord === undefined) return state;
+  const freeBass = spec.freeBass === true;
+  const upper = freeBass ? held.slice(1) : held;
+  const target = new Set(chord.notes.map(pcNumber));
+  const lowest = held[0] ?? 0;
+  const shapeOk =
+    (!freeBass || held.length >= 2) &&
+    upper.length === target.size &&
+    setEquals(new Set(upper.map(midiToPc)), target) &&
+    (chord.bass === undefined || midiToPc(lowest) === pcNumber(chord.bass));
+  if (!shapeOk) {
+    // Mid-change (lifting old notes, adding new ones) is not a miss.
+    const previous = spec.chords[state.index - 1]?.notes ?? [];
+    const allowed = new Set([...target, ...previous.map(pcNumber)]);
+    const passing = held.every((m) => allowed.has(midiToPc(m)));
+    return { ...state, status: passing ? 'partial' : 'wrong', tooFar: [] };
+  }
+  if (state.index > 0 && spec.maxMove !== undefined) {
+    const before = freeBass ? state.played.slice(1) : state.played;
+    const moves = voiceMotion(before, upper);
+    const limit = spec.maxMove;
+    const tooFar = moves === null ? [] : upper.filter((_, i) => Math.abs(moves[i] ?? 0) > limit);
+    if (tooFar.length > 0) return { ...state, status: 'wrong', tooFar };
+  }
+  const index = state.index + 1;
+  return {
+    ...state,
+    index,
+    played: held,
+    tooFar: [],
+    status: index >= spec.chords.length ? 'matched' : 'partial',
+  };
+}
+
+const targetOf = (chord: ProgressionChord): ChordTarget =>
+  chord.bass === undefined
+    ? { pcs: chord.notes.map(pcNumber) }
+    : { pcs: chord.notes.map(pcNumber), bass: pcNumber(chord.bass) };
+
+/** `notes` rotated so `bass` comes first. */
+function bassFirst(notes: readonly PitchClass[], bass?: PitchClass): PitchClass[] {
+  const i = bass === undefined ? 0 : notes.findIndex((n) => pcNumber(n) === pcNumber(bass));
+  return i <= 0 ? [...notes] : [...notes.slice(i), ...notes.slice(0, i)];
+}
+
+/**
+ * The voice-led path a `progression` step demonstrates (play-backs, the first hint): the first
+ * chord placed like a hint, each next one the smoothest, kept on the keyboard.
+ */
+export function progressionPath(spec: Extract<MatchSpec, { type: 'progression' }>): Midi[][] {
+  return voiceLead(spec.chords.map(targetOf), spec.freeBass === true);
+}
+
 export interface Hint {
   /** Spelled note names with ♯/♭, in target order (root, 3rd, 5th for chords). */
   names: string[];
@@ -160,17 +259,31 @@ export interface Hint {
   keys: Midi[];
 }
 
-/** Derived, never authored (HANDOFF §4): level 1 shows `names`, level 2 lights `keys`. */
-export function hintFor(spec: MatchSpec): Hint | null {
+/**
+ * Derived, never authored (HANDOFF §4): level 1 shows `names`, level 2 lights `keys`.
+ * A progression's hint follows `state`: the next chord, voiced nearest to what was just played.
+ */
+export function hintFor(spec: MatchSpec, state?: MatchState): Hint | null {
   switch (spec.type) {
     case 'chord': {
-      const pcs = spec.notes.map(pcNumber);
-      const root = pcs[0];
-      if (root === undefined) return { names: [], keys: [] };
+      if (spec.notes.length === 0) return { names: [], keys: [] };
       return {
-        names: spec.notes.map(pretty),
-        keys: stackAbove(placeRoot(root), pcs.slice(1)),
+        names: bassFirst(spec.notes, spec.bass).map(pretty),
+        keys: placeChord(targetOf(spec)),
       };
+    }
+    case 'progression': {
+      const i = Math.min(state?.index ?? 0, spec.chords.length - 1);
+      const chord = spec.chords[i];
+      if (chord === undefined) return { names: [], keys: [] };
+      const played = state?.played ?? [];
+      const freeBass = spec.freeBass === true;
+      const keys =
+        i === 0 || played.length === 0
+          ? (progressionPath(spec)[i] ?? [])
+          : nextVoicing(played, targetOf(chord), freeBass);
+      const names = freeBass ? chord.notes : bassFirst(chord.notes, chord.bass);
+      return { names: names.map(pretty), keys };
     }
     case 'voicing':
     case 'sequence':

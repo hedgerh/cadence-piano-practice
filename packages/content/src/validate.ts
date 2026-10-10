@@ -9,13 +9,16 @@ import {
   type MatchSpec,
   PRACTICE_RANGE,
   type PitchClass,
+  TWO_HAND_RANGE,
   diatonicTriads,
   hintFor,
   inRange88,
   keyTitle,
   noteToMidi,
   pcNumber,
+  progressionPath,
   scale,
+  voiceMotion,
 } from '@cadence/music';
 import { z } from 'zod';
 import { type Key, type Level, type Sound, type Step, type Track, TrackSchema } from './types';
@@ -73,9 +76,75 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
     }
   };
 
+  /** Every note (or pitch class) is in `key` and spelled for it. */
+  const checkInKey = (notes: readonly string[], path: string, key: Key | undefined): void => {
+    if (!key) return;
+    let names: PitchClass[];
+    try {
+      names = scale(key);
+    } catch {
+      return; // reported once at the level
+    }
+    const pcs = new Set(names.map(pcNumber));
+    notes.forEach((note, n) => {
+      const name = note.replace(/-?\d+$/, '') as PitchClass;
+      if (!pcs.has(pcNumber(name))) {
+        err(`${path}[${n}]`, `${note} is not in ${keyTitle(key)}`);
+      } else if (!names.includes(name)) {
+        err(`${path}[${n}]`, `${note} is misspelled for ${keyTitle(key)}`);
+      }
+    });
+  };
+
+  const checkBass = (notes: readonly PitchClass[], bass: PitchClass | undefined, path: string) => {
+    if (bass !== undefined && !notes.includes(bass)) {
+      err(`${path}.bass`, `bass ${bass} is not one of the chord's notes`);
+    }
+  };
+
+  // decisions.md 2026-10-10 "Voice leading": every progression step can be played as shown.
+  const checkProgression = (
+    match: Extract<MatchSpec, { type: 'progression' }>,
+    path: string,
+    key: Key | undefined,
+  ): void => {
+    const already = errors.length;
+    if (match.chords.length < 2) err(`${path}.chords`, 'a progression has at least 2 chords');
+    match.chords.forEach((chord, c) => {
+      const cp = `${path}.chords[${c}]`;
+      checkInKey(chord.notes, `${cp}.notes`, key);
+      checkBass(chord.notes, chord.bass, cp);
+      if (match.freeBass === true && chord.bass === undefined) {
+        err(`${cp}.bass`, 'a freeBass progression names the bass of every chord');
+      }
+    });
+    if (errors.length > already) return;
+    const path0 = progressionPath(match);
+    const free = match.freeBass === true;
+    path0.forEach((voicing, c) => {
+      const upper = free ? voicing.slice(1) : voicing;
+      const range = free ? TWO_HAND_RANGE : PRACTICE_RANGE;
+      if (voicing.some((m) => m < range.low || m > range.high)) {
+        err(`${path}.chords[${c}]`, 'the shown voicing falls off the practice keyboard');
+      }
+      const before = path0[c - 1];
+      if (before === undefined || match.maxMove === undefined) return;
+      const moves = voiceMotion(free ? before.slice(1) : before, upper) ?? [];
+      if (moves.some((m) => Math.abs(m) > (match.maxMove ?? 0))) {
+        err(
+          `${path}.chords[${c}]`,
+          `no voicing reaches this chord within ${match.maxMove} semitones`,
+        );
+      }
+    });
+  };
+
   // ---- rules 2, 3, 6: matches
   const checkMatch = (match: MatchSpec, path: string, key: Key | undefined): void => {
     switch (match.type) {
+      case 'progression':
+        checkProgression(match, path, key);
+        return;
       case 'chord':
       case 'voicing':
       case 'sequence': {
@@ -86,28 +155,14 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
             }
           });
         } else {
-          const keys = hintFor(match)?.keys ?? [];
+          const before = errors.length;
+          checkBass(match.notes, match.bass, path);
+          const keys = errors.length > before ? [] : (hintFor(match)?.keys ?? []);
           if (keys.some((m) => m < PRACTICE_RANGE.low || m > PRACTICE_RANGE.high)) {
             err(path, 'chord hint placement falls outside the practice range C3..B4');
           }
         }
-        if (key) {
-          let names: PitchClass[];
-          try {
-            names = scale(key);
-          } catch {
-            return; // reported once at the level
-          }
-          const pcs = new Set(names.map(pcNumber));
-          match.notes.forEach((note, n) => {
-            const name = note.replace(/-?\d+$/, '') as PitchClass;
-            if (!pcs.has(pcNumber(name))) {
-              err(`${path}.notes[${n}]`, `${note} is not in ${keyTitle(key)}`);
-            } else if (!names.includes(name)) {
-              err(`${path}.notes[${n}]`, `${note} is misspelled for ${keyTitle(key)}`);
-            }
-          });
-        }
+        checkInKey(match.notes, `${path}.notes`, key);
         return;
       }
       case 'choice':
@@ -247,7 +302,8 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
         err(`${lp}.key.tonic`, `level ${j + 1} should be ${expected} (got ${level.key.tonic})`);
       }
       // Diatonic-chord levels: the seven numerals in order.
-      if (level.steps.length === 0 || !level.steps.every((st) => st.match.type === 'chord')) return;
+      const plainChord = (st: Step) => st.match.type === 'chord' && st.match.bass === undefined;
+      if (level.steps.length === 0 || !level.steps.every(plainChord)) return;
       const numerals = level.key.mode === 'major' ? MAJOR_NUMERALS : MINOR_NUMERALS;
       if (level.steps.length !== numerals.length) {
         err(`${lp}.steps`, `a chord level has 7 steps (got ${level.steps.length})`);

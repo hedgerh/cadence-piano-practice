@@ -40,9 +40,12 @@ export function answerOf(step: Step): string {
     case 'root':
       return m.then?.type === 'choice' ? `${m.note}:${m.then.answer}` : m.note;
     case 'chord':
+      return m.bass === undefined ? m.notes.join(' ') : `${m.notes.join(' ')}/${m.bass}`;
     case 'voicing':
     case 'sequence':
       return m.notes.join(' ');
+    case 'progression':
+      return m.chords.map((c) => c.notes.join(' ')).join(' | ');
   }
 }
 

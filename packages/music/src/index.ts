@@ -4,4 +4,5 @@ export * from './keys';
 export * from './triads';
 export * from './intervals';
 export * from './voicing';
+export * from './voiceLeading';
 export * from './match';

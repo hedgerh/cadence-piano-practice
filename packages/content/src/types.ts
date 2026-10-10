@@ -23,7 +23,11 @@ export const KeySchema = z.object({ tonic: PitchClassSchema, mode: ModeSchema })
 /** HANDOFF §4 Match union (mirrors `MatchSpec` in `@cadence/music`). */
 export const MatchSpecSchema: z.ZodType<MatchSpec> = z.lazy(() =>
   z.discriminatedUnion('type', [
-    z.object({ type: z.literal('chord'), notes: z.array(PitchClassSchema) }),
+    z.object({
+      type: z.literal('chord'),
+      notes: z.array(PitchClassSchema),
+      bass: PitchClassSchema.exactOptional(),
+    }),
     z.object({ type: z.literal('voicing'), notes: z.array(NoteSchema) }),
     z.object({
       type: z.literal('sequence'),
@@ -36,6 +40,14 @@ export const MatchSpecSchema: z.ZodType<MatchSpec> = z.lazy(() =>
       type: z.literal('root'),
       note: PitchClassSchema,
       then: MatchSpecSchema.exactOptional(),
+    }),
+    z.object({
+      type: z.literal('progression'),
+      chords: z.array(
+        z.object({ notes: z.array(PitchClassSchema), bass: PitchClassSchema.exactOptional() }),
+      ),
+      maxMove: z.number().int().min(0).exactOptional(),
+      freeBass: z.boolean().exactOptional(),
     }),
   ]),
 );

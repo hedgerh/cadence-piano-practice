@@ -143,6 +143,47 @@ describe('validateTracks negatives', () => {
     expectOneError(tracks, `tracks[${T.minor}].lesson.rows[1].chips[2].quality`);
   });
 
+  // decisions.md 2026-10-10 "Voice leading".
+  it('a bass that is not a chord tone', () => {
+    const tracks = broken((t) => {
+      at(aMajor(t).steps, 0).match = { type: 'chord', notes: ['A', 'C#', 'E'], bass: 'B' };
+    });
+    expectOneError(tracks, `tracks[${T.major}].levels[3].steps[0].match.bass`);
+  });
+
+  it('a progression chord outside the key', () => {
+    const tracks = broken((t) => {
+      at(aMajor(t).steps, 0).match = {
+        type: 'progression',
+        chords: [{ notes: ['A', 'C#', 'E'] }, { notes: ['D', 'F', 'A'] }],
+      };
+    });
+    expectOneError(tracks, `tracks[${T.major}].levels[3].steps[0].match.chords[1].notes[1]`);
+  });
+
+  it('a progression no voicing can play within maxMove', () => {
+    const tracks = broken((t) => {
+      at(aMajor(t).steps, 0).match = {
+        type: 'progression',
+        chords: [{ notes: ['A', 'C#', 'E'] }, { notes: ['D', 'F#', 'A'] }],
+        maxMove: 0,
+      };
+    });
+    expectOneError(tracks, `tracks[${T.major}].levels[3].steps[0].match.chords[1]`);
+  });
+
+  it('a freeBass progression with a chord missing its bass', () => {
+    const tracks = broken((t) => {
+      at(aMajor(t).steps, 0).match = {
+        type: 'progression',
+        chords: [{ notes: ['A', 'C#', 'E'] }, { notes: ['D', 'F#', 'A'], bass: 'D' }],
+        maxMove: 2,
+        freeBass: true,
+      };
+    });
+    expectOneError(tracks, `tracks[${T.major}].levels[3].steps[0].match.chords[0].bass`);
+  });
+
   it('a malformed note fails the schema with a path', () => {
     const tracks = broken((t) => {
       at(intervalsL1(t).pool, 0).play = {
