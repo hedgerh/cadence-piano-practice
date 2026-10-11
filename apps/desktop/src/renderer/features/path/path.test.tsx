@@ -1,4 +1,11 @@
-import { majorDiatonicChords, minorDiatonicChords } from '@cadence/content';
+import {
+  bassAndChords,
+  inversionShapes,
+  majorDiatonicChords,
+  majorScales,
+  minorDiatonicChords,
+  smoothProgressions,
+} from '@cadence/content';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -140,6 +147,19 @@ describe('circle content (Path:93–129; minor track: outer minors, inner relati
     const minor = trackPattern(minorDiatonicChords());
     expect(minor?.title).toBe('The pattern in every minor key');
     expect(minor?.chips.map((c) => c.numeral).join(' ')).toBe('i ii° III iv v VI VII');
+  });
+
+  // decisions.md 2026-10-10 "Voice leading": the chords a track uses, once each, in scale order.
+  it('voice leading tracks show the distinct chords they use; scales show none', () => {
+    const numerals = (t: Parameters<typeof trackPattern>[0]) =>
+      trackPattern(t)
+        ?.chips.map((c) => c.numeral)
+        .join(' ');
+    expect(trackPattern(inversionShapes())?.title).toBe("The chords you'll use in every major key");
+    expect(numerals(inversionShapes())).toBe('I IV V vi');
+    expect(numerals(smoothProgressions())).toBe('I ii IV V vi');
+    expect(numerals(bassAndChords())).toBe('I ii IV V vi');
+    expect(trackPattern(majorScales())).toBeNull();
   });
 
   it('compact labels: slot 6 (Path:110 G♭ at 20px) and three-character labels', () => {

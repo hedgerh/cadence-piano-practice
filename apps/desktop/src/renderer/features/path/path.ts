@@ -2,7 +2,17 @@
 // `/tracks/:trackId`; engine.md §4 trackOverview). Everything is derived from `content.tracks`,
 // `content.track` and `tracks.overview`; nothing here knows about a particular track.
 import type { Quality } from '@cadence/content';
-import { relativeMajor, relativeMinor, type Key } from '@cadence/music';
+import {
+  diatonicTriads,
+  midiToPc,
+  noteToMidi,
+  pcNumber,
+  relativeMajor,
+  relativeMinor,
+  type Key,
+  type MatchSpec,
+  type Pc,
+} from '@cadence/music';
 import type { CircleKey } from '../../components/music/CircleOfFifths/CircleOfFifths';
 import type { TrackPill } from '../../components/ui/TrackPills';
 import type { TrackDto, TrackOverviewDto, TrackSummary } from '../shared/hooks';
@@ -36,18 +46,50 @@ export interface PatternChip {
   quality: Quality;
 }
 
+/** The chords (as pitch-class sets) a step asks for, whatever its match type. */
+function chordsOf(match: MatchSpec): Set<Pc>[] {
+  switch (match.type) {
+    case 'chord':
+      return [new Set(match.notes.map(pcNumber))];
+    case 'voicing':
+      return [new Set(match.notes.map((n) => midiToPc(noteToMidi(n))))];
+    case 'progression':
+      return match.chords.map((c) => new Set(c.notes.map(pcNumber)));
+    case 'sequence':
+    case 'choice':
+    case 'root':
+      return [];
+  }
+}
+
+const sameSet = (a: ReadonlySet<Pc>, b: ReadonlySet<Pc>) =>
+  a.size === b.size && [...a].every((x) => b.has(x));
+
 /**
- * Path:58–76 — "The pattern in every major key" + the seven quality-colored numerals, read from
- * the track's first level (every level of a circle track shares the pattern).
+ * Path:58–76 — "The pattern in every major key" + the seven quality-colored numerals. Derived
+ * from the diatonic chords the track's first level uses (every level of a circle track shares
+ * the pattern), in scale order, once each: all seven for the chord tracks; the voice-leading
+ * tracks (decisions.md 2026-10-10) use fewer, titled "The chords you'll use".
  */
 export function trackPattern(track: TrackDto): { title: string; chips: PatternChip[] } | null {
   const level = track.levels?.[0];
   if (!level?.key) return null;
-  const chips = level.steps.flatMap((s): PatternChip[] =>
-    s.quality ? [{ numeral: s.label, quality: s.quality }] : [],
+  const triads = diatonicTriads(level.key);
+  const used = level.steps.flatMap((s) => chordsOf(s.match));
+  const chips = triads.flatMap((t): PatternChip[] =>
+    used.some((c) => sameSet(c, new Set(t.pcs)))
+      ? [{ numeral: t.numeral, quality: t.quality }]
+      : [],
   );
   if (chips.length === 0) return null;
-  return { title: `The pattern in every ${level.key.mode} key`, chips };
+  const mode = level.key.mode;
+  return {
+    title:
+      chips.length === triads.length
+        ? `The pattern in every ${mode} key`
+        : `The chords you'll use in every ${mode} key`,
+    chips,
+  };
 }
 
 /** ASCII short name ("Ebm", "Gb"); CircleOfFifths renders it with pretty(). */
