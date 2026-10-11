@@ -32,6 +32,7 @@ import {
   practiceNoun,
   progressionParts,
   progressSegments,
+  runProgressView,
 } from './practiceSelectors';
 import { withRetry } from './retry';
 
@@ -43,6 +44,7 @@ function session(results: PracticeSession['results'] = []): PracticeSession {
     sessionId: 's1',
     focus: null,
     run: null,
+    runProgress: null,
     trackId: 'major-diatonic-chords',
     trackTitle: 'Major diatonic chords',
     levelId: level.id,
@@ -354,6 +356,16 @@ describe('practice selectors', () => {
         levelTitle: 'G major',
       }),
     ).toEqual({ text: 'Circle run · G major', tone: 'lavender' });
+    // decisions.md 2026-10-11: with its place in the run, the eyebrow counts keys instead.
+    expect(
+      eyebrowFor({
+        kind: 'learn',
+        trackTitle: 'Inversion shapes',
+        run: 'circle',
+        levelTitle: 'B major',
+        runProgress: { position: 6, total: 12 },
+      }).text,
+    ).toBe('Circle run · key 6 of 12');
     expect(
       eyebrowFor({
         kind: 'learn',
@@ -580,5 +592,22 @@ describe('progression steps (Smooth progressions, C major)', () => {
     expect(s.phase).toBe('listening');
     s = run([releaseAll(1), press(2, 'E5', 'G5', 'C6')], s);
     expect(s.phase).toBe('matched');
+  });
+});
+
+// decisions.md 2026-10-11 "Circle run progress".
+describe('runProgressView', () => {
+  it('one dot per key: done before, current, upcoming after; keys left', () => {
+    const v = runProgressView({ position: 6, total: 12 });
+    expect(v?.dots.filter((d) => d === 'done')).toHaveLength(5);
+    expect(v?.dots[5]).toBe('current');
+    expect(v?.dots.filter((d) => d === 'upcoming')).toHaveLength(6);
+    expect(v?.label).toBe('6 keys left');
+    expect(v?.aria).toBe('Key 6 of 12, 6 keys left');
+  });
+  it('the last two keys and one-off sessions', () => {
+    expect(runProgressView({ position: 11, total: 12 })?.label).toBe('1 key left');
+    expect(runProgressView({ position: 12, total: 12 })?.label).toBe('Last key');
+    expect(runProgressView(null)).toBeNull();
   });
 });

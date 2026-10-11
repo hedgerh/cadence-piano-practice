@@ -40,6 +40,30 @@
   color: var(--muted);
 }
 
+/* decisions.md 2026-10-11 "Circle run progress": one dot per key of the run. */
+.run {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.runDots {
+  display: flex;
+  gap: 5px;
+}
+.runDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+.runDot.done {
+  background: var(--teal);
+}
+.runDot.current {
+  background: var(--tangerine);
+}
+
 /* Practice:58 */
 .main {
   flex-grow: 1;

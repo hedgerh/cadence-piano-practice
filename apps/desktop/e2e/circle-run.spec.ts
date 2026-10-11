@@ -73,7 +73,8 @@ test('circle run: C (completed) → G (completed) instead of jumping to A major'
     await expect(page).toHaveURL(/#\/practice\/c-major\?session=/);
     const cSession = await invoke(page, 'sessions.get', { sessionId: sessionIdFrom(page.url()) });
     expect(cSession).toMatchObject({ levelId: 'c-major', kind: 'review', run: 'circle' });
-    await expect(page.getByTestId('task-header')).toContainText('Circle run · C major');
+    await expect(page.getByTestId('task-header')).toContainText('Circle run · key 1 of 12');
+    await expect(page.getByTestId('run-progress')).toContainText('11 keys left');
     await playCMajor(page);
 
     // ---- Complete: run caption, then the countdown lands on G major (not A major) ----
@@ -86,7 +87,8 @@ test('circle run: C (completed) → G (completed) instead of jumping to A major'
     await expect(page.getByTestId('chord-name')).toHaveText('G major');
     const gSession = await invoke(page, 'sessions.get', { sessionId: sessionIdFrom(page.url()) });
     expect(gSession).toMatchObject({ levelId: 'g-major', kind: 'review', run: 'circle' });
-    await expect(page.getByTestId('task-header')).toContainText('Circle run · G major');
+    await expect(page.getByTestId('task-header')).toContainText('Circle run · key 2 of 12');
+    await expect(page.getByTestId('run-progress').locator('[data-state="done"]')).toHaveCount(1);
 
     // ---- A one-off (non-run) session still goes to the next uncompleted key ----
     const oneOff = await invoke(page, 'sessions.start', { levelId: 'd-major', kind: 'review' });

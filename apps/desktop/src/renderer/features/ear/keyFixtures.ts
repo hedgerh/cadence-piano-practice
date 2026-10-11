@@ -37,6 +37,7 @@ export function keySessionFixture(
     sessionId: `dev-${levelId}`,
     focus: null,
     run: null,
+    runProgress: null,
     trackId: 'ear-training',
     trackTitle: 'Ear training',
     levelId,

@@ -13,6 +13,7 @@ import { ShowMeControl } from '../../components/ui/ShowMeControl';
 import { TaskHeader, type EyebrowTone } from '../../components/ui/TaskHeader';
 import { TextButton } from '../../components/ui/TextButton';
 import type { MidiStatus } from '../../midi/MidiInput';
+import { cx } from '../../lib/cx';
 import { MidiStateBanner } from './MidiStateBanner';
 import styles from './PracticePage.module.css';
 import {
@@ -34,6 +35,7 @@ import {
   practiceNoun,
   progressionParts,
   progressSegments,
+  runProgressView,
   type MarkPlayedMode,
 } from './practiceSelectors';
 import type { XpToast } from './usePracticeSession';
@@ -60,6 +62,8 @@ export interface PracticeViewProps {
   autoFinishing?: boolean;
   /** Task 09: "+5 XP" after each recorded step. */
   xpToast?: XpToast | null;
+  /** Circle run: this key's place in the run (decisions.md 2026-10-11). */
+  runProgress?: { position: number; total: number } | null;
   /** Progression steps: play the voice-led path ("Hear it"); omitted = no button. */
   onHear?: (() => void) | undefined;
   hearing?: boolean;
@@ -84,7 +88,9 @@ export function PracticeView({
   xpToast = null,
   onHear,
   hearing = false,
+  runProgress = null,
 }: PracticeViewProps) {
+  const run = runProgressView(runProgress);
   const total = state.steps.length;
   const finished = state.phase === 'finished';
   const step = currentStep(state);
@@ -127,6 +133,16 @@ export function PracticeView({
             {doneCount(state)} of {total} {noun}s
           </span>
         </div>
+        {run && (
+          <div className={styles.run} role="img" aria-label={run.aria} data-testid="run-progress">
+            <span className={styles.runDots}>
+              {run.dots.map((d, i) => (
+                <span key={i} className={cx(styles.runDot, styles[d])} data-state={d} />
+              ))}
+            </span>
+            <span className={styles.count}>{run.label}</span>
+          </div>
+        )}
         {chordLevel && <ShowMeControl value={state.vis} onChange={onVisibility} />}
       </div>
 

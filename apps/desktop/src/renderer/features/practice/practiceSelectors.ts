@@ -146,15 +146,23 @@ const KIND_TONE: Record<PracticeSession['kind'], EyebrowTone> = {
 
 /**
  * Practice:29 "Learn · diatonic chords" — kind + the track title without its Major/Minor prefix.
- * A circle-run session reads "Circle run · G major" (decisions.md 2026-10-03), toned by kind.
+ * A circle-run session reads "Circle run · key 6 of 12" (decisions.md 2026-10-11; the header
+ * title already names the key), or "Circle run · G major" without a position; toned by kind.
  */
 export function eyebrowFor(
   session: Pick<PracticeSession, 'kind' | 'trackTitle'> &
-    Partial<Pick<PracticeSession, 'run' | 'levelTitle'>>,
+    Partial<Pick<PracticeSession, 'run' | 'levelTitle' | 'runProgress'>>,
 ): {
   text: string;
   tone: EyebrowTone;
 } {
+  const rp = session.runProgress;
+  if (session.run === 'circle' && rp) {
+    return {
+      text: `Circle run · key ${rp.position} of ${rp.total}`,
+      tone: KIND_TONE[session.kind],
+    };
+  }
   if (session.run === 'circle' && session.levelTitle !== undefined) {
     return { text: `Circle run · ${session.levelTitle}`, tone: KIND_TONE[session.kind] };
   }
@@ -215,6 +223,24 @@ export function finishCopy(
     title: `${capital(word(total - skipped.length))} of ${word(total)}. Nice.`,
     body: `${joinNames(names)} ${skipped.length === 1 ? 'comes' : 'come'} back tomorrow.`,
   };
+}
+
+export type RunDot = 'done' | 'current' | 'upcoming';
+
+/**
+ * decisions.md 2026-10-11 "Circle run progress": one dot per key of the run (keys before this
+ * one are done, since a run goes in circle order) and "N keys left".
+ */
+export function runProgressView(
+  rp: { position: number; total: number } | null | undefined,
+): { dots: RunDot[]; label: string; aria: string } | null {
+  if (!rp || rp.total < 1) return null;
+  const dots = Array.from({ length: rp.total }, (_, i): RunDot =>
+    i + 1 < rp.position ? 'done' : i + 1 === rp.position ? 'current' : 'upcoming',
+  );
+  const left = rp.total - rp.position;
+  const label = left === 0 ? 'Last key' : left === 1 ? '1 key left' : `${left} keys left`;
+  return { dots, label, aria: `Key ${rp.position} of ${rp.total}, ${label.toLowerCase()}` };
 }
 
 export type MarkPlayedMode = 'hidden' | 'text' | 'promoted';

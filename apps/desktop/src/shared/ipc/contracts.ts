@@ -310,6 +310,7 @@ export const SessionSchema = z.object({
   results: z.array(SessionResultSchema),
   focus: SessionFocusSchema.nullable(),
   run: SessionRunSchema.nullable(),
+  runProgress: z.object({ position: z.number(), total: z.number() }).nullable(),
 });
 
 export const RecordStepInputSchema = z.object({

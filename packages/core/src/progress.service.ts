@@ -410,6 +410,10 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       })),
       focus: session.focus,
       run: session.run,
+      runProgress:
+        session.run === null
+          ? null
+          : { position: ref.order + 1, total: content.levelOrder(session.trackId).length },
     };
   };
 

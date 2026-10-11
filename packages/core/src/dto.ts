@@ -312,6 +312,11 @@ export interface SessionDto {
   focus: SessionFocus | null;
   /** Circle run (decisions.md 2026-10-03); null for a one-off session. */
   run: SessionRun | null;
+  /**
+   * Circle run: where this key sits in the run ("key 6 of 12", decisions.md 2026-10-11
+   * "Circle run progress"); null for a one-off session.
+   */
+  runProgress: { position: number; total: number } | null;
 }
 
 export interface RecordStepInput {

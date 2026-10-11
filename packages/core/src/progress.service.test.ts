@@ -697,6 +697,8 @@ describe('circle run', () => {
     while (levelId !== null) {
       const { session, complete } = playRun(services, levelId);
       expect(session.run).toBe('circle');
+      // decisions.md 2026-10-11 "Circle run progress": Practice shows "key N of 12".
+      expect(session.runProgress).toEqual({ position: visited.length + 1, total: 12 });
       expect(complete.run).toBe('circle');
       expect(complete.runPosition).toBe(visited.length + 1);
       visited.push(levelId);
@@ -748,6 +750,7 @@ describe('circle run', () => {
     const done = services.progress.finishSession({ sessionId: oneOff.sessionId, durationMs: 1 });
     expect(done.run).toBeNull();
     expect(done.runPosition).toBeNull();
+    expect(oneOff.runProgress).toBeNull();
     expect(done.next).toMatchObject({ levelId: 'a-major', run: null });
   });
 

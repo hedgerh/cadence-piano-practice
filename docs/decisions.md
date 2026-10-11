@@ -170,3 +170,11 @@ Append-only. One entry per architectural or product decision agents must follow.
   - Levels with progressions use a three-octave keyboard (C2–B4, 990px, the two-octave key sizes).
   - Lessons show chord shapes as tiles over one shared keyboard: picking a tile plays it, and "Hear" lights each shape as it sounds.
 - **Not yet**: minor keys and 7th chords (phase 2), and Jam / tempo (phase 3).
+
+## 2026-10-11 — Circle run progress
+
+- **Why**: the owner found a circle run daunting with no sense, inside a key, of how far through the 12 keys they were.
+- **Engine**: `SessionDto.runProgress` = `{ position, total }` (the 1-based place of the level in circle order and the track's level count) for a circle run, `null` for a one-off. Mirrored in `contracts.ts`.
+- **Practice** (beyond the designs):
+  - The eyebrow reads "Circle run · key 6 of 12", matching Complete's "Circle run · 4 of 12". The header title already names the key.
+  - The progress bar row shows one 10px dot per key: keys before this one teal (a run goes in circle order), this key tangerine, the rest `--line-strong`. It is labelled "6 keys left" / "1 key left" / "Last key", with an aria-label "Key 6 of 12, 6 keys left".
