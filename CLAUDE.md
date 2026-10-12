@@ -22,6 +22,7 @@ pnpm test --project packages
 pnpm lint:fix / pnpm format
 pnpm e2e                # builds, then Playwright _electron smoke/screens with a temp userData
 pnpm dist               # NSIS installer into apps/desktop/dist
+pnpm dist:mac           # on a Mac only: DMG + zip (ad-hoc signed, not notarized); CI: .github/workflows/build-mac.yml
 pnpm db:generate        # drizzle-kit generate after editing packages/db/src/schema.ts
 pnpm rebuild:native     # after bumping Electron: rebuild better-sqlite3 for the Electron ABI
 ```
@@ -69,4 +70,5 @@ Every renderer→main call goes through `shared/ipc/contracts.ts`. Adding a proc
 - Electron is pinned exactly. After bumping, run `pnpm rebuild:native`. Escape hatch if native rebuilds fight you: swap `packages/db/src/client.ts` to `node:sqlite` (one file).
 - Compute local dates for streaks with `Intl.DateTimeFormat` in the user's timezone; never `toISOString().slice(0, 10)`.
 - `createHashRouter` only (file:// in production).
+- macOS is supported too (decisions.md 2026-10-12 "macOS build"); build it on a Mac or via the Build macOS workflow, never from Windows (better-sqlite3 is native). Keep `process.platform` checks to `main/`.
 - First `pnpm dist` may need Windows Developer Mode (symlink privilege for electron-builder's cache). The installer is unsigned; SmartScreen will warn.

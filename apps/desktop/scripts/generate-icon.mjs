@@ -1,4 +1,5 @@
-// Generates apps/desktop/resources/icon.ico (16/32/48/64/128/256) with no dependencies:
+// Generates apps/desktop/resources/icon.ico (16/32/48/64/128/256) and icon-mac.png (1024, for
+// electron-builder's macOS .icns) with no dependencies:
 // a tangerine (#FF8A4C) rounded square with an ink (#211B16) "C", drawn as a round-capped arc
 // (Fredoka's rounded stroke style) and anti-aliased with signed distance fields.
 //
@@ -15,7 +16,12 @@ const SIZES = [16, 32, 48, 64, 128, 256];
 const TANGERINE = [0xff, 0x8a, 0x4c];
 const INK = [0x21, 0x1b, 0x16];
 
-const outFile = join(dirname(fileURLToPath(import.meta.url)), '..', 'resources', 'icon.ico');
+const resources = join(dirname(fileURLToPath(import.meta.url)), '..', 'resources');
+const outFile = join(resources, 'icon.ico');
+const macFile = join(resources, 'icon-mac.png');
+/** macOS icon grid: the 1024 canvas holds an 824px tile (100px margin) so it sits with the Dock's. */
+const MAC_SIZE = 1024;
+const MAC_INSET = 100;
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 
@@ -36,21 +42,25 @@ function sdC(x, y, rm, w, gapHalfAngle) {
   return Math.min(Math.hypot(x - ex, y - ey), Math.hypot(x - ex, y + ey)) - w / 2;
 }
 
-/** Straight (non-premultiplied) RGBA, top-down rows. */
-function render(size) {
+/** Straight (non-premultiplied) RGBA, top-down rows. `insetPx` overrides the tile margin. */
+function render(size, insetPx) {
   const px = new Uint8Array(size * size * 4);
-  const inset = size >= 48 ? size / 32 : 0; // small sizes use the full cell to stay legible
+  // Small sizes use the full cell to stay legible.
+  const inset = insetPx ?? (size >= 48 ? size / 32 : 0);
   const half = size / 2 - inset;
   const radius = half * 0.44;
-  const rm = size * 0.235;
-  const w = size * (size <= 16 ? 0.19 : 0.165);
+  // The C is drawn against the ICO's 256px tile proportions (tile = 240/256 of the cell); with a
+  // custom margin (macOS) it scales with the tile instead, so it fills the tile the same way.
+  const letter = insetPx === undefined ? size : (half * 2 * 256) / 240;
+  const rm = letter * 0.235;
+  const w = letter * (size <= 16 ? 0.19 : 0.165);
   const gap = (42 * Math.PI) / 180;
   for (let j = 0; j < size; j++) {
     for (let i = 0; i < size; i++) {
       const x = i + 0.5 - size / 2;
       const y = j + 0.5 - size / 2;
       const bg = clamp01(0.5 - sdRoundRect(x, y, half, half, radius));
-      const c = clamp01(0.5 - sdC(x + size * 0.015, y, rm, w, gap));
+      const c = clamp01(0.5 - sdC(x + letter * 0.015, y, rm, w, gap));
       const o = (j * size + i) * 4;
       for (let k = 0; k < 3; k++) px[o + k] = Math.round(TANGERINE[k] * (1 - c) + INK[k] * c);
       px[o + 3] = Math.round(bg * 255);
@@ -145,3 +155,6 @@ images.forEach(({ size, data }, i) => {
 mkdirSync(dirname(outFile), { recursive: true });
 writeFileSync(outFile, Buffer.concat([dir, ...images.map((img) => img.data)]));
 console.log(`Wrote ${outFile} (${SIZES.join('/')}px, ${offset} bytes)`);
+
+writeFileSync(macFile, encodePng(MAC_SIZE, render(MAC_SIZE, MAC_INSET)));
+console.log(`Wrote ${macFile} (${MAC_SIZE}px)`);

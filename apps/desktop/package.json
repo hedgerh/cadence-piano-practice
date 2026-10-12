@@ -12,6 +12,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "dist": "electron-vite build && electron-builder --win",
+    "dist:mac": "electron-vite build && electron-builder --mac",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p e2e/tsconfig.json",
     "e2e": "pnpm build && playwright test -c e2e/playwright.config.ts",
     "rebuild:native": "electron-builder install-app-deps",

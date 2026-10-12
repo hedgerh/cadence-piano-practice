@@ -12,14 +12,28 @@ It is a Windows desktop app (Electron, React, SQLite). It runs fully offline and
 
 ## Requirements
 
-- Windows 10 or 11, 64-bit.
+- Windows 10 or 11, 64-bit, or macOS 12 or later (Apple Silicon or Intel).
 - A USB MIDI keyboard is **optional**. Without one, every chord can be marked as played, and the computer keyboard plays notes: the home row `A S D F G H J K L ;` is C4–E5, the row above is the black keys, and `Z` / `X` shift the octave.
 
 ## Install
 
+### Windows
+
 1. Download `Cadence Setup x.y.z.exe` and run it.
 2. The installer is not code-signed, so Windows SmartScreen shows "Windows protected your PC". Click **More info → Run anyway**.
 3. Choose an install folder and finish. Cadence appears in the Start menu.
+
+### macOS
+
+1. Download the DMG for your Mac: `Cadence-x.y.z-arm64.dmg` for Apple Silicon (M1 and later), `Cadence-x.y.z-x64.dmg` for Intel. The **Build macOS** GitHub Actions workflow produces both (Actions tab → Build macOS → Run workflow; the DMGs are under the run's artifacts).
+2. Open the DMG and drag **Cadence** into **Applications**.
+3. Cadence is not notarized by Apple (there is no Apple Developer account), so the first launch is blocked:
+   - **macOS 15 or later:** open Cadence once and dismiss the warning. Then go to **System Settings → Privacy & Security**, scroll down to "Cadence was blocked…", click **Open Anyway**, and confirm.
+   - **macOS 14 or earlier:** right-click (or Control-click) Cadence in Applications, choose **Open**, then **Open** again.
+
+   If macOS says the app "is damaged and can't be opened", that is the same quarantine check. Run `xattr -dr com.apple.quarantine /Applications/Cadence.app` in Terminal, then open it normally.
+
+   After the first launch it opens like any other app. Closing the window keeps Cadence running in the Dock, as Mac apps do; **Cmd+Q** quits.
 
 Plug in your keyboard before or after launching; Cadence notices it either way. With more than one MIDI device connected, click the keyboard pill in the top-right corner to choose one. Cadence remembers the choice.
 
@@ -27,7 +41,7 @@ Once you finish a key's seven chords, Cadence moves on to the next key by itself
 
 ## Where your data lives
 
-Everything is stored in `%APPDATA%\Cadence`:
+Everything is stored in `%APPDATA%\Cadence` on Windows and `~/Library/Application Support/Cadence` on macOS:
 
 - `cadence.sqlite`: your profile, progress, review schedule, XP and streak.
 - `logs\main.log`: the app log, useful in bug reports.
@@ -46,6 +60,7 @@ pnpm test             # unit tests only
 pnpm format           # Prettier
 pnpm e2e              # build, then Playwright drives the real app with a throwaway profile
 pnpm dist             # NSIS installer into apps/desktop/dist
+pnpm dist:mac         # on a Mac: DMG + zip for that Mac's architecture into apps/desktop/dist
 pnpm db:generate      # Drizzle migration after editing packages/db/src/schema.ts
 pnpm rebuild:native   # after bumping Electron: rebuild better-sqlite3 for its ABI
 ```

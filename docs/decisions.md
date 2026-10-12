@@ -198,3 +198,17 @@ Append-only. One entry per architectural or product decision agents must follow.
   - **Roots:** every interval starts from C by default (the owner asked not to have random starting notes). A Roots row (all twelve pitch classes; the last one on stays on) adds more. Up and together start from the root in C4–B4, down from the root in C5–B5. Saves from before roots existed start from C.
   - **Nothing is recorded:** no session, XP or review (the owner's choice: "fully free"). The settings persist in `localStorage` as a per-device convenience.
   - **Entry:** stages with content `Stage.freePractice: 'intervals'` (both interval stages) get a "Free practice" link in their row footer. From "Intervals going down" the drill starts on Down.
+
+## 2026-10-12 — macOS build
+
+- **Why**: the owner's coworker wants to run Cadence on a Mac. There is no Apple Developer account, so the build does what is possible without one.
+- **Packaging** (`electron-builder.yml` `mac`):
+  - A DMG and a zip per architecture: arm64 for Apple Silicon, x64 for Intel. The architecture comes from the build machine or `--arm64` / `--x64`.
+  - Ad-hoc signed (`identity: '-'`; Apple Silicon will not run unsigned code), no hardened runtime, not notarized.
+  - Gatekeeper therefore blocks the first launch. README "Installing" gives the Open Anyway / right-click Open steps and the `xattr` fallback.
+  - Icon: `resources/icon-mac.png`, a 1024px render from `scripts/generate-icon.mjs` on Apple's icon grid (824px tile, 100px margin). The ICO is byte-identical.
+- **Where it builds**: better-sqlite3 is native, so a Mac build cannot be made from Windows.
+  - `pnpm dist:mac` works on a Mac.
+  - `.github/workflows/build-mac.yml` (manual run, or a `v*` tag) builds arm64 on `macos-15` and x64 on `macos-15-intel`. It uploads the DMGs and zips as artifacts, and attaches them to the release for a tag.
+- **App behaviour**: closing the window keeps the app running on macOS; the Dock icon reopens it (the existing `activate` handler). Electron's default app menu provides Cmd+Q, Edit (copy/paste) and Window. Unpackaged runs skip the `.ico` window icon on macOS. Nothing else is platform-specific: Web MIDI (CoreMIDI), Web Audio, the bundled fonts and samples, and `userData` (`~/Library/Application Support/Cadence`) work as on Windows.
+- **Not verified**: no Mac was available. The first workflow run and the coworker's install are the test.

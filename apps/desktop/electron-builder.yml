@@ -36,3 +36,23 @@ nsis:
 
 # No code signing for local use; Windows SmartScreen will warn on first run.
 # See README "Installing".
+
+# macOS (decisions.md 2026-10-12 "macOS build"): a DMG (and zip) per architecture. There is no
+# Apple Developer account, so the app is ad-hoc signed (identity "-"; Apple Silicon refuses to
+# run unsigned code at all) and not notarized: Gatekeeper asks once, see README "Installing".
+# Build on a Mac (`pnpm dist:mac`) or with .github/workflows/build-mac.yml; better-sqlite3 is
+# native, so it cannot be cross-built from Windows.
+mac:
+  icon: resources/icon-mac.png
+  category: public.app-category.music
+  identity: '-'
+  hardenedRuntime: false
+  notarize: false
+  # The architecture comes from the machine (or `--arm64` / `--x64`): one DMG per Mac type.
+  target:
+    - dmg
+    - zip
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+dmg:
+  title: Cadence ${version}

@@ -6,7 +6,9 @@ export const WINDOW = { width: 1280, height: 820, minWidth: 1100, minHeight: 720
 
 /**
  * `icon` is only needed unpackaged (dev, e2e): the packaged exe embeds `resources/icon.ico`
- * (electron-builder `win.icon`) and Windows uses it for the window and taskbar.
+ * (electron-builder `win.icon`) and Windows uses it for the window and taskbar. A packaged Mac
+ * app takes its Dock icon from the bundle (`mac.icon`); `autoHideMenuBar` does nothing there,
+ * and Electron's default app menu supplies Cmd+Q, Edit (copy/paste) and Window.
  */
 export function createMainWindow(icon?: string): BrowserWindow {
   const win = new BrowserWindow({

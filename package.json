@@ -13,6 +13,7 @@
     "dev": "pnpm --filter @cadence/desktop dev",
     "build": "pnpm --filter @cadence/desktop build",
     "dist": "pnpm --filter @cadence/desktop dist",
+    "dist:mac": "pnpm --filter @cadence/desktop dist:mac",
     "e2e": "pnpm --filter @cadence/desktop e2e",
     "typecheck": "pnpm -r --parallel typecheck",
     "lint": "eslint .",

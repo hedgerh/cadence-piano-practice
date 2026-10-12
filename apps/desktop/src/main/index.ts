@@ -34,8 +34,12 @@ log.errorHandler.startCatching();
 
 let database: OpenedDatabase | null = null;
 
-// Unpackaged runs have no embedded exe icon; point the window at the generated one.
-const windowIcon = app.isPackaged ? undefined : join(app.getAppPath(), 'resources', 'icon.ico');
+// Unpackaged runs have no embedded exe icon; point the window at the generated one. macOS
+// windows have no icon (the Dock uses the bundle's), so it is skipped there.
+const windowIcon =
+  app.isPackaged || process.platform === 'darwin'
+    ? undefined
+    : join(app.getAppPath(), 'resources', 'icon.ico');
 
 function start(): void {
   // §4.2 both MIDI permission handlers.
@@ -95,8 +99,10 @@ app
     app.quit();
   });
 
+// macOS convention: closing the window keeps the app running; the Dock icon reopens it
+// (`activate` above). Everywhere else, closing the window quits.
 app.on('window-all-closed', () => {
-  app.quit();
+  if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('will-quit', () => {
