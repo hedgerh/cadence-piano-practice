@@ -20,6 +20,10 @@ test('free interval practice: from the map, toggles drive questions, nothing is 
     await expect(page).toHaveURL(/#\/ear-practice\/intervals\?dir=up$/);
     await expect(page.getByTestId('interval-practice')).toBeVisible();
     await expect(page.getByTestId('practice-direction-up')).toHaveAttribute('aria-pressed', 'true');
+    // Every interval starts from C; G can be added as a second root.
+    await expect(page.getByTestId('practice-root-0')).toHaveAttribute('aria-pressed', 'true');
+    await page.getByTestId('practice-root-7').click();
+    await expect(page.getByTestId('practice-root-7')).toHaveAttribute('aria-pressed', 'true');
 
     // Only the picked intervals are answers; add the tritone and "Together".
     await expect(page.getByTestId(/^practice-answer-/)).toHaveCount(5);

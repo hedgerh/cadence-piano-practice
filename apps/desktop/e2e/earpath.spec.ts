@@ -108,7 +108,7 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
       borderTopLeftRadius: '18px',
     });
     // Last stage has no rail below its node (EarPath:147–149).
-    await expect(rows.nth(4).locator(':scope > :first-child > *')).toHaveCount(1);
+    await expect(rows.last().locator(':scope > :first-child > *')).toHaveCount(1);
 
     // Two columns at 1280 (EarPath:49), aligned to the top.
     const info = await page.getByTestId('ladder-how').boundingBox();

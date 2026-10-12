@@ -192,8 +192,9 @@ Append-only. One entry per architectural or product decision agents must follow.
   - The last level keeps the old `intervals-6` id, so its progress carries over; the step-key snapshot only gained keys.
   - The ascending stage's blurb drops "then descending". The design fixtures (EarPath.dc.html, five stages) are unchanged.
 - **Free practice** (`/ear-practice/intervals`, renderer only, not in the designs):
-  - **Settings strip:** a toggle per interval, each showing this visit's right/total, and direction toggles Up / Down / Together (together = both notes at once, a `chord` sound; at least one direction stays on). A running score and the Sound control sit beside them.
+  - **Settings strip:** a toggle per interval, each showing this visit's right/total, root toggles, and direction toggles Up / Down / Together (together = both notes at once, a `chord` sound; at least one direction stays on). A running score and the Sound control sit beside them.
   - **Drill:** the EarInterval drill pieces (112px play button, answer chips for the picked intervals only, FeedbackPanel with the ladder's feedback sentence).
-  - **Questions:** drawn evenly from the picked (interval, direction) pairs, never the same pair twice in a row. Roots are C4–G4 going up or together, C5–G4 going down. Each question auto-plays.
+  - **Questions:** drawn evenly from the picked (interval, direction) pairs, never the same pair twice in a row. Each question auto-plays.
+  - **Roots:** every interval starts from C by default (the owner asked not to have random starting notes). A Roots row (all twelve pitch classes; the last one on stays on) adds more. Up and together start from the root in C4–B4, down from the root in C5–B5. Saves from before roots existed start from C.
   - **Nothing is recorded:** no session, XP or review (the owner's choice: "fully free"). The settings persist in `localStorage` as a per-device convenience.
   - **Entry:** stages with content `Stage.freePractice: 'intervals'` (both interval stages) get a "Free practice" link in their row footer. From "Intervals going down" the drill starts on Down.

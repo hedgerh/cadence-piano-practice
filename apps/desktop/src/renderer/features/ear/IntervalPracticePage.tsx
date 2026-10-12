@@ -17,14 +17,17 @@ import drill from './ChoiceDrill.module.css';
 import styles from './IntervalPracticePage.module.css';
 import {
   addToTally,
+  ALL_ROOTS,
   DIRECTION_LABEL,
   DIRECTIONS,
   feedbackFor,
   loadSettings,
   nextQuestion,
+  rootLabel,
   saveSettings,
   toggleDirection,
   toggleInterval,
+  toggleRoot,
   type PracticeDirection,
   type PracticeQuestion,
   type PracticeSettings,
@@ -91,7 +94,8 @@ export function IntervalPracticePage() {
     const stale =
       question === null ||
       !next.intervals.includes(question.interval) ||
-      !next.directions.includes(question.direction);
+      !next.directions.includes(question.direction) ||
+      !next.roots.includes(question.rootPc);
     if (stale && chosen === null) advance(next, question);
   };
 
@@ -145,6 +149,27 @@ export function IntervalPracticePage() {
                 >
                   <span className={styles.toggleId}>{iv.id}</span>
                   <span className={styles.toggleScore}>{t ? `${t.right}/${t.total}` : ' '}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className={styles.row}>
+          <span className={styles.rowLabel}>Roots</span>
+          <div className={styles.toggles}>
+            {ALL_ROOTS.map((pc) => {
+              const on = settings.roots.includes(pc);
+              return (
+                <button
+                  key={pc}
+                  type="button"
+                  className={cx(styles.toggle, styles.narrow, on && styles.on)}
+                  aria-pressed={on}
+                  aria-label={`Start from ${rootLabel(pc)}`}
+                  onClick={() => change(toggleRoot(settings, pc))}
+                  data-testid={`practice-root-${pc}`}
+                >
+                  <span className={styles.toggleId}>{rootLabel(pc)}</span>
                 </button>
               );
             })}

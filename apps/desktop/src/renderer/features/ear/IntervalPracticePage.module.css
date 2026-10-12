@@ -57,6 +57,9 @@
 .wide {
   min-width: 96px;
 }
+.narrow {
+  min-width: 44px;
+}
 .on {
   border-color: var(--ink);
   background: var(--lavender-tint);

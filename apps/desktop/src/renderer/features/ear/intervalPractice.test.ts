@@ -4,15 +4,17 @@ import { describe, expect, it } from 'vitest';
 import {
   addToTally,
   DEFAULT_SETTINGS,
-  DOWN_ROOTS,
   feedbackFor,
   makeQuestion,
   nextQuestion,
   parseSettings,
+  rootLabel,
+  rootNote,
   toggleDirection,
   toggleInterval,
-  UP_ROOTS,
+  toggleRoot,
   type PracticeQuestion,
+  type PracticeSettings,
 } from './intervalPractice';
 
 /** A deterministic sequence in [0, 1). */
@@ -43,41 +45,55 @@ describe('makeQuestion', () => {
   });
 });
 
+const settingsOf = (over: Partial<PracticeSettings>): PracticeSettings => ({
+  ...DEFAULT_SETTINGS,
+  ...over,
+});
+const rootOf = (q: PracticeQuestion | null) =>
+  q?.sound.type === 'notes' || q?.sound.type === 'chord' ? q.sound.notes[0] : undefined;
+
 describe('nextQuestion', () => {
-  it('draws only the picked intervals and directions, with a root for the direction', () => {
-    const settings = { intervals: ['m3' as const, 'P5' as const], directions: ['down' as const] };
+  it('every interval starts from C by default: C4 going up or together, C5 going down', () => {
+    for (const d of ['up', 'together', 'down'] as const) {
+      for (let i = 0; i < 10; i++) {
+        const q = nextQuestion(settingsOf({ directions: [d] }), Math.random);
+        expect(rootOf(q)).toBe(d === 'down' ? 'C5' : 'C4');
+        expect(q?.rootPc).toBe(0);
+      }
+    }
+  });
+
+  it('draws only the picked intervals, directions and roots', () => {
+    const s = settingsOf({ intervals: ['m3', 'P5'], directions: ['down'], roots: [0, 7] });
     for (let i = 0; i < 20; i++) {
-      const q = nextQuestion(settings, Math.random);
+      const q = nextQuestion(s, Math.random);
       expect(['m3', 'P5']).toContain(q?.interval);
       expect(q?.direction).toBe('down');
-      const root = q?.sound.type === 'notes' ? q.sound.notes[0] : undefined;
-      expect(DOWN_ROOTS).toContain(root);
+      expect(['C5', 'G5']).toContain(rootOf(q));
     }
-    const up = nextQuestion({ intervals: ['M2'], directions: ['up'] }, Math.random);
-    expect(UP_ROOTS).toContain(up?.sound.type === 'notes' ? up.sound.notes[0] : undefined);
   });
 
   it('never repeats the same interval and direction when there is a choice', () => {
-    const settings = { intervals: ['P1' as const, 'P5' as const], directions: ['up' as const] };
+    const s = settingsOf({ intervals: ['P1', 'P5'] });
     let prev: PracticeQuestion | null = null;
     for (let i = 0; i < 20; i++) {
-      const q = nextQuestion(settings, Math.random, prev);
+      const q = nextQuestion(s, Math.random, prev);
       if (prev) expect(q?.interval).not.toBe(prev.interval);
       prev = q;
     }
     // One pair only: it repeats.
-    const only = { intervals: ['P5' as const], directions: ['up' as const] };
+    const only = settingsOf({ intervals: ['P5'] });
     const first = nextQuestion(only, seq(0));
     expect(nextQuestion(only, seq(0), first)?.interval).toBe('P5');
   });
 
   it('nothing picked → no question', () => {
-    expect(nextQuestion({ intervals: [], directions: ['up'] }, Math.random)).toBeNull();
+    expect(nextQuestion(settingsOf({ intervals: [] }), Math.random)).toBeNull();
   });
 });
 
 describe('settings', () => {
-  it('toggles keep interval order; the last direction stays on', () => {
+  it('toggles keep their order; the last direction and the last root stay on', () => {
     const s = toggleInterval(DEFAULT_SETTINGS, 'M2');
     expect(s.intervals).toEqual(['P1', 'M2', 'm3', 'M3', 'P5', 'P8']);
     expect(toggleInterval(s, 'M2').intervals).toEqual(DEFAULT_SETTINGS.intervals);
@@ -85,14 +101,25 @@ describe('settings', () => {
     const both = toggleDirection(DEFAULT_SETTINGS, 'together');
     expect(both.directions).toEqual(['up', 'together']);
     expect(toggleDirection(both, 'up').directions).toEqual(['together']);
+    expect(toggleRoot(DEFAULT_SETTINGS, 0)).toBe(DEFAULT_SETTINGS);
+    expect(toggleRoot(toggleRoot(DEFAULT_SETTINGS, 7), 2).roots).toEqual([0, 2, 7]);
   });
 
-  it('parses saved settings, dropping anything unknown', () => {
+  it('roots: labels and where each direction starts', () => {
+    expect([0, 1, 3, 11].map(rootLabel)).toEqual(['C', 'C♯', 'E♭', 'B']);
+    expect(rootNote(7, 'up')).toBe('G4');
+    expect(rootNote(7, 'down')).toBe('G5');
+  });
+
+  it('parses saved settings, dropping anything unknown; older saves start from C', () => {
     expect(parseSettings(null)).toBeNull();
     expect(parseSettings('not json')).toBeNull();
     expect(
       parseSettings('{"intervals":["P5","XX","P1"],"directions":["down","sideways"]}'),
-    ).toEqual({ intervals: ['P1', 'P5'], directions: ['down'] });
+    ).toEqual({ intervals: ['P1', 'P5'], directions: ['down'], roots: [0] });
+    expect(
+      parseSettings('{"intervals":["P5"],"directions":["up"],"roots":[7,"x",2,40]}')?.roots,
+    ).toEqual([2, 7]);
     expect(parseSettings('{"intervals":["P5"],"directions":[]}')).toBeNull();
   });
 });

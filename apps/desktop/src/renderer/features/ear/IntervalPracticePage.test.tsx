@@ -45,6 +45,9 @@ describe('IntervalPracticePage', () => {
     expect(pressed('practice-interval-P5')).toBe('true');
     expect(pressed('practice-interval-TT')).toBe('false');
     expect(pressed('practice-direction-up')).toBe('true');
+    // Every interval from C unless more roots are switched on.
+    expect(pressed('practice-root-0')).toBe('true');
+    expect(pressed('practice-root-7')).toBe('false');
     await settle();
     expect(synth.calls.length).toBe(2);
     expect(screen.getAllByTestId(/^practice-answer-/)).toHaveLength(5);
@@ -76,6 +79,7 @@ describe('IntervalPracticePage', () => {
     expect(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}')).toEqual({
       intervals: ['TT'],
       directions: ['down'],
+      roots: [0],
     });
   });
 });
