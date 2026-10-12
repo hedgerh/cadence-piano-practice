@@ -94,7 +94,7 @@ describe('PlanService.getToday', () => {
       route: '/ear/intervals-1',
     });
     expect(learn2?.blurb).toBe(
-      'Hear two notes, name the distance. Ascending first, then descending. Unison, perfect 5th and octave, going up from C.',
+      'Hear two notes going up, name the distance. Unison, perfect 5th and octave, going up from C.',
     );
     // yesterday's C major is due → review block; warm-up needs a mastered level → none
     expect(day2.blocks.map((b) => b.type)).toEqual(['learn', 'review']);

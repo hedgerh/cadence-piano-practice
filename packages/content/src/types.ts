@@ -125,6 +125,11 @@ export const StageSchema = z.object({
   title: z.string(),
   blurb: z.string(),
   unlock: UnlockSchema.exactOptional(),
+  /**
+   * A free practice mode the map offers on this stage ("intervals": pick intervals and
+   * directions, nothing recorded; decisions.md 2026-10-11).
+   */
+  freePractice: z.enum(['intervals']).exactOptional(),
   levels: z.array(LevelSchema),
 });
 

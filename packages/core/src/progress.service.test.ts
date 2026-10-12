@@ -390,7 +390,7 @@ describe('sessions.finish', () => {
       title: 'Intervals · Level 1, passed',
       correct: 10,
       total: 10,
-      track: { done: 1, total: 20, unit: 'levels', nextTitle: 'Level 2' },
+      track: { done: 1, total: 24, unit: 'levels', nextTitle: 'Level 2' },
       next: { levelId: 'intervals-2', label: 'Keep going — Level 2', route: '/ear/intervals-2' },
     });
     expect(done.chips).toHaveLength(10);
@@ -452,19 +452,22 @@ describe('nextLevel and overview', () => {
     const o = services.progress.trackOverview(ear);
     expect(o.stages?.map((s) => s.unlockText)).toEqual([
       null,
+      // decisions.md 2026-10-11: going down waits for the whole ascending stage.
+      'Unlocks after Intervals L5',
       null,
       'Unlocks at Intervals L5',
       'Unlocks at Scale degrees L4',
       'Unlocks after Chords in a key L2',
     ]);
-    expect(o.stages?.[1]).toMatchObject({ state: 'open', progressText: 'Level 1 of 4' });
+    expect(o.stages?.[2]).toMatchObject({ state: 'open', progressText: 'Level 1 of 4' });
     // next in the same stage first
     expect(services.progress.nextLevel(ear, 'intervals-3')?.id).toBe('intervals-4');
-    for (const id of ['intervals-4', 'intervals-5', 'intervals-6']) {
+    for (const id of ['intervals-4', 'intervals-5']) {
       playLevel(services, { levelId: id, kind: 'free' });
     }
-    // stage done → first level of the next unlocked stage
-    expect(services.progress.nextLevel(ear, 'intervals-6')?.id).toBe('scale-degrees-1');
+    // stage done → first level of the next unlocked stage (going down)
+    expect(services.progress.isStageUnlocked(ear, 'intervals-down')).toBe(true);
+    expect(services.progress.nextLevel(ear, 'intervals-5')?.id).toBe('intervals-down-1');
     expect(services.progress.trackOverview(ear).stages?.[0]).toMatchObject({
       state: 'complete',
       progressText: 'Complete',
@@ -475,7 +478,14 @@ describe('nextLevel and overview', () => {
     const h = createHarness(EVENING);
     seed(h.services, 'ear-unlocked', { timezone: TZ });
     const o = h.services.progress.trackOverview('ear-training');
-    expect(o.stages?.map((s) => s.state)).toEqual(['open', 'complete', 'open', 'open', 'open']);
+    expect(o.stages?.map((s) => s.state)).toEqual([
+      'complete',
+      'open',
+      'complete',
+      'open',
+      'open',
+      'open',
+    ]);
     expect(o.stages?.every((s) => s.unlockText === null)).toBe(true);
     expect(h.services.progress.isLevelUnlocked('find-the-key-1')).toBe(true);
     // xp_total matches the ledger
@@ -561,7 +571,7 @@ describe('ear level replay (review kind)', () => {
     expect(services.plan.getToday().blocks.map((b) => [b.id, b.status])).toEqual(plan);
     expect(services.progress.currentLevel('ear-training')?.id).toBe('intervals-3');
     expect(services.progress.trackOverview('ear-training').stages?.[0]?.progressText).toBe(
-      'Level 3 of 6',
+      'Level 3 of 5',
     );
   });
 

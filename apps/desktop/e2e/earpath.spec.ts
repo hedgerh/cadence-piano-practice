@@ -55,9 +55,11 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
 
     // ---- stages from the engine (EarPath:82–157; engine.md §6.9 unlock copy) ----
     const rows = page.getByTestId('stage-row');
-    await expect(rows).toHaveCount(5);
+    await expect(rows).toHaveCount(6);
     const expected = [
-      ['current', 'Intervals', 'Level 3 of 6'],
+      ['current', 'Intervals', 'Level 3 of 5'],
+      // decisions.md 2026-10-11: going down is its own stage after the ascending one.
+      ['locked', 'Intervals going down', 'Unlocks after Intervals L5'],
       ['locked', 'Scale degrees', 'Unlocks at Intervals L4'],
       ['locked', 'Chord quality', 'Unlocks at Intervals L5'],
       ['locked', 'Chords in a key', 'Unlocks after Scale degrees L3'],
@@ -169,7 +171,7 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
     await go(page, '/tracks/ear-training');
     await expect(rows.nth(0).locator(':scope > :nth-child(2) > :first-child > span')).toHaveText([
       'Intervals',
-      'Level 3 of 6',
+      'Level 3 of 5',
     ]);
     await expect(start).toHaveText('Start Level 3');
     expect(

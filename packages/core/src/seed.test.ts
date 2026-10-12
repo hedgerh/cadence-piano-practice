@@ -86,7 +86,8 @@ describe('seed day8 → Today (Main.dc.html)', () => {
     const { services } = day8();
     const o = services.progress.trackOverview('ear-training');
     expect(o.stages?.map((s) => [s.title, s.state, s.unlockText, s.progressText])).toEqual([
-      ['Intervals', 'open', null, 'Level 3 of 6'],
+      ['Intervals', 'open', null, 'Level 3 of 5'],
+      ['Intervals going down', 'locked', 'Unlocks after Intervals L5', null],
       ['Scale degrees', 'locked', 'Unlocks at Intervals L4', null],
       ['Chord quality', 'locked', 'Unlocks at Intervals L5', null],
       ['Chords in a key', 'locked', 'Unlocks after Scale degrees L3', null],
@@ -96,7 +97,6 @@ describe('seed day8 → Today (Main.dc.html)', () => {
       'done',
       'done',
       'current',
-      'upcoming',
       'upcoming',
       'upcoming',
     ]);

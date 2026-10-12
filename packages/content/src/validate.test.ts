@@ -91,10 +91,10 @@ describe('validateTracks negatives', () => {
 
   it('an unlock cycle', () => {
     const tracks = broken((t) => {
-      at(ear(t).stages, 1).unlock = { stage: 'chord-quality', level: 1 };
-      at(ear(t).stages, 2).unlock = { stage: 'scale-degrees', level: 1 };
+      at(ear(t).stages, 2).unlock = { stage: 'chord-quality', level: 1 };
+      at(ear(t).stages, 3).unlock = { stage: 'scale-degrees', level: 1 };
     });
-    expectOneError(tracks, `tracks[${T.ear}].stages[1].unlock`);
+    expectOneError(tracks, `tracks[${T.ear}].stages[2].unlock`);
   });
 
   it('choice.answer not in options', () => {
@@ -115,11 +115,11 @@ describe('validateTracks negatives', () => {
 
   it('a phrase without 8 notes', () => {
     const tracks = broken((t) => {
-      const step = at(at(at(ear(t).stages, 4).levels, 0).pool, 0);
+      const step = at(at(at(ear(t).stages, 5).levels, 0).pool, 0);
       if (step.play?.type !== 'phrase') throw new Error('expected phrase');
       step.play = { type: 'phrase', notes: step.play.notes.slice(0, 7) };
     });
-    expectOneError(tracks, `tracks[${T.ear}].stages[4].levels[0].pool[0].play.notes`);
+    expectOneError(tracks, `tracks[${T.ear}].stages[5].levels[0].pool[0].play.notes`);
   });
 
   it('circle levels out of order (G and D swapped)', () => {

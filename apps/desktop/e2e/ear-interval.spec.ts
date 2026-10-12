@@ -237,17 +237,18 @@ test('ear intervals L3 (seed day8): gating, feedback, play-back, a miss, pass sc
     // passed, so Scale degrees opens now (Task 13 acceptance); Chord quality stays locked. ----
     await go(page, '/tracks/ear-training');
     const rows = page.getByTestId('stage-row');
-    await expect(rows).toHaveCount(5);
+    await expect(rows).toHaveCount(6);
     const overview = await invoke(page, 'tracks.overview', { trackId: 'ear-training' });
     expect(overview.stages?.map((s) => [s.stageId, s.state])).toEqual([
       ['intervals', 'open'],
+      ['intervals-down', 'locked'],
       ['scale-degrees', 'open'],
       ['chord-quality', 'locked'],
       ['chords-in-key', 'locked'],
       ['find-the-key', 'locked'],
     ]);
-    await expect(rows.nth(2)).toHaveAttribute('data-state', 'locked');
-    await expect(rows.nth(2)).toContainText('Unlocks at Intervals L5');
+    await expect(rows.nth(3)).toHaveAttribute('data-state', 'locked');
+    await expect(rows.nth(3)).toContainText('Unlocks at Intervals L5');
     await expect(page.getByTestId('ladder-start')).toHaveText('Start Level 4');
 
     expect(errors).toEqual([]);

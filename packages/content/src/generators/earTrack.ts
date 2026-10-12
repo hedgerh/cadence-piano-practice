@@ -87,11 +87,47 @@ const INTERVAL_LEVELS: readonly IntervalLevelDef[] = [
     direction: 'up',
     blurb: 'All thirteen intervals, now starting from C, D, E, F or G.',
   },
+];
+
+/**
+ * decisions.md 2026-10-11 "Descending intervals": going down gets its own stage, built up like
+ * going up. The last level keeps the old level-6 id ("intervals-6") so its progress carries over.
+ */
+const DESCENDING_LEVELS: readonly (IntervalLevelDef & { id: string })[] = [
   {
+    id: 'intervals-down-1',
+    ids: ['P1', 'P5', 'P8'],
+    roots: ['C5'],
+    direction: 'down',
+    blurb: 'Unison, perfect 5th and octave, going down from C.',
+  },
+  {
+    id: 'intervals-down-2',
+    ids: ['P1', 'm3', 'M3', 'P5', 'P8'],
+    roots: ['C5'],
+    direction: 'down',
+    blurb: 'Adds the major and minor 3rd, going down.',
+  },
+  {
+    id: 'intervals-down-3',
+    ids: ['P1', 'M2', 'm3', 'M3', 'P4', 'P5', 'P8'],
+    roots: ['C5'],
+    direction: 'down',
+    blurb: 'Adds the perfect 4th and major 2nd, going down.',
+  },
+  {
+    id: 'intervals-down-4',
+    ids: ['P1', 'm2', 'M2', 'm3', 'M3', 'P4', 'P5', 'm6', 'M6', 'P8'],
+    roots: ['C5'],
+    direction: 'down',
+    blurb: 'Adds the minor 2nd, minor 6th and major 6th, going down.',
+  },
+  {
+    id: 'intervals-6',
     ids: ALL_INTERVAL_IDS,
     roots: ['C5', 'B4', 'A4', 'G4'],
     direction: 'down',
-    blurb: 'All thirteen intervals, going down.',
+    blurb: 'All thirteen intervals going down, from C, B, A or G.',
   },
 ];
 
@@ -166,25 +202,38 @@ function intervalStep(root: Note, iv: Interval, dir: 'up' | 'down'): Step {
   };
 }
 
+function intervalLevel(def: IntervalLevelDef, id: string, n: number): Level {
+  const active = INTERVALS.filter((iv) => def.ids.includes(iv.id));
+  return {
+    id,
+    title: `Level ${n}`,
+    blurb: def.blurb,
+    pass: PASS_TEN,
+    steps: [],
+    pool: def.roots.flatMap((root) => active.map((iv) => intervalStep(root, iv, def.direction))),
+    activeOptions: active.map((iv) => iv.id),
+  };
+}
+
 function intervalsStage(): Stage {
   return {
     id: 'intervals',
     title: 'Intervals',
-    blurb: 'Hear two notes, name the distance. Ascending first, then descending.',
-    levels: INTERVAL_LEVELS.map((def, i): Level => {
-      const active = INTERVALS.filter((iv) => def.ids.includes(iv.id));
-      return {
-        id: `intervals-${i + 1}`,
-        title: `Level ${i + 1}`,
-        blurb: def.blurb,
-        pass: PASS_TEN,
-        steps: [],
-        pool: def.roots.flatMap((root) =>
-          active.map((iv) => intervalStep(root, iv, def.direction)),
-        ),
-        activeOptions: active.map((iv) => iv.id),
-      };
-    }),
+    blurb: 'Hear two notes going up, name the distance.',
+    freePractice: 'intervals',
+    levels: INTERVAL_LEVELS.map((def, i) => intervalLevel(def, `intervals-${i + 1}`, i + 1)),
+  };
+}
+
+/** Unlocks when the ascending stage is complete (decisions.md 2026-10-11). */
+function descendingIntervalsStage(): Stage {
+  return {
+    id: 'intervals-down',
+    title: 'Intervals going down',
+    blurb: 'The same distances, high note first — built up the same way.',
+    unlock: { stage: 'intervals', level: INTERVAL_LEVELS.length + 1 },
+    freePractice: 'intervals',
+    levels: DESCENDING_LEVELS.map((def, i) => intervalLevel(def, def.id, i + 1)),
   };
 }
 
@@ -578,6 +627,7 @@ export function earTraining(): Track {
     available: true,
     stages: [
       intervalsStage(),
+      descendingIntervalsStage(),
       scaleDegreesStage(),
       chordQualityStage(),
       chordsInKeyStage(),

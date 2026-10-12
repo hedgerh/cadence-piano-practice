@@ -267,13 +267,13 @@ test('all complete: Today, the circle and the ear ladder show finished states', 
     await go(page, '/tracks/ear-training');
     await expect(page.getByTestId('ladder-complete')).toContainText('Every level done');
     await expect(page.getByTestId('ladder-start')).toHaveCount(0);
-    await expect(page.getByTestId('stage-row')).toHaveCount(5);
+    await expect(page.getByTestId('stage-row')).toHaveCount(6);
     for (const state of await page
       .getByTestId('stage-row')
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-state')))) {
       expect(state).toBe('done');
     }
-    await expect(page.getByTestId('ladder-eyebrow')).toHaveText('Track · stage 5 of 5');
+    await expect(page.getByTestId('ladder-eyebrow')).toHaveText('Track · stage 6 of 6');
     await page.screenshot({ path: 'e2e/screenshots/16-earpath-complete.png' });
   } finally {
     await app.close();

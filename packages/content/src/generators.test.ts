@@ -453,9 +453,11 @@ describe('voice leading tracks', () => {
 describe('ear-training', () => {
   const stages = ear.stages ?? [];
 
-  it('five stages with the level counts and unlocks from engine.md §2.2', () => {
+  it('six stages with the level counts and unlocks from engine.md §2.2', () => {
+    // decisions.md 2026-10-11 "Descending intervals": going down is its own stage.
     expect(stages.map((s) => [s.id, s.levels.length])).toEqual([
-      ['intervals', 6],
+      ['intervals', 5],
+      ['intervals-down', 5],
       ['scale-degrees', 4],
       ['chord-quality', 3],
       ['chords-in-key', 4],
@@ -463,6 +465,7 @@ describe('ear-training', () => {
     ]);
     expect(stages.map((s) => s.unlock ?? null)).toEqual([
       null,
+      { stage: 'intervals', level: 6 },
       { stage: 'intervals', level: 4 },
       { stage: 'intervals', level: 5 },
       { stage: 'scale-degrees', level: 4 },
@@ -473,14 +476,18 @@ describe('ear-training', () => {
   it('stage titles and blurbs come from EarPath.dc.html', () => {
     expect(stages.map((s) => s.title)).toEqual([
       'Intervals',
+      'Intervals going down',
       'Scale degrees',
       'Chord quality',
       'Chords in a key',
       'Find the key',
     ]);
-    expect(stageById(ear, 'intervals').blurb).toBe(
-      'Hear two notes, name the distance. Ascending first, then descending.',
-    );
+    // The design's "Ascending first, then descending." moved to its own stage (2026-10-11).
+    expect(stageById(ear, 'intervals').blurb).toBe('Hear two notes going up, name the distance.');
+    expect(stages.filter((s) => s.freePractice === 'intervals').map((s) => s.id)).toEqual([
+      'intervals',
+      'intervals-down',
+    ]);
   });
 
   it('pass is 8/10, except find-the-key at 4/5; ear levels draw from a pool', () => {
@@ -503,9 +510,19 @@ describe('ear-training', () => {
       ['P1', 'M2', 'm3', 'M3', 'P4', 'P5', 'P8'],
       ['P1', 'm2', 'M2', 'm3', 'M3', 'P4', 'P5', 'm6', 'M6', 'P8'],
       ['P1', 'm2', 'M2', 'm3', 'M3', 'P4', 'TT', 'P5', 'm6', 'M6', 'm7', 'M7', 'P8'],
-      ['P1', 'm2', 'M2', 'm3', 'M3', 'P4', 'TT', 'P5', 'm6', 'M6', 'm7', 'M7', 'P8'],
     ]);
-    expect(levels.map((l) => l.pool?.length)).toEqual([3, 5, 7, 10, 65, 52]);
+    expect(levels.map((l) => l.pool?.length)).toEqual([3, 5, 7, 10, 65]);
+    // Going down mirrors going up; the last level keeps the old "intervals-6" id.
+    const downLevels = stageById(ear, 'intervals-down').levels;
+    expect(downLevels.map((l) => l.id)).toEqual([
+      'intervals-down-1',
+      'intervals-down-2',
+      'intervals-down-3',
+      'intervals-down-4',
+      'intervals-6',
+    ]);
+    expect(downLevels.map((l) => l.activeOptions)).toEqual(levels.map((l) => l.activeOptions));
+    expect(downLevels.map((l) => l.pool?.length)).toEqual([3, 5, 7, 10, 52]);
     const p4 = at(levels, 2).pool?.find((s) => s.label === 'P4');
     expect(p4).toMatchObject({
       id: 'up-C4-P4',
@@ -516,15 +533,16 @@ describe('ear-training', () => {
     });
     if (p4?.match.type !== 'choice') throw new Error('expected choice');
     expect(p4.match.options).toHaveLength(13);
-    const down = at(at(levels, 5).pool, 3);
+    const down = at(at(downLevels, 4).pool, 3);
     expect(down.play).toEqual({ type: 'notes', notes: ['C5', 'A4'], gapMs: 800 });
     expect(down.explain).toBe("C down to A. 'Hey Jude' — the first two notes.");
   });
 
   it('intervals: every step names an anchor tune after the where-sentence', () => {
     const levels = stageById(ear, 'intervals').levels;
-    for (const level of levels) {
-      const dir = level.id === 'intervals-6' ? 'down' : 'up';
+    const downLevels = stageById(ear, 'intervals-down').levels;
+    for (const level of [...levels, ...downLevels]) {
+      const dir = downLevels.includes(level) ? 'down' : 'up';
       for (const step of level.pool ?? []) {
         if (step.match.type !== 'choice') throw new Error('expected choice');
         const anchor = intervalAnchor(
