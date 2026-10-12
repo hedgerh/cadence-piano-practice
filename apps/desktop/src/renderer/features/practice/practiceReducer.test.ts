@@ -25,6 +25,7 @@ import {
   finishCopy,
   hintNames,
   keyboardCaption,
+  keyboardStart,
   keyboardStates,
   keyboardVariant,
   markPlayedMode,
@@ -567,6 +568,24 @@ describe('progression steps (Smooth progressions, C major)', () => {
     );
     expect(keyboardStates(s)).toMatchObject({ 48: 'hint', 53: 'hint', 57: 'hint' });
     expect(hintNames(s)).toEqual(['F', 'A', 'C']);
+  });
+
+  // decisions.md 2026-10-12 "Keyboard follows the hand": the owner's I–IV–V–I in C. After
+  // D4–G4–B4 the nearest I is E4–G4–C5, and C5 is past the C2..B4 window.
+  it('the keyboard slides up an octave when the next smooth chord needs C5', () => {
+    const i4v1 = progSteps.find((st) => st.id === 'I-IV-V-I');
+    if (!i4v1) throw new Error('missing I-IV-V-I');
+    let s = initialPracticeState({ steps: [i4v1], results: [], visibility: 'all' });
+    expect(keyboardStart(s)).toBe(36);
+    s = run([press(0, 'C4', 'E4', 'G4'), press(1, 'C4', 'F4', 'A4')], s);
+    expect(keyboardStart(s)).toBe(36);
+    s = run([press(2, 'D4', 'G4', 'B4')], s);
+    expect(s.match.index).toBe(3);
+    expect(keyboardStart(s)).toBe(48);
+    expect(hintNames({ ...s, hint: 1 })).toEqual(['C', 'E', 'G']);
+    s = run([press(3, 'E4', 'G4', 'C5')], s);
+    expect(s.phase).toBe('matched');
+    expect(keyboardStart(initialPracticeState(session()))).toBeUndefined();
   });
 
   it('progression levels use the three-octave keyboard and their own wording', () => {

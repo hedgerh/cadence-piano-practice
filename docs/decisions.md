@@ -212,3 +212,8 @@ Append-only. One entry per architectural or product decision agents must follow.
   - `.github/workflows/build-mac.yml` (manual run, or a `v*` tag) builds arm64 on `macos-15` and x64 on `macos-15-intel`. It uploads the DMGs and zips as artifacts, and attaches them to the release for a tag.
 - **App behaviour**: closing the window keeps the app running on macOS; the Dock icon reopens it (the existing `activate` handler). Electron's default app menu provides Cmd+Q, Edit (copy/paste) and Window. Unpackaged runs skip the `.ico` window icon on macOS. Nothing else is platform-specific: Web MIDI (CoreMIDI), Web Audio, the bundled fonts and samples, and `userData` (`~/Library/Application Support/Cadence`) work as on Windows.
 - **Not verified**: no Mac was available. The first workflow run and the coworker's install are the test.
+
+## 2026-10-12 — Keyboard follows the hand
+
+- **Why**: the owner played I–IV–V–I in C as C–E–G → C–F–A → D–G–B, and then could not find a smooth C. The nearest one is E4–G4–C5 (B steps up to C), but the three-octave keyboard stopped at B4, so the hint lit only E and G. Grading was right; the keyboard hid the answer.
+- **What**: `keyboardStart` picks the three-octave keyboard's window, C2..B4 or C3..B5, so that every note in play fits: held keys, the chord just played, the next chord's nearest voicing (the hint keys, computed at any hint level) and a flash. It prefers C2..B4 (the bass and climbs need it); failing that, it takes the window holding the most. The two-octave keyboard stays C3..B4.

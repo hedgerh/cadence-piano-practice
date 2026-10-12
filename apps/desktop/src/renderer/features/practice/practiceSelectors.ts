@@ -82,6 +82,33 @@ export function keyboardVariant(state: Pick<PracticeState, 'steps'>): KeyboardVa
   return state.steps.some((s) => s.match.type === 'progression') ? 'three-octave' : 'two-octave';
 }
 
+/** The three-octave keyboard's two windows: C2..B4 (left-hand bass room) and C3..B5. */
+export const THREE_OCTAVE_STARTS: readonly Midi[] = [36, 48];
+
+/**
+ * decisions.md 2026-10-12 "Keyboard follows the hand": a smooth path can climb past B4 (after
+ * D–G–B the nearest C is E–G–C with C5 on top), so the three-octave keyboard shows whichever
+ * window holds every note in play — what is held, the chord just played, the next chord's
+ * nearest voicing and a flash — preferring C2..B4; failing that, the one holding the most.
+ * Undefined for the two-octave keyboard (its fixed C3..B4).
+ */
+export function keyboardStart(state: PracticeState): Midi | undefined {
+  if (keyboardVariant(state) !== 'three-octave') return undefined;
+  const step = currentStep(state);
+  const notes = new Set<Midi>([...state.held, ...state.flash]);
+  if (state.phase === 'listening' && step) {
+    for (const m of state.match.played) notes.add(m);
+    for (const m of hintFor(step.match, state.match)?.keys ?? []) notes.add(m);
+  }
+  const inside = (start: Midi) => [...notes].filter((m) => m >= start && m < start + 36).length;
+  let best = THREE_OCTAVE_STARTS[0] ?? 36;
+  for (const start of THREE_OCTAVE_STARTS) {
+    if (inside(start) === notes.size) return start;
+    if (inside(start) > inside(best)) best = start;
+  }
+  return best;
+}
+
 export interface ProgressionPart {
   label: string;
   /** Chord symbol under the numeral ("B♭/D"). */

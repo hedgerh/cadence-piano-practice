@@ -30,6 +30,7 @@ import {
   hintNames,
   keyboardCaption,
   keyboardStates,
+  keyboardStart,
   keyboardVariant,
   movedTooFar,
   practiceNoun,
@@ -107,6 +108,7 @@ export function PracticeView({
   const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
   const parts = progressionParts(state);
   const variant = keyboardVariant(state);
+  const keyStart = keyboardStart(state);
 
   return (
     <div
@@ -221,6 +223,7 @@ export function PracticeView({
         <div className={styles.keys}>
           <PianoKeyboard
             variant={variant}
+            {...(keyStart !== undefined ? { startMidi: keyStart } : {})}
             live
             states={keyboardStates(state)}
             data-testid="practice-keyboard"
