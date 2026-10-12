@@ -7,7 +7,6 @@ import { box, expectSize, expectStyle } from './probes';
 
 const INK = 'rgb(33, 27, 22)'; // --ink #211B16
 const PAPER = 'rgb(255, 255, 255)';
-const LINE = 'rgb(239, 232, 223)'; // --line #EFE8DF
 const LINE_STRONG = 'rgb(230, 222, 212)'; // --line-strong #E6DED4
 const TANGERINE = 'rgb(255, 138, 76)';
 const TEAL = 'rgb(91, 214, 184)';
@@ -67,14 +66,10 @@ test('Path (seed day8): pills, circle geometry, up next, probes, review a finish
     // (decisions.md 2026-10-08 "Track library") ----
     await expect(page.getByTestId('all-tracks-link')).toHaveAttribute('href', '#/tracks');
     const pills = page.getByTestId('track-pills').locator('[data-state]');
-    await expect(pills).toHaveText([
-      'Major diatonic chords',
-      'Minor diatonic chords',
-      'Inversions & voice leading',
-    ]);
+    // decisions.md 2026-10-10 "Voice leading": the inversions stub left the Chords group.
+    await expect(pills).toHaveText(['Major diatonic chords', 'Minor diatonic chords']);
     const states = await pills.evaluateAll((els) => els.map((e) => e.getAttribute('data-state')));
-    expect(states).toEqual(['active', 'available', 'locked']);
-    await expect(pills.nth(2)).toHaveJSProperty('tagName', 'SPAN');
+    expect(states).toEqual(['active', 'available']);
     await expectSize(pills.nth(0), { height: 44 });
     await expectStyle(pills.nth(0), { backgroundColor: INK, color: PAPER, fontSize: '15px' });
     await expectStyle(pills.nth(1), {
@@ -82,7 +77,6 @@ test('Path (seed day8): pills, circle geometry, up next, probes, review a finish
       borderTopColor: LINE_STRONG,
       borderTopWidth: '2px',
     });
-    await expectStyle(pills.nth(2), { borderTopColor: LINE, color: 'rgb(107, 97, 90)' });
 
     // ---- intro + pattern (Path:53–76) ----
     await expect(page.getByTestId('path-eyebrow')).toHaveText('Track · 3 of 12 keys');
