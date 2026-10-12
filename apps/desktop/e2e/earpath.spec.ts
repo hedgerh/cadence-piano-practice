@@ -31,7 +31,7 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
     await expect(page.getByTestId('all-tracks-link')).toHaveAttribute('href', '#/tracks');
 
     // ---- intro + cards (EarPath:52–77) ----
-    await expect(page.getByTestId('ladder-eyebrow')).toHaveText('Track · stage 1 of 5');
+    await expect(page.getByTestId('ladder-eyebrow')).toHaveText('Track · stage 1 of 6');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ear training');
     await expect(page.getByTestId('ladder-how')).toContainText('How a level works');
     await expect(page.getByTestId('ladder-how').locator('li')).toHaveCount(4);
