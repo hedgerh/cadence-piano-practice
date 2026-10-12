@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, daysBetween } from './dates';
 import type { StepProgressRow, StepResult } from './ports';
-import { INTERVALS, type ReviewNoteResult, schedule } from './review.service';
+import { inversionShapesLevel, keyLevel, smoothProgressionsLevel } from '@cadence/content';
+import { INTERVALS, type ReviewNoteResult, schedule, stepShort } from './review.service';
 import { TZ, onboarded, testContent } from './testing/harness';
 
 const base = { trackId: 't', levelId: 'l', stepId: 's', now: 0 };
@@ -186,3 +187,21 @@ describe('ReviewService', () => {
     expect(services.review.reviewNote(a, two, 1)).toBe('Both are clean — next review tomorrow.');
   });
 });
+
+// decisions.md 2026-10-11: Complete chips and review notes name every step type shortly.
+describe('stepShort', () => {
+  it('chords, inversions as slash chords, climbs as their chord, progressions as symbols', () => {
+    const f = { tonic: 'F', mode: 'major' } as const;
+    expect(stepShort(keyLevel(f).steps[1] ?? never())).toBe('Gm');
+    const shapes = inversionShapesLevel(f).steps;
+    expect(shapes.slice(0, 4).map(stepShort)).toEqual(['F', 'B♭', 'C', 'Dm']);
+    expect(stepShort(shapes[4] ?? never())).toBe('F/A');
+    const smooth = smoothProgressionsLevel(f).steps;
+    expect(stepShort(smooth[0] ?? never())).toBe('F – B♭ – F');
+    expect(stepShort(smooth[3] ?? never())).toBe('F/A – B♭ – C – F');
+  });
+});
+
+function never(): never {
+  throw new Error('missing step');
+}

@@ -75,6 +75,17 @@
   gap: 8px;
   width: 100%;
 }
+/* Beyond the design: long or many chips wrap and size to their text (decisions.md 2026-10-11). */
+.chipsWrap {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.chips.chipsWrap > * {
+  flex: 0 0 auto;
+  min-width: 60px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
 
 /* Complete:48 */
 .stats {

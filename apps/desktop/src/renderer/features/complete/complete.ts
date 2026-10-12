@@ -114,6 +114,15 @@ const endsCircleRun = (dto: CompleteDto): boolean =>
   dto.runPosition !== null &&
   dto.runPosition === dto.track.total;
 
+/**
+ * The design's row fits seven short chips (numeral + "Bm"). Longer ones (a progression "I – IV –
+ * I" over "C – F – C", "I climb") wrap onto rows and size to their text instead
+ * (decisions.md 2026-10-11).
+ */
+export function wrapChips(chips: readonly { numeral: string }[]): boolean {
+  return chips.length > 7 || chips.some((c) => c.numeral.length > 4);
+}
+
 /** Complete:35 — the engine's subtitle, with the first sentence adjusted when chords were skipped. */
 function subtitleFor(dto: CompleteDto, skipped: number): string {
   if (skipped === 0) return dto.subtitle;

@@ -9,7 +9,8 @@ import { RomanChip } from '../../components/ui/RomanChip';
 import { SecondaryButton } from '../../components/ui/SecondaryButton';
 import { StatTile } from '../../components/ui/StatTile';
 import { TextButton } from '../../components/ui/TextButton';
-import { completeView, type CompleteAction, type CompleteDto } from './complete';
+import { cx } from '../../lib/cx';
+import { completeView, wrapChips, type CompleteAction, type CompleteDto } from './complete';
 import styles from './CompletePage.module.css';
 import { useHandsFreeNext, type Schedule } from './useHandsFreeNext';
 
@@ -87,7 +88,10 @@ export function CompleteView({
           </p>
         </div>
 
-        <div className={styles.chips} data-testid="complete-chips">
+        <div
+          className={cx(styles.chips, wrapChips(view.chips) && styles.chipsWrap)}
+          data-testid="complete-chips"
+        >
           {view.chips.map((c, i) => (
             <RomanChip
               key={c.key}

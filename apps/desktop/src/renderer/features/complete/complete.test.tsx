@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { chipView, completeView, formatDuration } from './complete';
+import { chipView, completeView, formatDuration, wrapChips } from './complete';
 import { CompleteView } from './CompleteView';
 import { circleRunFixture, completeDtoFixture, parseSkipped } from './dev';
 
@@ -219,5 +219,16 @@ describe('circle run', () => {
     expect(screen.getByTestId('complete-map').hasAttribute('disabled')).toBe(false);
     fireEvent.click(screen.getByTestId('complete-map'));
     expect(onAction).toHaveBeenLastCalledWith({ kind: 'map', label: 'Back to the map' });
+  });
+});
+
+// decisions.md 2026-10-11: long or many chips wrap and size to their text.
+describe('wrapChips', () => {
+  it('keeps the seven-chord row; wraps progressions, climbs and long levels', () => {
+    const chip = (numeral: string, sub: string) => ({ numeral, sub });
+    expect(wrapChips(Array.from({ length: 7 }, () => chip('vii°', 'G♯° · hint')))).toBe(false);
+    expect(wrapChips([chip('I – IV – I', 'C – F – C')])).toBe(true);
+    expect(wrapChips([chip('I climb', 'F')])).toBe(true);
+    expect(wrapChips(Array.from({ length: 12 }, () => chip('I⁶', 'F/A')))).toBe(true);
   });
 });
