@@ -72,14 +72,15 @@ test('EarPath (seed day8): stages, unlock copy, probes, starts Level 3', async (
       await expect(head).toHaveText([title, meta]);
     }
 
-    // Current card: 2 teal + 1 tangerine + 3 grey segments (EarPath:93–100).
+    // Current card: 2 teal + 1 tangerine + 2 grey segments (EarPath:93–100; five ascending
+    // levels since decisions.md 2026-10-11).
     const current = rows.nth(0);
     const segs = current.locator('span[data-state]');
-    await expect(segs).toHaveCount(6);
+    await expect(segs).toHaveCount(5);
     const colors = await segs.evaluateAll((els) =>
       els.map((el) => getComputedStyle(el).backgroundColor),
     );
-    expect(colors).toEqual([TEAL, TEAL, TANGERINE, SAND_DEEP, SAND_DEEP, SAND_DEEP]);
+    expect(colors).toEqual([TEAL, TEAL, TANGERINE, SAND_DEEP, SAND_DEEP]);
     for (let i = 1; i < 5; i++)
       await expect(rows.nth(i).locator('span[data-state]')).toHaveCount(0);
 
