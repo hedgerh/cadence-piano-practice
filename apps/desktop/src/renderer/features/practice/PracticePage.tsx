@@ -62,7 +62,8 @@ function LivePractice({ session }: { session: PracticeSession }) {
       finishError={practice.finishError}
       autoFinishing={practice.autoFinishing}
       xpToast={practice.xpToast}
-      runProgress={session.runProgress}
+      keyProgress={session.keyProgress}
+      run={session.run === 'circle'}
       onHear={hear.available ? hear.play : undefined}
       hearing={hear.playing}
     />

@@ -410,10 +410,17 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       })),
       focus: session.focus,
       run: session.run,
-      runProgress:
-        session.run === null
+      keyProgress:
+        ref.track.map !== 'circle-of-fifths'
           ? null
-          : { position: ref.order + 1, total: content.levelOrder(session.trackId).length },
+          : (() => {
+              const { order, completed } = trackState(session.trackId);
+              return {
+                position: ref.order + 1,
+                total: order.length,
+                done: order.map((l) => completed.has(l.id)),
+              };
+            })(),
     };
   };
 

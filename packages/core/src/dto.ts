@@ -313,10 +313,11 @@ export interface SessionDto {
   /** Circle run (decisions.md 2026-10-03); null for a one-off session. */
   run: SessionRun | null;
   /**
-   * Circle run: where this key sits in the run ("key 6 of 12", decisions.md 2026-10-11
-   * "Circle run progress"); null for a one-off session.
+   * Circle-of-fifths tracks: this key's place in circle order and which keys are completed
+   * (`done[i]` for position i + 1), for "key 6 of 12" and the dot strip (decisions.md
+   * 2026-10-11 "Key progress"); null on ladder tracks.
    */
-  runProgress: { position: number; total: number } | null;
+  keyProgress: { position: number; total: number; done: boolean[] } | null;
 }
 
 export interface RecordStepInput {

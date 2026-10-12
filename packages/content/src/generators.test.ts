@@ -385,8 +385,14 @@ describe('voice leading tracks', () => {
       ],
     });
     expect(at(c.steps, 0).parts?.map((p) => p.label)).toEqual(['I', 'I⁶', 'I⁶₄', 'I']);
+    // decisions.md 2026-10-11: chord symbols under the numerals, slash = the bass.
+    expect(at(c.steps, 0).parts?.map((p) => p.sub)).toEqual(['C', 'C/E', 'C/G', 'C']);
+    expect(at(c.steps, 3).parts?.map((p) => p.sub)).toEqual(['Am', 'Am/C', 'Am/E', 'Am']);
+    expect(at(at(shapesTrack.levels, 10).steps, 9).name).toBe(
+      'B♭/F · B♭ major, 2nd inversion, F in the bass',
+    );
     expect(at(c.steps, 4)).toMatchObject({
-      name: 'C major, E in the bass',
+      name: 'C/E · C major, 1st inversion, E in the bass',
       match: { type: 'chord', notes: ['C', 'E', 'G'], bass: 'E' },
     });
   });
@@ -405,6 +411,7 @@ describe('voice leading tracks', () => {
     ]);
     const fromFirst = at(c.steps, 3);
     expect(fromFirst.parts?.map((p) => p.label)).toEqual(['I⁶', 'IV', 'V', 'I']);
+    expect(fromFirst.parts?.map((p) => p.sub)).toEqual(['C/E', 'F', 'G', 'C']);
     expect(fromFirst.match).toMatchObject({
       type: 'progression',
       maxMove: 2,

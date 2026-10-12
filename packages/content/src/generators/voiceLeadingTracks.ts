@@ -48,6 +48,9 @@ function triadAt(triads: readonly Triad[], degree: number): Triad {
 
 const notesOf = (t: Triad) => [t.root, t.third, t.fifth];
 const label = (t: Triad, inv: number) => `${t.numeral}${INVERSIONS[inv]?.suffix ?? ''}`;
+/** Chord symbol with the bass after a slash for an inversion: "B♭", "B♭/D", "Gm/D". */
+export const chordSymbol = (t: Triad, inv: number) =>
+  inv === 0 ? pretty(t.short) : `${pretty(t.short)}/${pretty(inversionBass(t, inv))}`;
 
 function levelBase(key: Key, suffix: string, blurb: string): Omit<Level, 'steps'> {
   return {
@@ -68,7 +71,11 @@ function climbStep(t: Triad): Step {
     label: `${t.numeral} climb`,
     name: `${t.name}: root position, 1st, 2nd, root again`,
     quality: t.quality,
-    parts: order.map((inv) => ({ label: label(t, inv), quality: t.quality })),
+    parts: order.map((inv) => ({
+      label: label(t, inv),
+      sub: chordSymbol(t, inv),
+      quality: t.quality,
+    })),
     match: {
       type: 'progression',
       chords: order.map((inv) => ({ notes: notesOf(t), bass: inversionBass(t, inv) })),
@@ -81,7 +88,7 @@ function recallStep(t: Triad, inv: 1 | 2): Step {
   return {
     id: `${numeralAscii(t.numeral)}-${INVERSIONS[inv].id}`,
     label: label(t, inv),
-    name: `${t.name}, ${pretty(bass)} in the bass`,
+    name: `${chordSymbol(t, inv)} · ${t.name}, ${INVERSIONS[inv].name}, ${pretty(bass)} in the bass`,
     quality: t.quality,
     match: { type: 'chord', notes: notesOf(t), bass },
   };
@@ -170,10 +177,10 @@ function progressionStep(triads: readonly Triad[], def: ProgressionDef, twoHands
     id: def.id,
     label: numerals,
     name: `${chords.map((t) => t.short).join(' – ')} · ${def.about}`,
-    parts: chords.map((t, i) => ({
-      label: i === 0 && def.start !== undefined ? label(t, def.start) : t.numeral,
-      quality: t.quality,
-    })),
+    parts: chords.map((t, i) => {
+      const inv = i === 0 && def.start !== undefined ? def.start : 0;
+      return { label: label(t, inv), sub: chordSymbol(t, inv), quality: t.quality };
+    }),
     match,
   };
 }

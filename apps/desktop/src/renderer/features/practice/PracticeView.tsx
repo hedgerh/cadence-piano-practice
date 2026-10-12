@@ -35,7 +35,7 @@ import {
   practiceNoun,
   progressionParts,
   progressSegments,
-  runProgressView,
+  keyProgressView,
   type MarkPlayedMode,
 } from './practiceSelectors';
 import type { XpToast } from './usePracticeSession';
@@ -62,8 +62,10 @@ export interface PracticeViewProps {
   autoFinishing?: boolean;
   /** Task 09: "+5 XP" after each recorded step. */
   xpToast?: XpToast | null;
-  /** Circle run: this key's place in the run (decisions.md 2026-10-11). */
-  runProgress?: { position: number; total: number } | null;
+  /** Circle tracks: this key's place and the completed keys (decisions.md 2026-10-11). */
+  keyProgress?: { position: number; total: number; done: boolean[] } | null;
+  /** The session is a circle run (dots count the run, not completion). */
+  run?: boolean;
   /** Progression steps: play the voice-led path ("Hear it"); omitted = no button. */
   onHear?: (() => void) | undefined;
   hearing?: boolean;
@@ -88,9 +90,10 @@ export function PracticeView({
   xpToast = null,
   onHear,
   hearing = false,
-  runProgress = null,
+  keyProgress = null,
+  run: inRun = false,
 }: PracticeViewProps) {
-  const run = runProgressView(runProgress);
+  const run = keyProgressView(keyProgress, inRun);
   const total = state.steps.length;
   const finished = state.phase === 'finished';
   const step = currentStep(state);
@@ -162,6 +165,7 @@ export function PracticeView({
                       mode="state"
                       size={64}
                       numeral={p.label}
+                      {...(p.sub !== undefined ? { sub: p.sub } : {})}
                       state={p.state}
                       data-testid={`part-${i}`}
                     />

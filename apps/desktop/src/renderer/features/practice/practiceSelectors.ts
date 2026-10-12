@@ -84,6 +84,8 @@ export function keyboardVariant(state: Pick<PracticeState, 'steps'>): KeyboardVa
 
 export interface ProgressionPart {
   label: string;
+  /** Chord symbol under the numeral ("B♭/D"). */
+  sub?: string | undefined;
   state: RomanChipState;
 }
 
@@ -94,6 +96,7 @@ export function progressionParts(state: PracticeState): ProgressionPart[] {
   const done = state.phase === 'listening' ? state.match.index : step.parts.length;
   return step.parts.map((p, i) => ({
     label: p.label,
+    sub: p.sub,
     state: i < done ? 'done' : i === done ? 'current' : 'upcoming',
   }));
 }
@@ -151,12 +154,12 @@ const KIND_TONE: Record<PracticeSession['kind'], EyebrowTone> = {
  */
 export function eyebrowFor(
   session: Pick<PracticeSession, 'kind' | 'trackTitle'> &
-    Partial<Pick<PracticeSession, 'run' | 'levelTitle' | 'runProgress'>>,
+    Partial<Pick<PracticeSession, 'run' | 'levelTitle' | 'keyProgress'>>,
 ): {
   text: string;
   tone: EyebrowTone;
 } {
-  const rp = session.runProgress;
+  const rp = session.keyProgress;
   if (session.run === 'circle' && rp) {
     return {
       text: `Circle run · key ${rp.position} of ${rp.total}`,
@@ -228,19 +231,31 @@ export function finishCopy(
 export type RunDot = 'done' | 'current' | 'upcoming';
 
 /**
- * decisions.md 2026-10-11 "Circle run progress": one dot per key of the run (keys before this
- * one are done, since a run goes in circle order) and "N keys left".
+ * decisions.md 2026-10-11 "Key progress": one dot per key of a circle track, this key
+ * tangerine. In a circle run the keys before this one are done (a run goes in circle order)
+ * and "N keys left" counts the rest of the run; otherwise completed keys are teal and "N keys
+ * left" counts the keys not yet completed (this one included).
  */
-export function runProgressView(
-  rp: { position: number; total: number } | null | undefined,
+export function keyProgressView(
+  kp: { position: number; total: number; done: readonly boolean[] } | null | undefined,
+  run: boolean,
 ): { dots: RunDot[]; label: string; aria: string } | null {
-  if (!rp || rp.total < 1) return null;
-  const dots = Array.from({ length: rp.total }, (_, i): RunDot =>
-    i + 1 < rp.position ? 'done' : i + 1 === rp.position ? 'current' : 'upcoming',
-  );
-  const left = rp.total - rp.position;
-  const label = left === 0 ? 'Last key' : left === 1 ? '1 key left' : `${left} keys left`;
-  return { dots, label, aria: `Key ${rp.position} of ${rp.total}, ${label.toLowerCase()}` };
+  if (!kp || kp.total < 1) return null;
+  const dots = Array.from({ length: kp.total }, (_, i): RunDot => {
+    if (i + 1 === kp.position) return 'current';
+    const done = run ? i + 1 < kp.position : kp.done[i] === true;
+    return done ? 'done' : 'upcoming';
+  });
+  const left = run ? kp.total - kp.position : dots.filter((_, i) => kp.done[i] !== true).length;
+  const label =
+    left === 0
+      ? run
+        ? 'Last key'
+        : 'All keys done'
+      : left === 1
+        ? '1 key left'
+        : `${left} keys left`;
+  return { dots, label, aria: `Key ${kp.position} of ${kp.total}, ${label.toLowerCase()}` };
 }
 
 export type MarkPlayedMode = 'hidden' | 'text' | 'promoted';

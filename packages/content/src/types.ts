@@ -83,7 +83,14 @@ export const StepSchema = z.object({
    * (decisions.md 2026-10-10 "Voice leading"). Same length as the match's `chords`.
    */
   parts: z
-    .array(z.object({ label: z.string(), quality: QualitySchema.exactOptional() }))
+    .array(
+      z.object({
+        label: z.string(),
+        /** Chord symbol under the numeral: "B♭", "B♭/D" (decisions.md 2026-10-11). */
+        sub: z.string().exactOptional(),
+        quality: QualitySchema.exactOptional(),
+      }),
+    )
     .exactOptional(),
 });
 

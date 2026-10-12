@@ -37,7 +37,7 @@ export function practiceSessionFixture(opts: {
     sessionId: 'dev-practice',
     focus: null,
     run: null,
-    runProgress: null,
+    keyProgress: null,
     trackId: opts.scale ? 'minor-scales' : 'major-diatonic-chords',
     trackTitle: opts.scale ? 'Minor scales' : 'Major diatonic chords',
     levelId: level.id,

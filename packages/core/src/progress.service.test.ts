@@ -698,7 +698,7 @@ describe('circle run', () => {
       const { session, complete } = playRun(services, levelId);
       expect(session.run).toBe('circle');
       // decisions.md 2026-10-11 "Circle run progress": Practice shows "key N of 12".
-      expect(session.runProgress).toEqual({ position: visited.length + 1, total: 12 });
+      expect(session.keyProgress).toMatchObject({ position: visited.length + 1, total: 12 });
       expect(complete.run).toBe('circle');
       expect(complete.runPosition).toBe(visited.length + 1);
       visited.push(levelId);
@@ -750,7 +750,9 @@ describe('circle run', () => {
     const done = services.progress.finishSession({ sessionId: oneOff.sessionId, durationMs: 1 });
     expect(done.run).toBeNull();
     expect(done.runPosition).toBeNull();
-    expect(oneOff.runProgress).toBeNull();
+    // A one-off session still knows its key's place and which keys are done (day8: C, G, D).
+    expect(oneOff.keyProgress).toMatchObject({ total: 12 });
+    expect(oneOff.keyProgress?.done.slice(0, 4)).toEqual([true, true, true, false]);
     expect(done.next).toMatchObject({ levelId: 'a-major', run: null });
   });
 

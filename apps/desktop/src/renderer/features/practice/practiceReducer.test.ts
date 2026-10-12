@@ -32,7 +32,7 @@ import {
   practiceNoun,
   progressionParts,
   progressSegments,
-  runProgressView,
+  keyProgressView,
 } from './practiceSelectors';
 import { withRetry } from './retry';
 
@@ -44,7 +44,7 @@ function session(results: PracticeSession['results'] = []): PracticeSession {
     sessionId: 's1',
     focus: null,
     run: null,
-    runProgress: null,
+    keyProgress: null,
     trackId: 'major-diatonic-chords',
     trackTitle: 'Major diatonic chords',
     levelId: level.id,
@@ -363,7 +363,7 @@ describe('practice selectors', () => {
         trackTitle: 'Inversion shapes',
         run: 'circle',
         levelTitle: 'B major',
-        runProgress: { position: 6, total: 12 },
+        keyProgress: { position: 6, total: 12, done: [] },
       }).text,
     ).toBe('Circle run · key 6 of 12');
     expect(
@@ -595,19 +595,30 @@ describe('progression steps (Smooth progressions, C major)', () => {
   });
 });
 
-// decisions.md 2026-10-11 "Circle run progress".
-describe('runProgressView', () => {
-  it('one dot per key: done before, current, upcoming after; keys left', () => {
-    const v = runProgressView({ position: 6, total: 12 });
+// decisions.md 2026-10-11 "Key progress".
+describe('keyProgressView', () => {
+  const run = { position: 6, total: 12, done: Array<boolean>(12).fill(false) };
+  it('circle run: done before, current, upcoming after; keys left in the run', () => {
+    const v = keyProgressView(run, true);
     expect(v?.dots.filter((d) => d === 'done')).toHaveLength(5);
     expect(v?.dots[5]).toBe('current');
     expect(v?.dots.filter((d) => d === 'upcoming')).toHaveLength(6);
     expect(v?.label).toBe('6 keys left');
     expect(v?.aria).toBe('Key 6 of 12, 6 keys left');
+    expect(keyProgressView({ ...run, position: 11 }, true)?.label).toBe('1 key left');
+    expect(keyProgressView({ ...run, position: 12 }, true)?.label).toBe('Last key');
   });
-  it('the last two keys and one-off sessions', () => {
-    expect(runProgressView({ position: 11, total: 12 })?.label).toBe('1 key left');
-    expect(runProgressView({ position: 12, total: 12 })?.label).toBe('Last key');
-    expect(runProgressView(null)).toBeNull();
+  it('one-off: completed keys teal, keys left = not yet completed (this one included)', () => {
+    const done = [true, true, true, false, false, false, false, false, false, false, false, false];
+    const v = keyProgressView({ position: 4, total: 12, done }, false);
+    expect(v?.dots.slice(0, 5)).toEqual(['done', 'done', 'done', 'current', 'upcoming']);
+    expect(v?.label).toBe('9 keys left');
+    // Reviewing a finished key: it does not count as left.
+    expect(keyProgressView({ position: 2, total: 12, done }, false)?.label).toBe('9 keys left');
+    const all = Array<boolean>(12).fill(true);
+    expect(keyProgressView({ position: 1, total: 12, done: all }, false)?.label).toBe(
+      'All keys done',
+    );
+    expect(keyProgressView(null, false)).toBeNull();
   });
 });

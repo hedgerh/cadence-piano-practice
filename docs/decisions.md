@@ -171,10 +171,13 @@ Append-only. One entry per architectural or product decision agents must follow.
   - Lessons show chord shapes as tiles over one shared keyboard: picking a tile plays it, and "Hear" lights each shape as it sounds.
 - **Not yet**: minor keys and 7th chords (phase 2), and Jam / tempo (phase 3).
 
-## 2026-10-11 — Circle run progress
+## 2026-10-11 — Key progress and chord symbols
 
-- **Why**: the owner found a circle run daunting with no sense, inside a key, of how far through the 12 keys they were.
-- **Engine**: `SessionDto.runProgress` = `{ position, total }` (the 1-based place of the level in circle order and the track's level count) for a circle run, `null` for a one-off. Mirrored in `contracts.ts`.
+- **Why**: the owner found 12 keys daunting with no sense, inside a key, of how far through the track they were. That applies to a circle run and to a one-off learn session alike. They also wanted the inversions named as chords ("E/B").
+- **Engine**: `SessionDto.keyProgress` = `{ position, total, done[] }` on circle-of-fifths tracks (null on ladders): the level's 1-based place in circle order, the level count, and which levels are completed. Mirrored in `contracts.ts`.
 - **Practice** (beyond the designs):
-  - The eyebrow reads "Circle run · key 6 of 12", matching Complete's "Circle run · 4 of 12". The header title already names the key.
-  - The progress bar row shows one 10px dot per key: keys before this one teal (a run goes in circle order), this key tangerine, the rest `--line-strong`. It is labelled "6 keys left" / "1 key left" / "Last key", with an aria-label "Key 6 of 12, 6 keys left".
+  - **Eyebrow:** in a circle run it reads "Circle run · key 6 of 12", matching Complete's "Circle run · 4 of 12" (the header title already names the key).
+  - **Dot strip:** the progress bar row shows one 10px dot per key, with this key tangerine.
+    - In a run, keys before this one are teal (a run goes in circle order) and the label counts the rest of the run: "6 keys left" / "1 key left" / "Last key".
+    - Otherwise completed keys are teal and the label counts keys not yet completed: "9 keys left" / "All keys done".
+- **Chord symbols** (content): `Step.parts[].sub` is the chord symbol under each chip's numeral, with the bass after a slash for an inversion (`chordSymbol`): B♭ · B♭/D · B♭/F · B♭ on a climb, and C/E · F · G · C for I–IV–V–I from I⁶. Shape recall steps are named "C/E · C major, 1st inversion, E in the bass".
