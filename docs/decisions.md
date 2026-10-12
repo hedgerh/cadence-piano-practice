@@ -182,3 +182,18 @@ Append-only. One entry per architectural or product decision agents must follow.
     - Otherwise completed keys are teal and the label counts keys not yet completed: "9 keys left" / "All keys done".
 - **Chord symbols** (content): `Step.parts[].sub` is the chord symbol under each chip's numeral, with the bass after a slash for an inversion (`chordSymbol`): B♭ · B♭/D · B♭/F · B♭ on a climb, and C/E · F · G · C for I–IV–V–I from I⁶. Shape recall steps are named "C/E · C major, 1st inversion, E in the bass".
 - **Complete chips**: `stepShort` names an inversion as a slash chord ("F/A"), a climb as its chord ("F") and a progression by its chord symbols ("F – B♭ – F"), instead of falling back to the step's full name. A level with more than seven chips, or any numeral longer than four characters ("I climb", "I – IV – I"), wraps the chip row and sizes chips to their text. The seven-chord levels keep the design's single row.
+
+## 2026-10-11 — Descending intervals and free interval practice
+
+- **Why**: the owner was hearing descending intervals while still guessing ascending ones, and asked for a free mode where they choose which intervals are active.
+- **Descending stage** (content):
+  - Going down was one level of all thirteen intervals right after the ascending ones. It is now its own stage, "Intervals going down", unlocked when the ascending stage is complete (`{intervals, 6}`).
+  - Its five levels mirror the ascending ones: P1/P5/P8 from C5; adding 3rds; adding 4th and 2nd; adding m2/m6/M6; then all thirteen from C5/B4/A4/G4.
+  - The last level keeps the old `intervals-6` id, so its progress carries over; the step-key snapshot only gained keys.
+  - The ascending stage's blurb drops "then descending". The design fixtures (EarPath.dc.html, five stages) are unchanged.
+- **Free practice** (`/ear-practice/intervals`, renderer only, not in the designs):
+  - **Settings strip:** a toggle per interval, each showing this visit's right/total, and direction toggles Up / Down / Together (together = both notes at once, a `chord` sound; at least one direction stays on). A running score and the Sound control sit beside them.
+  - **Drill:** the EarInterval drill pieces (112px play button, answer chips for the picked intervals only, FeedbackPanel with the ladder's feedback sentence).
+  - **Questions:** drawn evenly from the picked (interval, direction) pairs, never the same pair twice in a row. Roots are C4–G4 going up or together, C5–G4 going down. Each question auto-plays.
+  - **Nothing is recorded:** no session, XP or review (the owner's choice: "fully free"). The settings persist in `localStorage` as a per-device convenience.
+  - **Entry:** stages with content `Stage.freePractice: 'intervals'` (both interval stages) get a "Free practice" link in their row footer. From "Intervals going down" the drill starts on Down.

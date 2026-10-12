@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { AppHeader } from '../../components/ui/AppHeader';
 import { Card } from '../../components/ui/Card';
 import { NumberedList } from '../../components/ui/NumberedList';
@@ -39,6 +40,11 @@ export interface LadderPathViewProps {
   /** Dev screen: the stage whose "Replay a level" list starts open. */
   initialReplayStage?: string | null;
   onVisibility: (visibility: ShowMe) => void;
+  /**
+   * Stages offering free practice (content `Stage.freePractice`), stage id → route
+   * (decisions.md 2026-10-11 "Interval practice").
+   */
+  freePractice?: Readonly<Record<string, string>>;
 }
 
 /** EarPath.dc.html — the ladder track map, fed by `tracks.overview` (or a fixture). */
@@ -53,6 +59,7 @@ export function LadderPathView({
   starting = false,
   initialReplayStage = null,
   onVisibility,
+  freePractice = {},
 }: LadderPathViewProps) {
   const [replayOpen, setReplayOpen] = useState<string | null>(initialReplayStage);
   const upNext = overview?.upNext ?? null;
@@ -120,7 +127,21 @@ export function LadderPathView({
               {rows.map((r, i) => {
                 const stage = stages[i];
                 const replay = stage ? replayLevels(stage) : [];
-                if (!stage || replay.length === 0) return <StageRow key={r.index} {...r} />;
+                const practiceTo = stage ? freePractice[stage.stageId] : undefined;
+                const practice = practiceTo !== undefined && stage && (
+                  <Link
+                    to={practiceTo}
+                    className={styles.practiceLink}
+                    data-testid={`free-practice-${stage.stageId}`}
+                  >
+                    Free practice
+                  </Link>
+                );
+                if (!stage || replay.length === 0) {
+                  return (
+                    <StageRow key={r.index} {...r} {...(practice ? { footer: practice } : {})} />
+                  );
+                }
                 const open = replayOpen === stage.stageId;
                 // Each passed level's segment replays it (open stages show segments).
                 const levelActions = stage.levels.map((l) => {
@@ -141,13 +162,16 @@ export function LadderPathView({
                     levelActions={levelActions}
                     footer={
                       <>
-                        <TextButton
-                          onClick={() => setReplayOpen(open ? null : stage.stageId)}
-                          aria-pressed={open}
-                          data-testid={`replay-toggle-${stage.stageId}`}
-                        >
-                          {REPLAY_TOGGLE}
-                        </TextButton>
+                        <div className={styles.footerActions}>
+                          <TextButton
+                            onClick={() => setReplayOpen(open ? null : stage.stageId)}
+                            aria-pressed={open}
+                            data-testid={`replay-toggle-${stage.stageId}`}
+                          >
+                            {REPLAY_TOGGLE}
+                          </TextButton>
+                          {practice}
+                        </div>
                         {open && (
                           <ReplayLevels
                             stageId={stage.stageId}

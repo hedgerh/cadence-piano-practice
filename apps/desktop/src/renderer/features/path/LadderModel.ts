@@ -126,3 +126,21 @@ export const LADDER_COMPLETE = {
 export function upNextTitle(upNext: UpNextDto): string {
   return upNext.stageTitle !== null ? `${upNext.stageTitle} · ${upNext.title}` : upNext.title;
 }
+
+const PRACTICE_ROUTE = '/ear-practice/intervals';
+
+/**
+ * Content stages with `freePractice` → the practice route; the descending stage starts the
+ * drill on "down" (decisions.md 2026-10-11 "Interval practice").
+ */
+export function freePracticeRoutes(
+  stages: readonly { id: string; freePractice?: 'intervals' }[] | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const s of stages ?? []) {
+    if (s.freePractice !== 'intervals') continue;
+    out[s.id] =
+      s.id === 'intervals-down' ? `${PRACTICE_ROUTE}?dir=down` : `${PRACTICE_ROUTE}?dir=up`;
+  }
+  return out;
+}

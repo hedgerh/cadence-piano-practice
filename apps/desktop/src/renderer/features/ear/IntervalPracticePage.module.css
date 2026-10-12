@@ -1,0 +1,94 @@
+/* decisions.md 2026-10-11 "Interval practice" — not in the designs. The settings strip uses the
+   ear drill's bar width and the Show me / Sound controls' sand-and-ink toggle look; the drill
+   below reuses ChoiceDrill.module.css (EarInterval.dc.html). */
+.settings {
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--page-x);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.rowLabel {
+  width: 84px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.toggles {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.toggle {
+  min-width: 56px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--muted);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
+}
+.toggle:focus-visible {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 2px;
+}
+.wide {
+  min-width: 96px;
+}
+.on {
+  border-color: var(--ink);
+  background: var(--lavender-tint);
+  color: var(--ink);
+}
+
+.toggleId {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.1;
+}
+.toggleScore {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  min-height: 13px;
+}
+
+.score {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.sound {
+  margin-left: auto;
+}
+
+.empty {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+}

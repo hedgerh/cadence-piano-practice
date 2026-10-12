@@ -4,9 +4,11 @@ import {
   useMe,
   useSetTrackSettings,
   useStartSession,
+  useTrack,
   useTrackOverview,
   useTracks,
 } from '../shared/hooks';
+import { freePracticeRoutes } from './LadderModel';
 import { LadderPathView } from './LadderPathView';
 
 /**
@@ -19,6 +21,7 @@ export function LadderPathPage({ trackId }: { trackId: string }) {
   const me = useMe();
   const tracks = useTracks();
   const overview = useTrackOverview(trackId);
+  const track = useTrack(trackId);
   const start = useStartSession();
   const settings = useSetTrackSettings();
 
@@ -45,6 +48,7 @@ export function LadderPathPage({ trackId }: { trackId: string }) {
       onStart={(levelId) => startLevel(levelId, 'learn')}
       onReplay={(levelId) => startLevel(levelId, 'review')}
       onVisibility={(visibility) => settings.mutate({ trackId, visibility })}
+      freePractice={freePracticeRoutes(track.data?.stages)}
     />
   );
 }

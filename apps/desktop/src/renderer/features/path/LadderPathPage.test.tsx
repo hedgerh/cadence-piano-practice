@@ -2,7 +2,9 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FIXTURE_TRACKS, fixtureLadderOverview } from '../earpath/dev';
+import { earTraining } from '@cadence/content';
 import {
+  freePracticeRoutes,
   HOW_A_LEVEL_WORKS,
   levelSegment,
   replayLevels,
@@ -232,5 +234,38 @@ describe('LadderPathView', () => {
     expect(screen.getByTestId('app-header')).toBeTruthy();
     expect(screen.getByTestId('track-pills')).toBeTruthy();
     expect(screen.queryByTestId('stage-row')).toBeNull();
+  });
+});
+
+// decisions.md 2026-10-11 "Interval practice".
+describe('free practice on the map', () => {
+  it('stages with freePractice link to the drill; going down starts on "down"', () => {
+    expect(freePracticeRoutes(earTraining().stages)).toEqual({
+      intervals: '/ear-practice/intervals?dir=up',
+      'intervals-down': '/ear-practice/intervals?dir=down',
+    });
+    expect(freePracticeRoutes(undefined)).toEqual({});
+  });
+
+  it('the intervals stage row shows a "Free practice" link (with or without replays)', () => {
+    render(
+      <MemoryRouter>
+        <LadderPathView
+          streakDays={8}
+          xp={1240}
+          tracks={FIXTURE_TRACKS}
+          overview={fixtureLadderOverview()}
+          trackId="ear-training"
+          onStart={vi.fn()}
+          onReplay={vi.fn()}
+          onVisibility={vi.fn()}
+          freePractice={{ intervals: '/ear-practice/intervals?dir=up' }}
+        />
+      </MemoryRouter>,
+    );
+    const link = screen.getByTestId('free-practice-intervals');
+    expect(link.getAttribute('href')).toBe('/ear-practice/intervals?dir=up');
+    expect(link.textContent).toBe('Free practice');
+    expect(screen.queryByTestId('free-practice-scale-degrees')).toBeNull();
   });
 });
