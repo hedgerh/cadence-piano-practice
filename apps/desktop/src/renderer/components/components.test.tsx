@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
+import { PLAY_MY_NOTES_KEY, playMyNotes, setPlayMyNotes } from '../audio/liveMonitor';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { MidiHubContext } from '../midi/hooks';
@@ -144,6 +145,33 @@ describe('RomanChip / Callout', () => {
     fireEvent.keyDown(getByTestId('midi-menu'), { key: 'Escape' });
     expect(queryByTestId('midi-menu')).toBeNull();
     expect(document.activeElement).toBe(getByTestId('midi-pill'));
+    hub.stop();
+  });
+
+  // decisions.md 2026-10-13 "Play my notes": a switch under the keyboards, saved per computer.
+  it('"Play my notes" toggles and is remembered', async () => {
+    localStorage.removeItem(PLAY_MY_NOTES_KEY);
+    setPlayMyNotes(true);
+    const hub = createMidiHub();
+    hub.attach(
+      new WebMidiInput(createFakeMidiAccess([{ id: 'kk', name: 'KK S61' }]).navigator),
+      'device',
+    );
+    await act(() => hub.start());
+    const { getByTestId } = render(
+      <MidiHubContext.Provider value={hub}>
+        <MidiPill />
+      </MidiHubContext.Provider>,
+    );
+    fireEvent.click(getByTestId('midi-pill'));
+    const sw = getByTestId('play-my-notes');
+    expect(sw.getAttribute('role')).toBe('menuitemcheckbox');
+    expect(sw.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(sw);
+    expect(getByTestId('play-my-notes').getAttribute('aria-checked')).toBe('false');
+    expect(playMyNotes.get()).toBe(false);
+    expect(localStorage.getItem(PLAY_MY_NOTES_KEY)).toBe('off');
+    setPlayMyNotes(true);
     hub.stop();
   });
 

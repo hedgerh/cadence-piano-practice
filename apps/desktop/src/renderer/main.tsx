@@ -15,6 +15,7 @@ import { appMidi } from './midi/midiStore';
 import { api, queryKey } from './lib/api';
 import { appSynth, installAudioUnlock } from './audio/useAudio';
 import { installVoicePreference } from './audio/voicePreference';
+import { installLiveMonitor } from './audio/liveMonitor';
 import { installDevHooks } from './dev/devHooks';
 import './styles/fonts.css';
 import './styles/tokens.css';
@@ -36,6 +37,8 @@ async function boot(): Promise<void> {
   installAudioUnlock();
   // decisions.md 2026-10-11 "Sound setting": the synth plays the profile's chosen voice.
   installVoicePreference(queryClient, appSynth, queryKey('me.get'));
+  // decisions.md 2026-10-13 "Play my notes": what the learner plays sounds through the app.
+  installLiveMonitor(appMidi, appSynth);
   void queryClient.prefetchQuery({ queryKey: queryKey('me.get'), queryFn: () => api['me.get']() });
 
   const router = createAppRouter({ devRoutes: mode.devTools });

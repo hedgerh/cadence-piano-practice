@@ -7,11 +7,14 @@ import {
 import { writable, type Readable } from './signal';
 
 const FALLBACK_NAME = 'MIDI keyboard';
+/** Control change 64: the damper (sustain) pedal. */
+const SUSTAIN_CC = 64;
 
 /**
  * Real MIDI devices via Web MIDI (docs/ui.md §4): `requestMIDIAccess({ sysex: false })`;
- * `0x90` with velocity > 0 is note-on, `0x80` or velocity 0 is note-off; sustain (CC64)
- * and everything else is ignored.
+ * `0x90` with velocity > 0 is note-on, `0x80` or velocity 0 is note-off; the sustain pedal
+ * (`0xB0` controller 64, down at ≥ 64) feeds `sustain$` (decisions.md 2026-10-13); everything
+ * else is ignored.
  *
  * Task 16: listens to ONE input — the learner's preferred port (by id, then by name) when it is
  * connected, otherwise the first connected one — and lists every connected port in `devices$`
@@ -126,5 +129,6 @@ export class WebMidiInput extends BaseMidiInput implements SelectableMidiInput {
     const kind = status & 0xf0;
     if (kind === 0x90) this.noteOn(note, velocity);
     else if (kind === 0x80) this.noteOff(note);
+    else if (kind === 0xb0 && note === SUSTAIN_CC) this.sustain.set(velocity >= 64);
   }
 }

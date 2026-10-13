@@ -114,6 +114,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* decisions.md 2026-10-13: a hairline between the keyboards and the "Play my notes" switch. */
+.menuDivider {
+  height: 2px;
+  margin: 4px 6px;
+  border-radius: 1px;
+  background: var(--line);
+}
 .menuNote {
   padding: 4px 10px;
   font-size: 14px;

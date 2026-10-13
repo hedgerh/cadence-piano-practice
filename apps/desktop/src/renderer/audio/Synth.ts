@@ -23,4 +23,13 @@ export interface Synth {
   setVolume(volume: number): void;
   /** The Sound setting: recorded piano, synthesized piano or the basic tone. */
   setVoice(voice: SoundVoice): void;
+  /**
+   * Live playing (decisions.md 2026-10-13 "Play my notes"): a key went down with MIDI
+   * `velocity` (1..127). The note sounds in the current voice until `noteOff` (or the pedal
+   * lets it go). `stop()` never cuts live notes.
+   */
+  noteOn(midi: Midi, velocity: number): void;
+  noteOff(midi: Midi): void;
+  /** Sustain pedal (CC64): while down, released keys keep sounding. */
+  setSustain(down: boolean): void;
 }

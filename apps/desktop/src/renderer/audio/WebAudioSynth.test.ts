@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WebAudioSynth } from './WebAudioSynth';
+import { LIVE_RELEASE, RETRIGGER, velocityGain, WebAudioSynth } from './WebAudioSynth';
 
 // docs/engine.md §7 — exact envelope and master chain, checked against a recording fake.
 type Call = [string, ...unknown[]];
@@ -13,6 +13,7 @@ function fakeContext() {
     exponentialRampToValueAtTime: (v: number, t: number) => log.push([`${name}.exp`, v, t]),
     linearRampToValueAtTime: (v: number, t: number) => log.push([`${name}.lin`, v, t]),
     setTargetAtTime: (v: number, t: number, tc: number) => log.push([`${name}.target`, v, t, tc]),
+    cancelScheduledValues: (t: number) => log.push([`${name}.cancel`, t]),
   });
   const node = (kind: string) => ({
     connect: (to: { kind?: string }) => log.push([`${kind}.connect`, to.kind]),
@@ -212,5 +213,61 @@ describe('WebAudioSynth', () => {
       await synth.unlock();
       expect(synth.voice).toBe('tone');
     });
+  });
+});
+
+// decisions.md 2026-10-13 "Play my notes": live notes held until key up (or pedal up).
+describe('live playing', () => {
+  const live = () => {
+    const { ctx, log, gains } = fakeContext();
+    const synth = new WebAudioSynth(() => ctx as unknown as AudioContext, noSamples);
+    return { ctx, log, gains, synth };
+  };
+  const stops = (log: Call[]) => log.filter(([k]) => k === 'osc.stop').map(([, t]) => t);
+
+  it('velocity sets the level: soft is quieter, ~112 and up is full, never silent', () => {
+    expect(velocityGain(127)).toBe(1);
+    expect(velocityGain(112)).toBe(1);
+    expect(velocityGain(64)).toBeCloseTo((64 / 112) ** 1.6, 9);
+    expect(velocityGain(1)).toBe(0.05);
+  });
+
+  it('key down starts the note now at its velocity gain; key up damps it and stops it', () => {
+    const { log, gains, synth } = live();
+    synth.noteOn(69, 64);
+    expect(log).toContainEqual(['osc.start', 2, 'triangle', 440]);
+    const out = gains.find((g) => g.gain.value === velocityGain(64));
+    expect(out).toBeDefined();
+    synth.noteOff(69);
+    expect(log).toContainEqual(['gain.cancel', 2]);
+    expect(log).toContainEqual(['gain.target', 0, 2, LIVE_RELEASE / 4]);
+    expect(stops(log).at(-1)).toBeCloseTo(2 + LIVE_RELEASE + 0.05, 9);
+  });
+
+  it('the pedal holds released keys until it comes up; held keys keep sounding', () => {
+    const { log, synth } = live();
+    synth.setSustain(true);
+    synth.noteOn(60, 100);
+    synth.noteOn(64, 100);
+    synth.noteOff(60);
+    expect(log.some(([k]) => k === 'gain.target')).toBe(false);
+    synth.setSustain(false);
+    // Only C (released) is damped; E is still held down.
+    expect(log.filter(([k]) => k === 'gain.target')).toHaveLength(1);
+  });
+
+  it('striking a ringing key again cuts the old copy quickly', () => {
+    const { log, synth } = live();
+    synth.noteOn(60, 100);
+    synth.noteOn(60, 100);
+    expect(log).toContainEqual(['gain.target', 0, 2, RETRIGGER / 4]);
+  });
+
+  it('stopping a prompt never cuts what the learner is playing', () => {
+    const { log, synth } = live();
+    synth.noteOn(60, 100);
+    const before = stops(log).length;
+    synth.stop();
+    expect(stops(log).length).toBe(before);
   });
 });

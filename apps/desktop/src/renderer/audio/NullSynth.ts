@@ -53,8 +53,26 @@ export class NullSynth implements Synth {
     this.volume = Math.min(1, Math.max(0, volume));
   }
 
+  /** Live notes, as `['on', midi, velocity]`, `['off', midi]` and `['sustain', down]`. */
+  readonly live: (
+    readonly ['on', Midi, number] | readonly ['off', Midi] | readonly ['sustain', boolean]
+  )[] = [];
+
+  noteOn(midi: Midi, velocity: number): void {
+    this.live.push(['on', midi, velocity]);
+  }
+
+  noteOff(midi: Midi): void {
+    this.live.push(['off', midi]);
+  }
+
+  setSustain(down: boolean): void {
+    this.live.push(['sustain', down]);
+  }
+
   clear(): void {
     this.calls.length = 0;
     this.sounds.length = 0;
+    this.live.length = 0;
   }
 }

@@ -217,3 +217,14 @@ Append-only. One entry per architectural or product decision agents must follow.
 
 - **Why**: the owner played I–IV–V–I in C as C–E–G → C–F–A → D–G–B, and then could not find a smooth C. The nearest one is E4–G4–C5 (B steps up to C), but the three-octave keyboard stopped at B4, so the hint lit only E and G. Grading was right; the keyboard hid the answer.
 - **What**: `keyboardStart` picks the three-octave keyboard's window, C2..B4 or C3..B5, so that every note in play fits: held keys, the chord just played, the next chord's nearest voicing (the hint keys, computed at any hint level) and a flash. It prefers C2..B4 (the bass and climbs need it); failing that, it takes the window holding the most. The two-octave keyboard stays C3..B4.
+
+## 2026-10-13 — Play my notes
+
+- **Why**: the owner's Komplete Kontrol has no sound of its own; hearing what they played meant running Ableton with a piano.
+- **What**: every heard MIDI input's notes now sound through the app, in the Sound setting's voice (recorded piano by default), on every screen.
+  - `installLiveMonitor` subscribes the synth straight to the MIDI hub (no React in the path) at boot.
+  - `Synth.noteOn/noteOff/setSustain`: each key down starts a note held for up to 10 s (every voice has decayed by then), at a velocity gain of `(v/112)^1.6` clamped to 0.05..1. Key up damps it over 0.3 s. Striking a ringing key again cuts the old copy in 30 ms.
+  - The sustain pedal (CC64 ≥ 64, now read by `WebMidiInput` as `sustain$`) holds released keys until it comes up.
+  - Live notes are kept apart from prompts: `stop()` never cuts them.
+- **Switch**: "Play my notes" in the MIDI pill's menu (`menuitemcheckbox` under the keyboards, on by default), for keyboards with built-in speakers or a DAW. It is a per-computer `localStorage` preference, because it depends on the hardware. Key-ups always reach the synth, so switching off never leaves a note hanging.
+- **First key**: the window allows audio without a user gesture (`autoplayPolicy: 'no-user-gesture-required'`), so the first key pressed sounds before any click.

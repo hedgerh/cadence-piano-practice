@@ -43,6 +43,8 @@ export interface MidiHub {
   stop(): void;
   /** Note events from every heard input, as they happen. */
   subscribeEvents(listener: (e: NoteEvent) => void): () => void;
+  /** The sustain pedal of any heard input went down (true) or up (false). */
+  subscribeSustain(listener: (down: boolean) => void): () => void;
   setKeyboardAlways(on: boolean): void;
   /** Task 16: listen to this port (when connected); forwarded to the device input. */
   selectDevice(preference: MidiDevicePreference | null): void;
@@ -69,6 +71,7 @@ export function createMidiHub(options: { keyboardAlways?: boolean } = {}): MidiH
   let keyboardAlways = options.keyboardAlways ?? false;
   const attached: Attached[] = [];
   const events = emitter<NoteEvent>();
+  const sustain = emitter<boolean>();
   let started = false;
 
   const store = createStore<MidiState>(() => ({
@@ -123,6 +126,9 @@ export function createMidiHub(options: { keyboardAlways?: boolean } = {}): MidiH
         store.setState({ events: [...prev, e].slice(-EVENT_HISTORY) });
         events.emit(e);
       }),
+      input.sustain$.subscribe((down) => {
+        if (isHeard(entry)) sustain.emit(down);
+      }),
     ];
     if (isSelectable(input)) {
       unsubs.push(input.devices$.subscribe(recompute));
@@ -154,6 +160,7 @@ export function createMidiHub(options: { keyboardAlways?: boolean } = {}): MidiH
       recompute();
     },
     subscribeEvents: (listener) => events.subscribe(listener),
+    subscribeSustain: (listener) => sustain.subscribe(listener),
     setKeyboardAlways(on) {
       keyboardAlways = on;
       recompute();

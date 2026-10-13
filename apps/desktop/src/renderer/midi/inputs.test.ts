@@ -104,12 +104,17 @@ describe('WebMidiInput status', () => {
     device.onmidimessage?.({ data: new Uint8Array([0x91, 64, 80]) });
     device.onmidimessage?.({ data: new Uint8Array([0xb0, 64, 127]) });
     expect([...input.held$.get()]).toEqual([60, 64]);
+    // decisions.md 2026-10-13: CC64 is the sustain pedal (down at ≥ 64); other CCs are ignored.
+    expect(input.sustain$.get()).toBe(true);
+    device.onmidimessage?.({ data: new Uint8Array([0xb0, 1, 0]) });
+    expect(input.sustain$.get()).toBe(true);
     device.onmidimessage?.({ data: new Uint8Array([0x90, 60, 0]) });
     expect([...input.held$.get()]).toEqual([64]);
 
     device.state = 'disconnected';
     access.onstatechange?.();
     expect(input.held$.get().size).toBe(0);
+    expect(input.sustain$.get()).toBe(false);
     expect(input.status$.get()).toEqual({ kind: 'no-device' });
     input.stop();
   });

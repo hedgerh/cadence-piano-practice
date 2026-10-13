@@ -6,6 +6,10 @@
 //             are decoded (or if they fail) the tone plays instead;
 //   synth   — the additive piano in pianoSynth.ts;
 //   tone    — the design's own tone() (EarInterval:105–117: a triangle oscillator).
+// Live playing (decisions.md 2026-10-13 "Play my notes") uses the same voices: each key down
+// starts a note held for up to LIVE_HOLD (the sound decays by itself long before), scaled by
+// velocity; key up (or the pedal coming up) damps it over LIVE_RELEASE. Live notes are kept
+// apart from prompts, so `stop()` never silences what the learner is playing.
 import type { Sound } from '@cadence/content';
 import { midiToFrequency, type Midi } from '@cadence/music';
 import type { SoundVoice } from '@shared/ipc/contracts';
@@ -30,6 +34,24 @@ export const COMPRESSOR_RATIO = 4;
 export const PIANO_GAIN = 0.9;
 /** After `dur` the key is let go: the damper fades the string out over this long. */
 export const DAMPER = 0.4;
+/** A live note sounds at most this long while held (every voice has decayed by then). */
+export const LIVE_HOLD = 10;
+/** Key up: the live damper (time to silence; the gain falls with a quarter of it). */
+export const LIVE_RELEASE = 0.3;
+/** The same key struck again while still ringing: the old copy is cut this fast. */
+export const RETRIGGER = 0.03;
+
+/** Key velocity (1..127) to gain: a gentle curve, full level from ~112, never silent. */
+export function velocityGain(velocity: number): number {
+  return Math.min(1, Math.max(0.05, (velocity / 112) ** 1.6));
+}
+
+type Track = (src: AudioScheduledSourceNode) => () => void;
+
+interface LiveNote {
+  out: GainNode;
+  sources: AudioScheduledSourceNode[];
+}
 
 type ContextFactory = () => AudioContext;
 
@@ -44,6 +66,10 @@ export class WebAudioSynth implements Synth {
   private readonly pending = new Set<() => void>();
   private volume = 1;
   private voiceSetting: SoundVoice = 'samples';
+  private readonly live = new Map<Midi, LiveNote>();
+  /** Keys physically down (live notes may outlast them under the pedal). */
+  private readonly down = new Set<Midi>();
+  private sustain = false;
 
   constructor(
     private readonly createContext: ContextFactory = defaultFactory,
@@ -95,30 +121,98 @@ export class WebAudioSynth implements Synth {
 
   playMidi(notes: readonly Midi[], at: number, dur: number): void {
     const { ctx, master } = this.ensure();
+    for (const midi of notes) this.voiceNote(ctx, master, midi, at, dur, this.track);
+  }
+
+  /** One note in the current voice on `dest`; `track` registers each source it starts. */
+  private voiceNote(
+    ctx: AudioContext,
+    dest: AudioNode,
+    midi: Midi,
+    at: number,
+    dur: number,
+    track: Track,
+  ): void {
     const voice = this.voice;
-    for (const midi of notes) {
-      if (voice === 'samples' && this.samples) {
-        this.pianoVoice(ctx, master, this.samples, midi, at, dur);
-      } else if (voice === 'synth') {
-        playSynthPiano(ctx, master, midi, at, dur, this.track);
-      } else {
-        this.toneVoice(ctx, master, midi, at, dur);
+    if (voice === 'samples' && this.samples) {
+      this.pianoVoice(ctx, dest, this.samples, midi, at, dur, track);
+    } else if (voice === 'synth') {
+      playSynthPiano(ctx, dest, midi, at, dur, track);
+    } else {
+      this.toneVoice(ctx, dest, midi, at, dur, track);
+    }
+  }
+
+  // ---------------------------------------------------------------- live playing
+
+  noteOn(midi: Midi, velocity: number): void {
+    const { ctx, master } = this.ensure();
+    // Chromium may suspend an idle context; the note starts as soon as it resumes.
+    if (ctx.state === 'suspended') void ctx.resume();
+    this.down.add(midi);
+    this.releaseLive(midi, RETRIGGER);
+    const out = ctx.createGain();
+    out.gain.value = velocityGain(velocity);
+    out.connect(master);
+    const note: LiveNote = { out, sources: [] };
+    const track: Track = (src) => {
+      note.sources.push(src);
+      return () => {
+        note.sources = note.sources.filter((s) => s !== src);
+        if (note.sources.length === 0) out.disconnect();
+      };
+    };
+    this.voiceNote(ctx, out, midi, ctx.currentTime, LIVE_HOLD, track);
+    this.live.set(midi, note);
+  }
+
+  noteOff(midi: Midi): void {
+    this.down.delete(midi);
+    if (!this.sustain) this.releaseLive(midi, LIVE_RELEASE);
+  }
+
+  setSustain(down: boolean): void {
+    this.sustain = down;
+    if (down) return;
+    for (const midi of [...this.live.keys()]) {
+      if (!this.down.has(midi)) this.releaseLive(midi, LIVE_RELEASE);
+    }
+  }
+
+  /** Damp a live note to silence over `time` seconds, then stop its sources. */
+  private releaseLive(midi: Midi, time: number): void {
+    const note = this.live.get(midi);
+    if (!note || !this.ctx) return;
+    this.live.delete(midi);
+    const t = this.ctx.currentTime;
+    const gain = note.out.gain;
+    gain.cancelScheduledValues(t);
+    gain.setValueAtTime(gain.value, t);
+    gain.setTargetAtTime(0, t, time / 4);
+    for (const src of note.sources) {
+      try {
+        src.stop(t + time + RELEASE_TAIL);
+      } catch {
+        // Already ended.
       }
     }
   }
 
+  // ---------------------------------------------------------------- voices
+
   private pianoVoice(
     ctx: AudioContext,
-    master: GainNode,
+    master: AudioNode,
     bank: SampleBank,
     midi: Midi,
     at: number,
     dur: number,
+    track: Track,
   ): void {
     const root = nearestSample(midi, [...bank.keys()]);
     const buffer = root === null ? undefined : bank.get(root);
     if (root === null || buffer === undefined) {
-      this.toneVoice(ctx, master, midi, at, dur);
+      this.toneVoice(ctx, master, midi, at, dur, track);
       return;
     }
     const src = ctx.createBufferSource();
@@ -135,12 +229,12 @@ export class WebAudioSynth implements Synth {
     const balanced = this.balance(ctx, src, buffer.numberOfChannels, left, right);
     balanced.connect(gain);
     gain.connect(master);
+    const done = track(src);
     src.onended = () => {
-      this.active.delete(src);
+      done();
       balanced.disconnect();
       gain.disconnect();
     };
-    this.active.add(src);
     src.start(at);
     src.stop(at + dur + DAMPER + RELEASE_TAIL);
   }
@@ -174,7 +268,14 @@ export class WebAudioSynth implements Synth {
   }
 
   /** EarInterval:105–117 tone(): triangle, 20 ms attack, exponential decay over `dur`. */
-  private toneVoice(ctx: AudioContext, master: GainNode, midi: Midi, at: number, dur: number) {
+  private toneVoice(
+    ctx: AudioContext,
+    master: AudioNode,
+    midi: Midi,
+    at: number,
+    dur: number,
+    track: Track,
+  ) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
@@ -182,11 +283,11 @@ export class WebAudioSynth implements Synth {
     gain.gain.setValueAtTime(FLOOR_GAIN, at);
     gain.gain.exponentialRampToValueAtTime(PEAK_GAIN, at + ATTACK);
     gain.gain.exponentialRampToValueAtTime(FLOOR_GAIN, at + dur);
-    this.start(osc, gain, master, at, at + dur + RELEASE_TAIL);
+    this.start(osc, gain, master, at, at + dur + RELEASE_TAIL, track);
   }
 
   /** Register a source for `stop()`; the returned callback forgets it once it has ended. */
-  private readonly track = (src: AudioScheduledSourceNode): (() => void) => {
+  private readonly track: Track = (src) => {
     this.active.add(src);
     return () => this.active.delete(src);
   };
@@ -194,17 +295,18 @@ export class WebAudioSynth implements Synth {
   private start(
     src: AudioScheduledSourceNode,
     gain: GainNode,
-    master: GainNode,
+    master: AudioNode,
     at: number,
     stopAt: number,
+    track: Track,
   ): void {
     src.connect(gain);
     gain.connect(master);
+    const done = track(src);
     src.onended = () => {
-      this.active.delete(src);
+      done();
       gain.disconnect();
     };
-    this.active.add(src);
     src.start(at);
     src.stop(stopAt);
   }

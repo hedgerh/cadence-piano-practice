@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { setPlayMyNotes, usePlayMyNotes } from '../../audio/liveMonitor';
 import { cx } from '../../lib/cx';
 import { appPreferenceIo, chooseMidiDevice } from '../../midi/devicePreference';
 import { useMidiDevices, useMidiHub, useMidiStatus } from '../../midi/hooks';
@@ -13,6 +14,9 @@ export interface MidiPillProps {
   /** `app` (Main:36: "<name> connected", flex) or `task` (Practice:32: name only, inline-flex, pulsing dot). */
   variant?: 'app' | 'task';
 }
+
+/** Menu entries reachable with the arrow keys: the keyboards and the "Play my notes" switch. */
+const MENU_ITEMS = '[role="menuitemradio"], [role="menuitemcheckbox"]';
 
 /** ui.md §4 copy for each status. */
 export function midiPillLabel(status: MidiStatus, variant: 'app' | 'task'): string {
@@ -89,6 +93,7 @@ function LiveMidiPill({ variant }: { variant: 'app' | 'task' }) {
   const trigger = useRef<HTMLButtonElement>(null);
   const menuId = useId();
   const activeId = status.kind === 'connected' ? status.deviceId : null;
+  const playNotes = usePlayMyNotes();
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -108,7 +113,7 @@ function LiveMidiPill({ variant }: { variant: 'app' | 'task' }) {
   // Focus the checked (or first) item when the menu opens.
   useEffect(() => {
     if (!open) return;
-    const items = wrap.current?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]');
+    const items = wrap.current?.querySelectorAll<HTMLButtonElement>(MENU_ITEMS);
     const list = items ? [...items] : [];
     (list.find((el) => el.getAttribute('aria-checked') === 'true') ?? list[0])?.focus();
   }, [open]);
@@ -128,9 +133,7 @@ function LiveMidiPill({ variant }: { variant: 'app' | 'task' }) {
       return;
     }
     e.preventDefault();
-    const items = [
-      ...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'),
-    ];
+    const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>(MENU_ITEMS)];
     if (items.length === 0) return;
     const at = items.indexOf(document.activeElement as HTMLButtonElement);
     const next =
@@ -205,6 +208,19 @@ function LiveMidiPill({ variant }: { variant: 'app' | 'task' }) {
               Meanwhile your computer keys play notes: the home row, A to ;, is C4 to E5.
             </span>
           )}
+          {/* decisions.md 2026-10-13 "Play my notes": off for keyboards with their own sound. */}
+          <span className={styles.menuDivider} aria-hidden="true" />
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={playNotes}
+            className={cx(styles.menuItem, playNotes && styles.menuItemOn)}
+            onClick={() => setPlayMyNotes(!playNotes)}
+            data-testid="play-my-notes"
+          >
+            <span className={styles.menuName}>Play my notes</span>
+            {playNotes && <CheckIcon size={16} />}
+          </button>
         </div>
       )}
     </div>

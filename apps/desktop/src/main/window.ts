@@ -27,6 +27,9 @@ export function createMainWindow(icon?: string): BrowserWindow {
       contextIsolation: true,
       sandbox: true,
       nodeIntegration: false,
+      // decisions.md 2026-10-13 "Play my notes": the first key pressed must sound, before
+      // any click has unlocked audio.
+      autoplayPolicy: 'no-user-gesture-required',
     },
   });
 

@@ -23,6 +23,8 @@ export interface MidiInput {
   readonly status$: Readable<MidiStatus>;
   readonly held$: Readable<ReadonlySet<Midi>>;
   readonly events$: Stream<NoteEvent>;
+  /** Sustain pedal (CC64 ≥ 64) is down (decisions.md 2026-10-13 "Play my notes"). */
+  readonly sustain$: Readable<boolean>;
   start(): Promise<void>;
   stop(): void;
 }
@@ -64,6 +66,7 @@ export abstract class BaseMidiInput implements MidiInput {
   protected readonly status = writable<MidiStatus>({ kind: 'no-device' });
   protected readonly held = writable<ReadonlySet<Midi>>(new Set());
   protected readonly events = emitter<NoteEvent>();
+  protected readonly sustain = writable(false);
 
   get status$(): Readable<MidiStatus> {
     return this.status;
@@ -73,6 +76,9 @@ export abstract class BaseMidiInput implements MidiInput {
   }
   get events$(): Stream<NoteEvent> {
     return this.events;
+  }
+  get sustain$(): Readable<boolean> {
+    return this.sustain;
   }
 
   abstract start(): Promise<void>;
@@ -101,5 +107,6 @@ export abstract class BaseMidiInput implements MidiInput {
 
   protected releaseAll(): void {
     for (const midi of [...this.held.get()]) this.noteOff(midi);
+    this.sustain.set(false);
   }
 }
