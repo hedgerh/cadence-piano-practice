@@ -55,6 +55,7 @@ function LivePractice({ session }: { session: PracticeSession }) {
       markPlayed={markPlayedMode(status, me.data?.settings.showMarkPlayedAlways ?? false)}
       onHint={practice.hint}
       onSkip={practice.skip}
+      onRestart={practice.restart}
       onMarkPlayed={practice.markPlayed}
       onVisibility={practice.setVisibility}
       onFinish={practice.finish}

@@ -136,6 +136,7 @@ function DevPracticeScreen({ search }: { search: string }) {
       markPlayed={markPlayedMode(midi, true)}
       onHint={practice.hint}
       onSkip={practice.skip}
+      onRestart={practice.restart}
       onMarkPlayed={practice.markPlayed}
       onVisibility={practice.setVisibility}
       onFinish={practice.finish}

@@ -79,10 +79,18 @@
   background: var(--key-held);
 }
 .white.tried,
-.black.tried,
-.white.previous,
-.black.previous {
+.black.tried {
   background: var(--sand);
+}
+/* The chord just played (progressions): a teal outline you can find again at a glance
+   (decisions.md 2026-10-14 "Progression help"; it was a faint sand fill). */
+.white.previous {
+  background: var(--teal-tint);
+  box-shadow: inset 0 0 0 3px var(--teal-deep);
+  color: var(--teal-deep);
+}
+.black.previous {
+  background: var(--teal-deep);
 }
 /* A voice that moved too far (no red anywhere: a miss is lavender). */
 .white.far,

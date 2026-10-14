@@ -1,7 +1,7 @@
 // Practice.dc.html:153–196 — derivations from PracticeState to what the screen draws.
 // Pure (no React) so the reducer tests can cover them.
 import { stepNoun, type StepNoun } from '@cadence/content';
-import { hintFor, pretty, type Midi, type PitchClass } from '@cadence/music';
+import { hintFor, midiToPc, pcNumber, pretty, type Midi, type PitchClass } from '@cadence/music';
 import type { KeyState } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import type { KeyboardVariant } from '../../components/music/PianoKeyboard/keyboardLayout';
 import type { EyebrowTone } from '../../components/ui/TaskHeader';
@@ -46,7 +46,7 @@ export function practiceNoun(state: Pick<PracticeState, 'steps'>): StepNoun {
  * Practice:159–170 + engine.md §5: hint 2 lights the target tangerine; a match flashes teal.
  * A scale lights each note teal as it is accepted, so the run so far stays visible (a wrong
  * note clears it: HANDOFF §5 resets silently). A progression draws the chord just played
- * faintly and a voice that moved too far in lavender (decisions.md 2026-10-10).
+ * outlined in teal and a voice that moved too far in lavender (decisions.md 2026-10-10, 2026-10-14).
  */
 export function keyboardStates(state: PracticeState): Record<Midi, KeyState> {
   const out: Record<Midi, KeyState> = {};
@@ -114,23 +114,81 @@ export interface ProgressionPart {
   /** Chord symbol under the numeral ("B♭/D"). */
   sub?: string | undefined;
   state: RomanChipState;
+  /**
+   * The notes you played for a done chord, low to high ("E G♯ B"; a left-hand bass is set off
+   * with a dot: "A · E A C♯"). Undefined until it is played.
+   */
+  played?: string | undefined;
 }
 
-/** A progression step's chord chips: played teal, the one to play tangerine, the rest white. */
+/**
+ * A progression step's chord chips: played teal, the one to play tangerine, the rest white.
+ * Each played chord keeps the notes you used under it (decisions.md 2026-10-14 "Progression
+ * help"), so a rejected move can be retried from where your hand was.
+ */
 export function progressionParts(state: PracticeState): ProgressionPart[] {
   const step = currentStep(state);
   if (!step?.parts || step.match.type !== 'progression') return [];
+  const chords = step.match.chords;
   const done = state.phase === 'listening' ? state.match.index : step.parts.length;
-  return step.parts.map((p, i) => ({
-    label: p.label,
-    sub: p.sub,
-    state: i < done ? 'done' : i === done ? 'current' : 'upcoming',
-  }));
+  return step.parts.map((p, i) => {
+    const voicing = state.match.history[i];
+    const notes = chords[i]?.notes ?? [];
+    return {
+      label: p.label,
+      sub: p.sub,
+      state: i < done ? 'done' : i === done ? 'current' : 'upcoming',
+      played: voicing === undefined ? undefined : playedNames(voicing, notes),
+    };
+  });
+}
+
+/** `voicing` spelled with the chord's own names; an extra lowest note is a left-hand bass. */
+function playedNames(voicing: readonly Midi[], notes: readonly PitchClass[]): string {
+  const name = (m: Midi) => pretty(notes.find((n) => pcNumber(n) === midiToPc(m)) ?? '?');
+  const names = voicing.map(name);
+  if (voicing.length <= notes.length) return names.join(' ');
+  const [bass, ...rest] = names;
+  return `${bass ?? ''} · ${rest.join(' ')}`;
 }
 
 /** True when the right chord was played but a voice moved too far. */
 export function movedTooFar(state: PracticeState): boolean {
   return state.phase === 'listening' && state.match.tooFar.length > 0;
+}
+
+/**
+ * The lavender nudge. Two chords that share no notes (IV → V, V → vi) get the reason
+ * (decisions.md 2026-10-14 "Progression help"): every note moves, so the shape slides toward
+ * the new root, and the top note carries the line.
+ */
+export function tooFarCopy(state: PracticeState): string | null {
+  if (!movedTooFar(state)) return null;
+  const step = currentStep(state);
+  const i = state.match.index;
+  if (step?.match.type === 'progression' && i > 0) {
+    const from = step.match.chords[i - 1];
+    const to = step.match.chords[i];
+    const shared = to?.notes.some((n) => from?.notes.some((m) => pcNumber(m) === pcNumber(n)));
+    const fromRoot = from?.notes[0];
+    const toRoot = to?.notes[0];
+    if (shared === false && fromRoot !== undefined && toRoot !== undefined) {
+      const up = (pcNumber(toRoot) - pcNumber(fromRoot) + 12) % 12 <= 6;
+      const a = step.parts?.[i - 1]?.label ?? pretty(fromRoot);
+      const b = step.parts?.[i]?.label ?? pretty(toRoot);
+      return `**${a}** and **${b}** share no notes, so every note moves: take each one **${up ? 'up' : 'down'}** to the nearest note of ${b}. Listen to the top note.`;
+    }
+  }
+  return 'Right chord, big jump: move the lavender notes less and keep shared notes down.';
+}
+
+/** "Start over" shows once a progression step is under way. */
+export function canRestart(state: PracticeState): boolean {
+  return (
+    state.phase === 'listening' &&
+    currentStep(state)?.match.type === 'progression' &&
+    state.match.index > 0
+  );
 }
 
 /** The caption under the keyboard, by what the current step asks for. */

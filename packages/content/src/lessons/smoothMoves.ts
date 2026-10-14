@@ -26,7 +26,7 @@ export function smoothMovesLesson(): Lesson {
     rows: [],
     voicings: MOVES.map((m) => ({ ...m, notes: [...m.notes] })),
     bridge:
-      'The rule: notes the two chords **share stay down**, and every other note moves **by a step** (at most a whole step). Any shape that follows the rule counts.',
+      'The rule: notes the two chords **share stay down**, and every other note moves **by a step** (at most a whole step). Any shape that follows the rule counts. When two chords share **nothing** (IV → V), every note moves: slide the whole shape to the nearest notes and listen to the top note climb.',
     cta: 'Got it — play C major',
     hear: {
       label: 'Hear I – IV – I – V – I',

@@ -69,6 +69,8 @@ export interface PracticeSessionApi {
   hint: () => void;
   skip: () => void;
   markPlayed: () => void;
+  /** Progression steps: back to the first chord (decisions.md 2026-10-14). */
+  restart: () => void;
   setVisibility: (vis: Visibility) => void;
   finish: () => void;
   finishing: boolean;
@@ -201,6 +203,7 @@ export function usePracticeSession(
     hint: useCallback(() => dispatch({ type: 'HINT', at: Date.now() }), []),
     skip: useCallback(() => dispatch({ type: 'SKIP', at: Date.now() }), []),
     markPlayed: useCallback(() => dispatch({ type: 'MARK_PLAYED', at: Date.now() }), []),
+    restart: useCallback(() => dispatch({ type: 'RESTART_STEP' }), []),
     setVisibility,
     finish,
     finishing,

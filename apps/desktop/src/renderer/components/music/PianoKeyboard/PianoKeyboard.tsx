@@ -5,7 +5,7 @@ import { blackKeys, whiteKeys, type KeyboardVariant } from './keyboardLayout';
 import styles from './PianoKeyboard.module.css';
 
 /**
- * `previous`: the chord just played (progressions), drawn faintly; `far`: a held key that moved
+ * `previous`: the chord just played (progressions), outlined in teal; `far`: a held key that moved
  * too far from it (decisions.md 2026-10-10 "Voice leading").
  */
 export type KeyState = 'idle' | 'held' | 'hint' | 'correct' | 'tried' | 'home' | 'previous' | 'far';

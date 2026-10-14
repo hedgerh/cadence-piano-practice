@@ -24,6 +24,7 @@ import {
   type Visibility,
 } from './practiceReducer';
 import {
+  canRestart,
   chordShort,
   chordStates,
   finishCopy,
@@ -32,10 +33,10 @@ import {
   keyboardStates,
   keyboardStart,
   keyboardVariant,
-  movedTooFar,
   practiceNoun,
   progressionParts,
   progressSegments,
+  tooFarCopy,
   keyProgressView,
   type MarkPlayedMode,
 } from './practiceSelectors';
@@ -54,6 +55,8 @@ export interface PracticeViewProps {
   markPlayed: MarkPlayedMode;
   onHint: () => void;
   onSkip: () => void;
+  /** Progression steps: back to the first chord ("Start over"); omitted = no button. */
+  onRestart?: (() => void) | undefined;
   onMarkPlayed: () => void;
   onVisibility: (vis: Visibility) => void;
   onFinish: () => void;
@@ -82,6 +85,7 @@ export function PracticeView({
   markPlayed,
   onHint,
   onSkip,
+  onRestart,
   onMarkPlayed,
   onVisibility,
   onFinish,
@@ -109,6 +113,7 @@ export function PracticeView({
   const parts = progressionParts(state);
   const variant = keyboardVariant(state);
   const keyStart = keyboardStart(state);
+  const nudge = tooFarCopy(state);
 
   return (
     <div
@@ -162,15 +167,20 @@ export function PracticeView({
                 // decisions.md 2026-10-10 "Voice leading": one chip per chord, in order.
                 <div className={styles.parts} data-testid="progression-parts">
                   {parts.map((p, i) => (
-                    <RomanChip
-                      key={i}
-                      mode="state"
-                      size={64}
-                      numeral={p.label}
-                      {...(p.sub !== undefined ? { sub: p.sub } : {})}
-                      state={p.state}
-                      data-testid={`part-${i}`}
-                    />
+                    <div key={i} className={styles.part}>
+                      <RomanChip
+                        mode="state"
+                        size={64}
+                        numeral={p.label}
+                        {...(p.sub !== undefined ? { sub: p.sub } : {})}
+                        state={p.state}
+                        data-testid={`part-${i}`}
+                      />
+                      {/* decisions.md 2026-10-14 "Progression help": the notes you used. */}
+                      <span className={styles.played} data-testid={`part-played-${i}`}>
+                        {p.played ?? ''}
+                      </span>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -190,9 +200,9 @@ export function PracticeView({
               )}
             </div>
             {names.length > 0 && <NoteChips notes={names} />}
-            {movedTooFar(state) && (
+            {nudge !== null && (
               <span className={styles.nudge} role="status" data-testid="too-far">
-                Right chord, big jump: move the lavender notes less and keep shared notes down.
+                {renderBold(nudge)}
               </span>
             )}
           </>
@@ -264,6 +274,11 @@ export function PracticeView({
                 <OutlineInkButton onClick={onMarkPlayed} data-testid="mark-played">
                   Mark as played
                 </OutlineInkButton>
+              )}
+              {onRestart !== undefined && canRestart(state) && (
+                <TextButton onClick={onRestart} data-testid="restart-progression">
+                  Start over
+                </TextButton>
               )}
               <TextButton onClick={onSkip} data-testid="skip">
                 Skip for now

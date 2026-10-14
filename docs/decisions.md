@@ -228,3 +228,13 @@ Append-only. One entry per architectural or product decision agents must follow.
   - Live notes are kept apart from prompts: `stop()` never cuts them.
 - **Switch**: "Play my notes" in the MIDI pill's menu (`menuitemcheckbox` under the keyboards, on by default), for keyboards with built-in speakers or a DAW. It is a per-computer `localStorage` preference, because it depends on the hardware. Key-ups always reach the synth, so switching off never leaves a note hanging.
 - **First key**: the window allows audio without a user gesture (`autoplayPolicy: 'no-user-gesture-required'`), so the first key pressed sounds before any click.
+
+## 2026-10-14 — Progression help
+
+- **Why**: in Smooth progressions (E major, I–IV–V–I) the owner played IV as E–A–C♯. They then tried the textbook IV → V (every note down: D♯–F♯–B), which moves A down a minor third, and it was rejected. They could not remember where their hand had been, because the faint sand outline of the last chord was easy to miss. A left-hand root under the right hand also left the step listening forever: four notes never matched a three-voice chord.
+- **The rule stays strict.** Every voice still moves at most a whole step. Between chords that share no notes (IV → V, V → vi), that means the whole shape slides toward the new root, and the top note climbs. That line is what the drill is for. The textbook contrary motion belongs with a bass under it (Bass & chords).
+- **The nudge explains it**: when the two chords share no notes, `tooFarCopy` reads "**IV** and **V** share no notes, so every note moves: take each one **up** to the nearest note of V. Listen to the top note." The direction is the root's (up when it rises by six semitones or fewer). Other jumps keep the general nudge. The lesson's bridge says the same.
+- **Trail**: `MatchState.history` keeps every accepted voicing in order. Each chip shows the notes you played under it, spelled with the chord's names, low to high ("E G♯ B"; a left-hand bass set off as "A · E A C♯").
+- **Last chord**: the `previous` key state is now a teal outline (teal-tint fill, teal-deep inset ring and label; black keys teal-deep), not a sand fill.
+- **Start over**: once a progression is under way, a "Start over" text button (`RESTART_STEP`) resets the step to its first chord. Keys still down must be let go first, so the chord being held does not count at once.
+- **Left-hand root, one-hand drills**: without `freeBass`, one extra lowest note on the chord's root (its first note) is set aside. The right hand is graded and measured as before, `bass` applies to the right hand's lowest note, and motion is measured on the top voices of the previous voicing. Any other extra note keeps the step listening, as before.

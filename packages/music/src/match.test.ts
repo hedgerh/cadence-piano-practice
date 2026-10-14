@@ -50,6 +50,7 @@ describe('initialMatchState', () => {
         status: 'idle',
         index: 0,
         played: [],
+        history: [],
         tooFar: [],
         tries: [],
         found: false,
@@ -366,9 +367,49 @@ describe('progression — chords in order, each voice moving at most maxMove', (
     });
   });
 
+  it('keeps every accepted voicing, in order, as the trail', () => {
+    const { last } = run(oneFourOne, [held(...C), held(...F), held(...C)]);
+    expect(last.history).toEqual([
+      [60, 64, 67],
+      [60, 65, 69],
+      [60, 64, 67],
+    ]);
+  });
+
+  // decisions.md 2026-10-14 "Progression help": a left-hand root in a one-hand drill.
+  it('one hand: an extra left-hand root is set aside and the right hand is measured', () => {
+    const { states, last } = run(oneFourOne, [
+      held('C3', ...C),
+      held('F2', ...F),
+      held(...C), // the left hand may also drop out
+    ]);
+    expect(states.map((s) => s.index)).toEqual([1, 2, 3]);
+    expect(last.status).toBe('matched');
+    expect(states[1]?.played).toEqual([41, 60, 65, 69]);
+    expect(stateOf(oneFourOne, held('C3', 'C4', 'E4', 'G4')).index).toBe(1);
+  });
+
+  it('one hand: the extra note must be the root, and the right hand still may not jump', () => {
+    expect(statusOf(oneFourOne, held('E3', ...C))).toBe('partial');
+    const jump = run(oneFourOne, [held('C3', ...C), held('F2', 'F3', 'A3', 'C4')]).last;
+    expect(jump).toMatchObject({ status: 'wrong', tooFar: [53, 57, 60] });
+  });
+
+  it('one hand: an inversion is asked of the right hand, under any left-hand root', () => {
+    const fromFirst: MatchSpec = {
+      type: 'progression',
+      chords: [{ notes: ['C', 'E', 'G'], bass: 'E' }, { notes: ['F', 'A', 'C'] }],
+      maxMove: 2,
+    };
+    expect(stateOf(fromFirst, held('C3', 'E3', 'G3', 'C4')).index).toBe(1);
+    expect(statusOf(fromFirst, held('C3', ...C))).toBe('partial');
+  });
+
   it('the hint shows the next chord voiced nearest to what was played', () => {
     expect(hintFor(oneFourOne)).toEqual({ names: ['C', 'E', 'G'], keys: [60, 64, 67] });
     const afterI = stateOf(oneFourOne, held('C4', 'E4', 'G4'));
     expect(hintFor(oneFourOne, afterI)).toEqual({ names: ['F', 'A', 'C'], keys: [60, 65, 69] });
+    const withRoot = stateOf(oneFourOne, held('C3', 'C4', 'E4', 'G4'));
+    expect(hintFor(oneFourOne, withRoot)?.keys).toEqual([60, 65, 69]);
   });
 });

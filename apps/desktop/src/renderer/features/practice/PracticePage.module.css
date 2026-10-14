@@ -105,6 +105,23 @@
 .parts > * {
   flex: 0 0 88px;
 }
+/* decisions.md 2026-10-14 "Progression help": each chip over the notes you played for it. */
+.part {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.part > :first-child {
+  flex: 0 0 auto;
+}
+.played {
+  min-height: 18px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--teal-deep);
+  white-space: nowrap;
+}
 
 /* The right chord with a too-big jump: lavender, never red. */
 .nudge {

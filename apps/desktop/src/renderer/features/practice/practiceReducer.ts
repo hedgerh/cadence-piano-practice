@@ -69,6 +69,11 @@ export type PracticeAction =
   | { type: 'HINT'; at: number }
   | { type: 'SKIP'; at: number }
   | { type: 'MARK_PLAYED'; at: number }
+  /**
+   * decisions.md 2026-10-14 "Progression help": a progression step back to its first chord
+   * (keys still down must be let go first). Other steps ignore it.
+   */
+  | { type: 'RESTART_STEP' }
   /** 600 ms after a match (effect): matched → advancing. */
   | { type: 'FLASH_DONE' }
   /** advancing → next step in order, then the queue, else finished. */
@@ -247,6 +252,11 @@ export function practiceReducer(state: PracticeState, action: PracticeAction): P
       if (state.phase !== 'listening') return state;
       const s = startTimer(state, action.at);
       return moveNext(resolve(s, 'marked', action.at), action.at);
+    }
+    case 'RESTART_STEP': {
+      const spec = specOf(state);
+      if (state.phase !== 'listening' || spec?.type !== 'progression') return state;
+      return { ...state, match: initialMatchState(spec), armed: state.held.size === 0 };
     }
     case 'FLASH_DONE':
       return state.phase === 'matched' ? { ...state, phase: 'advancing' } : state;

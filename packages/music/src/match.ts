@@ -49,7 +49,9 @@ export type MatchSpec =
    * Each must have exactly its notes (one voice per note) and its `bass` lowest. With `maxMove`,
    * every voice may move at most that many semitones from the voicing the learner actually
    * played before it. With `freeBass`, the lowest note is an extra left-hand bass (the chord's
-   * `bass`): it may jump, and only the notes above it are measured.
+   * `bass`): it may jump, and only the notes above it are measured. Without it, a left-hand
+   * root is still welcome: one extra lowest note on the chord's root (its first note) is set
+   * aside the same way (decisions.md 2026-10-14 "Progression help").
    */
   | {
       type: 'progression';
@@ -69,6 +71,8 @@ export interface MatchState {
    * progression: the last accepted voicing, ascending.
    */
   played: readonly Midi[];
+  /** progression: every accepted voicing in order, as played (the trail; `played` is the last). */
+  history: readonly (readonly Midi[])[];
   /** progression: the right chord, but these held keys moved more than `maxMove`. */
   tooFar: readonly Midi[];
   /** root: MIDI notes played before the tonic was found. */
@@ -91,6 +95,7 @@ export function initialMatchState(_spec: MatchSpec): MatchState {
     status: 'idle',
     index: 0,
     played: [],
+    history: [],
     tooFar: [],
     tries: [],
     found: false,
@@ -201,9 +206,17 @@ function reduceProgression(
   const chord = spec.chords[state.index];
   if (chord === undefined) return state;
   const freeBass = spec.freeBass === true;
-  const upper = freeBass ? held.slice(1) : held;
   const target = new Set(chord.notes.map(pcNumber));
-  const lowest = held[0] ?? 0;
+  const root = chord.notes[0];
+  // One hand: an extra lowest note on the root is a left-hand bass, set aside.
+  const leftRoot =
+    !freeBass &&
+    root !== undefined &&
+    held.length === target.size + 1 &&
+    midiToPc(held[0] ?? 0) === pcNumber(root);
+  const upper = freeBass || leftRoot ? held.slice(1) : held;
+  // `bass` is the lowest note of the measured voices (with freeBass, the left hand itself).
+  const lowest = (freeBass ? held[0] : upper[0]) ?? 0;
   const shapeOk =
     (!freeBass || held.length >= 2) &&
     upper.length === target.size &&
@@ -217,8 +230,7 @@ function reduceProgression(
     return { ...state, status: passing ? 'partial' : 'wrong', tooFar: [] };
   }
   if (state.index > 0 && spec.maxMove !== undefined) {
-    const before = freeBass ? state.played.slice(1) : state.played;
-    const moves = voiceMotion(before, upper);
+    const moves = voiceMotion(measuredVoices(spec, state.played, upper.length), upper);
     const limit = spec.maxMove;
     const tooFar = moves === null ? [] : upper.filter((_, i) => Math.abs(moves[i] ?? 0) > limit);
     if (tooFar.length > 0) return { ...state, status: 'wrong', tooFar };
@@ -228,9 +240,23 @@ function reduceProgression(
     ...state,
     index,
     played: held,
+    history: [...state.history, held],
     tooFar: [],
     status: index >= spec.chords.length ? 'matched' : 'partial',
   };
+}
+
+/**
+ * The voices of an accepted `voicing` that motion is measured on: above the bass with
+ * `freeBass`, otherwise the top `voices` notes (leaving out a one-hand step's left-hand root).
+ */
+function measuredVoices(
+  spec: Extract<MatchSpec, { type: 'progression' }>,
+  voicing: readonly Midi[],
+  voices: number,
+): readonly Midi[] {
+  if (spec.freeBass === true) return voicing.slice(1);
+  return voicing.length > voices ? voicing.slice(voicing.length - voices) : voicing;
 }
 
 const targetOf = (chord: ProgressionChord): ChordTarget =>
@@ -281,7 +307,11 @@ export function hintFor(spec: MatchSpec, state?: MatchState): Hint | null {
       const keys =
         i === 0 || played.length === 0
           ? (progressionPath(spec)[i] ?? [])
-          : nextVoicing(played, targetOf(chord), freeBass);
+          : nextVoicing(
+              freeBass ? played : measuredVoices(spec, played, chord.notes.length),
+              targetOf(chord),
+              freeBass,
+            );
       const names = freeBass ? chord.notes : bassFirst(chord.notes, chord.bass);
       return { names: names.map(pretty), keys };
     }

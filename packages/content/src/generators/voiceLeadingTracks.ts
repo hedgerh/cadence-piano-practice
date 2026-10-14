@@ -189,7 +189,7 @@ export function smoothProgressionsLevel(key: Key): Level {
   const triads = diatonicTriads(key);
   return {
     ...levelBase(key, 'smooth', 'Right hand: keep shared notes, step to the rest.'),
-    note: 'Each note may move **at most a whole step**. Notes the chords share stay down.',
+    note: 'Each note may move **at most a whole step**. Notes the chords share stay down. A left-hand root underneath is welcome.',
     steps: SMOOTH_PROGRESSIONS.map((def) => progressionStep(triads, def, false)),
   };
 }

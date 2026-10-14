@@ -19,6 +19,7 @@ import {
   type PracticeState,
 } from './practiceReducer';
 import {
+  canRestart,
   chordShort,
   chordStates,
   eyebrowFor,
@@ -34,6 +35,7 @@ import {
   progressionParts,
   progressSegments,
   keyProgressView,
+  tooFarCopy,
 } from './practiceSelectors';
 import { withRetry } from './retry';
 
@@ -586,6 +588,62 @@ describe('progression steps (Smooth progressions, C major)', () => {
     s = run([press(3, 'E4', 'G4', 'C5')], s);
     expect(s.phase).toBe('matched');
     expect(keyboardStart(initialPracticeState(session()))).toBeUndefined();
+  });
+
+  // decisions.md 2026-10-14 "Progression help".
+  it('each played chord keeps its notes under its chip, spelled in the key', () => {
+    const e = smoothProgressionsLevel({ tonic: 'E', mode: 'major' }).steps.find(
+      (st) => st.id === 'I-IV-V-I',
+    );
+    if (!e) throw new Error('missing I-IV-V-I');
+    const step = { ...e, lastResult: null, dueOn: null, intervalDays: 0 };
+    let s = initialPracticeState({ steps: [step], results: [], visibility: 'all' });
+    s = run([press(0, 'E4', 'G#4', 'B4'), press(1, 'A2', 'E4', 'A4', 'C#5')], s);
+    expect(progressionParts(s).map((p) => p.played)).toEqual([
+      'E G♯ B',
+      'A · E A C♯',
+      undefined,
+      undefined,
+    ]);
+    // The textbook IV → V (every note down) moves A down a third: the nudge says why.
+    s = run([press(2, 'D#4', 'F#4', 'B4')], s);
+    expect(movedTooFar(s)).toBe(true);
+    expect(tooFarCopy(s)).toBe(
+      '**IV** and **V** share no notes, so every note moves: take each one **up** to the nearest note of V. Listen to the top note.',
+    );
+    s = run([press(3, 'F#4', 'B4', 'D#5')], s);
+    expect(s.match.index).toBe(3);
+    expect(progressionParts(s)[2]?.played).toBe('F♯ B D♯');
+  });
+
+  it('a jump between chords that share a note keeps the general nudge', () => {
+    const s = run([press(0, 'C4', 'E4', 'G4'), press(1, 'F3', 'A3', 'C4')], start());
+    expect(tooFarCopy(s)).toMatch(/^Right chord, big jump/);
+    expect(tooFarCopy(start())).toBeNull();
+  });
+
+  it('Start over goes back to the first chord once the keys are let go', () => {
+    let s = start();
+    expect(canRestart(s)).toBe(false);
+    s = run([press(0, 'C4', 'E4', 'G4'), press(1, 'C4', 'F4', 'A4')], s);
+    expect(canRestart(s)).toBe(true);
+    s = practiceReducer(s, { type: 'RESTART_STEP' });
+    expect(s.match.index).toBe(0);
+    expect(s.match.history).toEqual([]);
+    expect(progressionParts(s)[0]?.state).toBe('current');
+    expect(keyboardStates(s)).toEqual({});
+    // Still holding IV: nothing counts until the keys come up.
+    s = run([press(2, 'C4', 'E4', 'G4')], s);
+    expect(s.match.index).toBe(0);
+    s = run([releaseAll(3), press(4, 'C4', 'E4', 'G4')], s);
+    expect(s.match.index).toBe(1);
+    expect(s.current).toBe(0);
+  });
+
+  it('Start over leaves other steps alone', () => {
+    const s = initialPracticeState(session());
+    expect(practiceReducer(s, { type: 'RESTART_STEP' })).toBe(s);
+    expect(canRestart(s)).toBe(false);
   });
 
   it('progression levels use the three-octave keyboard and their own wording', () => {
