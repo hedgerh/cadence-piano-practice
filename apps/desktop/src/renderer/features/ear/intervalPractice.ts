@@ -28,6 +28,11 @@ export interface PracticeSettings {
   directions: PracticeDirection[];
   /** Pitch classes (0 = C) the intervals start from; C only by default. */
   roots: Pc[];
+  /**
+   * decisions.md 2026-10-15 "Auto next": an answer flashes on the chips with a one-line
+   * verdict, then the next interval comes by itself (no Next button).
+   */
+  autoNext: boolean;
 }
 
 /** Ascending level 2's set, every interval from C: a gentle start. */
@@ -35,7 +40,22 @@ export const DEFAULT_SETTINGS: PracticeSettings = {
   intervals: ['P1', 'm3', 'M3', 'P5', 'P8'],
   directions: ['up'],
   roots: [0],
+  autoNext: false,
 };
+
+/** Auto next: how long a verdict stays up. A miss stays longer, to see the right chip. */
+export const AUTO_NEXT_MS = { right: 600, wrong: 1400 } as const;
+
+export function toggleAutoNext(s: PracticeSettings): PracticeSettings {
+  return { ...s, autoNext: !s.autoNext };
+}
+
+/** Auto next's one-line verdict: "Major 3rd" / "It was a major 3rd". */
+export function quickVerdict(q: PracticeQuestion, correct: boolean): string {
+  const name = INTERVALS.find((i) => i.id === q.interval)?.name ?? q.interval;
+  const article = /^[AEIO]/i.test(name) ? 'an' : 'a';
+  return correct ? name : `It was ${article} ${name.toLowerCase()}`;
+}
 
 export const ALL_ROOTS: readonly Pc[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -188,7 +208,12 @@ export const SETTINGS_KEY = 'cadence.intervalPractice.v1';
 export function parseSettings(raw: string | null): PracticeSettings | null {
   if (raw === null) return null;
   try {
-    const v = JSON.parse(raw) as { intervals?: unknown; directions?: unknown; roots?: unknown };
+    const v = JSON.parse(raw) as {
+      intervals?: unknown;
+      directions?: unknown;
+      roots?: unknown;
+      autoNext?: unknown;
+    };
     const ids = Array.isArray(v.intervals)
       ? v.intervals.filter((x): x is string => typeof x === 'string' && ALL_IDS.has(x))
       : [];
@@ -201,6 +226,7 @@ export function parseSettings(raw: string | null): PracticeSettings | null {
       intervals: normalizeIntervals(ids),
       directions: DIRECTIONS.filter((d) => dirs.includes(d)),
       roots: roots.length > 0 ? roots : [0],
+      autoNext: v.autoNext === true,
     };
   } catch {
     return null;

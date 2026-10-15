@@ -8,6 +8,7 @@ import {
   makeQuestion,
   nextQuestion,
   parseSettings,
+  quickVerdict,
   rootLabel,
   rootNote,
   toggleDirection,
@@ -116,7 +117,10 @@ describe('settings', () => {
     expect(parseSettings('not json')).toBeNull();
     expect(
       parseSettings('{"intervals":["P5","XX","P1"],"directions":["down","sideways"]}'),
-    ).toEqual({ intervals: ['P1', 'P5'], directions: ['down'], roots: [0] });
+    ).toEqual({ intervals: ['P1', 'P5'], directions: ['down'], roots: [0], autoNext: false });
+    expect(
+      parseSettings('{"intervals":["P5"],"directions":["up"],"autoNext":true}')?.autoNext,
+    ).toBe(true);
     expect(
       parseSettings('{"intervals":["P5"],"directions":["up"],"roots":[7,"x",2,40]}')?.roots,
     ).toEqual([2, 7]);
@@ -125,6 +129,13 @@ describe('settings', () => {
 });
 
 describe('tally and feedback', () => {
+  // decisions.md 2026-10-15 "Auto next".
+  it('auto next: a one-line verdict', () => {
+    const q = makeQuestion('M3', 'up', 'C4');
+    expect(quickVerdict(q, true)).toBe('Major 3rd');
+    expect(quickVerdict(makeQuestion('P8', 'up', 'C4'), false)).toBe('It was an octave');
+  });
+
   it('counts right answers per interval', () => {
     let t = addToTally({}, 'm3', true);
     t = addToTally(t, 'm3', false);

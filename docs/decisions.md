@@ -244,3 +244,11 @@ Append-only. One entry per architectural or product decision agents must follow.
 - **Why**: the owner was on progression 3 of 8 in E major and wanted to go back to progression 1.
 - **What**: a "Restart key" text button beside the step count (`RESTART_LEVEL`). It shows once the key is under way and hides once the key is finished. Every step becomes pending again, in level order; the queue, skips and hint are cleared, and keys still down must be let go first.
 - **Saving**: results already saved stay until the step is replayed. A replayed step posts again under its ordinal: `recordStep` upserts on `(session, ordinal)`, keeps the latest result, adds only the XP difference, and does not reschedule review again. The renderer's "already posted" set is keyed by `PracticeState.round`, which `RESTART_LEVEL` increments, together with the ordinal. Leaving mid-restart and coming back resumes from the server's rows, as before.
+
+## 2026-10-15 — Auto next
+
+- **Why**: in interval free practice, the owner wants to drill quickly; clicking Next after every answer was tedious.
+- **What**: an "Auto next" toggle beside the directions. It is saved with the other practice settings and is off by default.
+  - With it on, an answer is shown only on the chips (the right one teal, a wrong pick lavender), plus a one-line verdict: "✓ Major 3rd" or "It was a major 3rd".
+  - The next interval comes after 600 ms when right and 1400 ms when wrong, which leaves time to see the right chip. It plays itself as usual.
+  - The feedback panel (explanation, keyboard, Next) shows only with Auto next off.

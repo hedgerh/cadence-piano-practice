@@ -18,13 +18,16 @@ import styles from './IntervalPracticePage.module.css';
 import {
   addToTally,
   ALL_ROOTS,
+  AUTO_NEXT_MS,
   DIRECTION_LABEL,
   DIRECTIONS,
   feedbackFor,
   loadSettings,
   nextQuestion,
+  quickVerdict,
   rootLabel,
   saveSettings,
+  toggleAutoNext,
   toggleDirection,
   toggleInterval,
   toggleRoot,
@@ -106,6 +109,17 @@ export function IntervalPracticePage() {
     setChosen(id);
     setTally((t) => addToTally(t, question.interval, id === question.interval));
   };
+
+  // Auto next: the verdict flashes, then the next question (which plays itself).
+  const autoNext = settings.autoNext;
+  useEffect(() => {
+    if (!autoNext || !answered) return;
+    const t = setTimeout(
+      () => advance(settings, question),
+      correct ? AUTO_NEXT_MS.right : AUTO_NEXT_MS.wrong,
+    );
+    return () => clearTimeout(t);
+  }, [autoNext, answered, correct, advance, settings, question]);
 
   const totals = useMemo(() => {
     const rows = Object.values(tally);
@@ -194,6 +208,16 @@ export function IntervalPracticePage() {
               );
             })}
           </div>
+          <button
+            type="button"
+            className={cx(styles.toggle, styles.wide, settings.autoNext && styles.on)}
+            aria-pressed={settings.autoNext}
+            title="Go straight to the next interval after each answer"
+            onClick={() => setSettings(toggleAutoNext(settings))}
+            data-testid="practice-auto-next"
+          >
+            <span className={styles.toggleId}>Auto next</span>
+          </button>
           <span className={styles.score} data-testid="practice-score">
             {totals.total === 0 ? 'No answers yet' : `${totals.right} of ${totals.total} right`}
           </span>
@@ -245,7 +269,17 @@ export function IntervalPracticePage() {
               })}
             </div>
 
-            {answered && (
+            {answered && autoNext && (
+              <span
+                className={cx(styles.verdict, correct ? styles.right : styles.wrong)}
+                role="status"
+                data-testid="practice-verdict"
+              >
+                {correct ? '✓ ' : ''}
+                {quickVerdict(question, correct)}
+              </span>
+            )}
+            {answered && !autoNext && (
               <FeedbackPanel
                 correct={correct}
                 {...feedbackFor(question, chosen, correct)}

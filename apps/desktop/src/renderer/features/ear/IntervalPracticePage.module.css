@@ -95,3 +95,20 @@
   font-weight: 700;
   color: var(--muted);
 }
+
+/* decisions.md 2026-10-15 "Auto next": a one-line verdict in place of the feedback panel.
+   Teal for right, lavender for a miss (no red anywhere). */
+.verdict {
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 17px;
+  font-weight: 800;
+}
+.right {
+  background: var(--teal-tint);
+  color: var(--teal-deep);
+}
+.wrong {
+  background: var(--lavender-tint);
+  color: var(--lavender-deep);
+}

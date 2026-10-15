@@ -80,6 +80,31 @@ describe('IntervalPracticePage', () => {
       intervals: ['TT'],
       directions: ['down'],
       roots: [0],
+      autoNext: false,
+    });
+  });
+
+  // decisions.md 2026-10-15 "Auto next".
+  it('auto next: the verdict flashes, then the next interval plays by itself', async () => {
+    const synth = renderPage();
+    fireEvent.click(screen.getByTestId('practice-auto-next'));
+    expect(pressed('practice-auto-next')).toBe('true');
+    await settle();
+    const before = synth.calls.length;
+    fireEvent.click(screen.getByTestId('practice-answer-P5'));
+    expect(screen.queryByTestId('feedback-panel')).toBeNull();
+    const verdict = screen.getByTestId('practice-verdict').textContent ?? '';
+    const right = verdict.startsWith('✓');
+    if (!right) expect(verdict).toMatch(/^It was an? /);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1400);
+    });
+    expect(screen.queryByTestId('practice-verdict')).toBeNull();
+    await settle();
+    expect(synth.calls.length).toBeGreaterThan(before);
+    expect(screen.getByTestId('practice-score').textContent).toMatch(/^[01] of 1 right$/);
+    expect(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}')).toMatchObject({
+      autoNext: true,
     });
   });
 });
