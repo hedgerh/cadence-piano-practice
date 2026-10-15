@@ -236,5 +236,11 @@ Append-only. One entry per architectural or product decision agents must follow.
 - **The nudge explains it**: when the two chords share no notes, `tooFarCopy` reads "**IV** and **V** share no notes, so every note moves: take each one **up** to the nearest note of V. Listen to the top note." The direction is the root's (up when it rises by six semitones or fewer). Other jumps keep the general nudge. The lesson's bridge says the same.
 - **Trail**: `MatchState.history` keeps every accepted voicing in order. Each chip shows the notes you played under it, spelled with the chord's names, low to high ("E G♯ B"; a left-hand bass set off as "A · E A C♯").
 - **Last chord**: the `previous` key state is now a teal outline (teal-tint fill, teal-deep inset ring and label; black keys teal-deep), not a sand fill.
-- **Start over**: once a progression is under way, a "Start over" text button (`RESTART_STEP`) resets the step to its first chord. Keys still down must be let go first, so the chord being held does not count at once.
+- **Restart progression**: once a progression is under way, a "Restart progression" text button (`RESTART_STEP`) resets the step to its first chord. Keys still down must be let go first, so the chord being held does not count at once.
 - **Left-hand root, one-hand drills**: without `freeBass`, one extra lowest note on the chord's root (its first note) is set aside. The right hand is graded and measured as before, `bass` applies to the right hand's lowest note, and motion is measured on the top voices of the previous voicing. Any other extra note keeps the step listening, as before.
+
+## 2026-10-14 — Restart key
+
+- **Why**: the owner was on progression 3 of 8 in E major and wanted to go back to progression 1.
+- **What**: a "Restart key" text button beside the step count (`RESTART_LEVEL`). It shows once the key is under way and hides once the key is finished. Every step becomes pending again, in level order; the queue, skips and hint are cleared, and keys still down must be let go first.
+- **Saving**: results already saved stay until the step is replayed. A replayed step posts again under its ordinal: `recordStep` upserts on `(session, ordinal)`, keeps the latest result, adds only the XP difference, and does not reschedule review again. The renderer's "already posted" set is keyed by `PracticeState.round`, which `RESTART_LEVEL` increments, together with the ordinal. Leaving mid-restart and coming back resumes from the server's rows, as before.

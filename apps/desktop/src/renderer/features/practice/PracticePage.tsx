@@ -56,6 +56,7 @@ function LivePractice({ session }: { session: PracticeSession }) {
       onHint={practice.hint}
       onSkip={practice.skip}
       onRestart={practice.restart}
+      onRestartKey={practice.restartKey}
       onMarkPlayed={practice.markPlayed}
       onVisibility={practice.setVisibility}
       onFinish={practice.finish}

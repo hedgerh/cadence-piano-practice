@@ -17,6 +17,7 @@ import { cx } from '../../lib/cx';
 import { MidiStateBanner } from './MidiStateBanner';
 import styles from './PracticePage.module.css';
 import {
+  canRestartLevel,
   currentStep,
   doneCount,
   HINT_LABELS,
@@ -57,6 +58,8 @@ export interface PracticeViewProps {
   onSkip: () => void;
   /** Progression steps: back to the first chord ("Start over"); omitted = no button. */
   onRestart?: (() => void) | undefined;
+  /** Back to step 1 of the key ("Restart key"); omitted = no button. */
+  onRestartKey?: (() => void) | undefined;
   onMarkPlayed: () => void;
   onVisibility: (vis: Visibility) => void;
   onFinish: () => void;
@@ -86,6 +89,7 @@ export function PracticeView({
   onHint,
   onSkip,
   onRestart,
+  onRestartKey,
   onMarkPlayed,
   onVisibility,
   onFinish,
@@ -142,6 +146,12 @@ export function PracticeView({
           <span className={styles.count} data-testid="practice-count">
             {doneCount(state)} of {total} {noun}s
           </span>
+          {onRestartKey !== undefined && canRestartLevel(state) && (
+            // decisions.md 2026-10-14 "Restart key": back to the first step of this key.
+            <TextButton onClick={onRestartKey} data-testid="restart-key">
+              Restart key
+            </TextButton>
+          )}
         </div>
         {run && (
           <div className={styles.run} role="img" aria-label={run.aria} data-testid="run-progress">
@@ -277,7 +287,7 @@ export function PracticeView({
               )}
               {onRestart !== undefined && canRestart(state) && (
                 <TextButton onClick={onRestart} data-testid="restart-progression">
-                  Start over
+                  Restart progression
                 </TextButton>
               )}
               <TextButton onClick={onSkip} data-testid="skip">

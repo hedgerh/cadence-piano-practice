@@ -71,6 +71,8 @@ export interface PracticeSessionApi {
   markPlayed: () => void;
   /** Progression steps: back to the first chord (decisions.md 2026-10-14). */
   restart: () => void;
+  /** Back to step 1 of the key (decisions.md 2026-10-14 "Restart key"). */
+  restartKey: () => void;
   setVisibility: (vis: Visibility) => void;
   finish: () => void;
   finishing: boolean;
@@ -123,7 +125,8 @@ export function usePracticeSession(
 
   // recordStep: post each new resolution once (idempotent on ordinal). Task 16: a post that
   // keeps failing is parked in memory and re-sent with the next resolution, then by Finish.
-  const posted = useRef<Set<number>>(new Set(session.results.map((r) => r.ordinal)));
+  // Keyed by restart round and ordinal, so a restarted key posts its replayed steps again.
+  const posted = useRef<Set<string>>(new Set(session.results.map((r) => `0:${r.ordinal}`)));
   const queue = useRef(new PostQueue<number>());
   const sessionId = session.sessionId;
   const [xpToast, setXpToast] = useState<XpToast | null>(null);
@@ -146,11 +149,12 @@ export function usePracticeSession(
   }, [xpToast]);
   useEffect(() => {
     for (const r of state.results) {
-      if (posted.current.has(r.ordinal)) continue;
-      posted.current.add(r.ordinal);
+      const key = `${state.round}:${r.ordinal}`;
+      if (posted.current.has(key)) continue;
+      posted.current.add(key);
       post(r);
     }
-  }, [state.results, post]);
+  }, [state.results, state.round, post]);
 
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
@@ -204,6 +208,7 @@ export function usePracticeSession(
     skip: useCallback(() => dispatch({ type: 'SKIP', at: Date.now() }), []),
     markPlayed: useCallback(() => dispatch({ type: 'MARK_PLAYED', at: Date.now() }), []),
     restart: useCallback(() => dispatch({ type: 'RESTART_STEP' }), []),
+    restartKey: useCallback(() => dispatch({ type: 'RESTART_LEVEL', at: Date.now() }), []),
     setVisibility,
     finish,
     finishing,

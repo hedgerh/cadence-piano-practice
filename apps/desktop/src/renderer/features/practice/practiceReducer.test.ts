@@ -8,6 +8,7 @@ import {
 import { noteToMidi, type Midi, type Note } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
 import {
+  canRestartLevel,
   currentStep,
   doneCount,
   durationMs,
@@ -638,6 +639,36 @@ describe('progression steps (Smooth progressions, C major)', () => {
     s = run([releaseAll(3), press(4, 'C4', 'E4', 'G4')], s);
     expect(s.match.index).toBe(1);
     expect(s.current).toBe(0);
+  });
+
+  // decisions.md 2026-10-14 "Restart key".
+  it('Restart key goes back to step 1 with every step pending again', () => {
+    let s = start();
+    expect(canRestartLevel(s)).toBe(false);
+    s = run(
+      [
+        press(0, 'C4', 'E4', 'G4'),
+        press(1, 'C4', 'F4', 'A4'),
+        press(2, 'C4', 'E4', 'G4'),
+        { type: 'FLASH_DONE' },
+        { type: 'ADVANCE', at: 3 },
+        { type: 'SKIP', at: 4 },
+      ],
+      s,
+    );
+    expect(s.current).toBe(2);
+    expect(doneCount(s)).toBe(1);
+    expect(canRestartLevel(s)).toBe(true);
+    s = practiceReducer(s, { type: 'RESTART_LEVEL', at: 5 });
+    expect(s).toMatchObject({ phase: 'listening', current: 0, results: [], queue: [], round: 1 });
+    expect(s.order).toEqual(progSteps.map((_, i) => i).slice(1));
+    expect(s.skippedOnce).toEqual([]);
+    expect(doneCount(s)).toBe(0);
+    expect(currentStep(s)?.id).toBe('I-IV-I');
+    // Keys still down from the last step wait to be let go.
+    expect(s.armed).toBe(false);
+    s = run([releaseAll(6), press(7, 'C4', 'E4', 'G4')], s);
+    expect(s.match.index).toBe(1);
   });
 
   it('Start over leaves other steps alone', () => {

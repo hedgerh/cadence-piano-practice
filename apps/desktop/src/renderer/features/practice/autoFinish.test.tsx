@@ -157,3 +157,23 @@ describe('PracticeView finished state', () => {
     expect(screen.queryByTestId('auto-finish-hint')).toBeNull();
   });
 });
+
+// decisions.md 2026-10-14 "Restart key": replayed steps are posted again (same ordinals).
+describe('usePracticeSession restartKey', () => {
+  it('posts a replayed step again after the key restarts', async () => {
+    const io = fakeIo();
+    const session = practiceSessionFixture({ done: [0, 1], vis: 'all' });
+    const { result } = renderHook(() =>
+      usePracticeSession(session, io, { onFinished: () => undefined }),
+    );
+    expect(result.current.state.current).toBe(2);
+    act(() => result.current.restartKey());
+    expect(result.current.state.current).toBe(0);
+    await act(async () => {
+      result.current.markPlayed();
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(io.recordStep).toHaveBeenCalledTimes(1);
+    expect(io.recordStep).toHaveBeenCalledWith(expect.objectContaining({ ordinal: 0 }));
+  });
+});

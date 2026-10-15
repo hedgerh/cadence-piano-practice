@@ -60,6 +60,11 @@ export interface PracticeState {
   results: readonly Resolution[];
   vis: Visibility;
   timer: PracticeTimer;
+  /**
+   * How many times the key was restarted (`RESTART_LEVEL`). Replayed steps post again under the
+   * same ordinals; the server keeps the latest result and never awards a step's XP twice.
+   */
+  round: number;
 }
 
 export type PracticeAction =
@@ -74,6 +79,11 @@ export type PracticeAction =
    * (keys still down must be let go first). Other steps ignore it.
    */
   | { type: 'RESTART_STEP' }
+  /**
+   * decisions.md 2026-10-14 "Restart key": back to step 1 of the key, every step pending again
+   * (results already saved stay until replayed). Keys still down must be let go first.
+   */
+  | { type: 'RESTART_LEVEL'; at: number }
   /** 600 ms after a match (effect): matched → advancing. */
   | { type: 'FLASH_DONE' }
   /** advancing → next step in order, then the queue, else finished. */
@@ -128,6 +138,7 @@ export function initialPracticeState(
     results,
     vis: session.visibility,
     timer: { startedAt: null, stoppedAt: null, baseMs, stepStartedAt: null },
+    round: 0,
   };
 }
 
@@ -258,6 +269,29 @@ export function practiceReducer(state: PracticeState, action: PracticeAction): P
       if (state.phase !== 'listening' || spec?.type !== 'progression') return state;
       return { ...state, match: initialMatchState(spec), armed: state.held.size === 0 };
     }
+    case 'RESTART_LEVEL': {
+      if (!canRestartLevel(state)) return state;
+      const first = state.steps[0];
+      if (!first) return state;
+      return {
+        ...state,
+        phase: 'listening',
+        current: 0,
+        order: state.steps.map((_, i) => i).slice(1),
+        queue: [],
+        skippedOnce: [],
+        hint: 0,
+        armed: state.held.size === 0,
+        match: initialMatchState(first.match),
+        flash: [],
+        results: [],
+        timer: {
+          ...state.timer,
+          stepStartedAt: state.timer.startedAt !== null ? action.at : null,
+        },
+        round: state.round + 1,
+      };
+    }
     case 'FLASH_DONE':
       return state.phase === 'matched' ? { ...state, phase: 'advancing' } : state;
     case 'ADVANCE':
@@ -268,6 +302,11 @@ export function practiceReducer(state: PracticeState, action: PracticeAction): P
 }
 
 // ---------------------------------------------------------------- selectors
+
+/** "Restart key" shows once the key is under way and not yet finished. */
+export function canRestartLevel(state: PracticeState): boolean {
+  return state.phase === 'listening' && (state.current !== 0 || state.results.length > 0);
+}
 
 export function resultFor(state: PracticeState, ordinal: number): Resolution | undefined {
   return state.results.find((r) => r.ordinal === ordinal);
