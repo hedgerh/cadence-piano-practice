@@ -39,6 +39,12 @@ export type MatchSpec =
       direction?: 'up' | 'down';
       /** Accept each note in any octave (ear play-backs, scales). */
       anyOctave?: boolean;
+      /**
+       * The whole run in any octave, same shape (echoes, arpeggios; decisions.md 2026-10-17
+       * "Melody tracks"): the first note in any octave, then each note exactly the target's
+       * distance from the note played before it.
+       */
+      shape?: boolean;
     }
   /** Name it from a list. */
   | { type: 'choice'; answer: string; options: readonly string[] }
@@ -143,11 +149,18 @@ export function reduceMatch(spec: MatchSpec, state: MatchState, input: MatchInpu
     case 'sequence': {
       if (input.type !== 'noteOn' || state.status === 'matched') return state;
       const midi = input.midi;
+      const shape = spec.shape === true;
       const same = (target: Note): boolean =>
-        spec.anyOctave === true
+        spec.anyOctave === true || shape
           ? midiToPc(noteToMidi(target)) === midiToPc(midi)
           : noteToMidi(target) === midi;
       const prev = state.played[state.played.length - 1];
+      // With `shape`, every note after the first is measured from the note played before it.
+      const before = spec.notes[state.index - 1];
+      const fits = (target: Note): boolean =>
+        shape && prev !== undefined && before !== undefined
+          ? midi - prev === noteToMidi(target) - noteToMidi(before)
+          : same(target);
       const onward =
         spec.anyOctave !== true ||
         spec.direction === undefined ||
@@ -157,7 +170,7 @@ export function reduceMatch(spec: MatchSpec, state: MatchState, input: MatchInpu
       const first = spec.notes[0];
       if (expected === undefined || first === undefined) return state;
       let played: Midi[];
-      if (onward && same(expected)) played = [...state.played, midi];
+      if (onward && fits(expected)) played = [...state.played, midi];
       else if (same(first))
         played = [midi]; // HANDOFF §5: wrong note resets silently
       else played = [];

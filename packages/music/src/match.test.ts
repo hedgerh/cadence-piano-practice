@@ -139,6 +139,31 @@ describe('sequence — ordered note-ons, wrong note resets silently', () => {
     expect(last.status).toBe('matched');
   });
 
+  // decisions.md 2026-10-17 "Melody tracks": the whole run in any octave, same shape.
+  it('shape: any starting octave, then each note the target distance from the last', () => {
+    const arp: MatchSpec = {
+      type: 'sequence',
+      notes: ['C4', 'E4', 'G4', 'C5', 'G4', 'E4', 'C4'],
+      shape: true,
+    };
+    const up = run(
+      arp,
+      ['C5', 'E5', 'G5', 'C6', 'G5', 'E5', 'C5'].map((n) => noteOn(n as Note)),
+    );
+    expect(up.last.status).toBe('matched');
+    const low = run(
+      arp,
+      ['C3', 'E3', 'G3', 'C4', 'G3', 'E3', 'C3'].map((n) => noteOn(n as Note)),
+    );
+    expect(low.last.status).toBe('matched');
+    // The right note name in the wrong octave breaks the shape: back to the start.
+    const broken = run(arp, [noteOn('C4'), noteOn('E4'), noteOn('G3')]);
+    expect(broken.last).toMatchObject({ index: 0, status: 'idle' });
+    // Restarting on the first note's name (any octave) begins a new run.
+    expect(stateOf(arp, noteOn('C2')).index).toBe(1);
+    expect(stateOf(arp, noteOn('E4')).index).toBe(0);
+  });
+
   it('stays matched and ignores held / choose inputs', () => {
     const { last } = run(seq, [noteOn('C4'), noteOn('D4'), noteOn('E4')]);
     expect(reduceMatch(seq, last, noteOn('F4'))).toBe(last);
