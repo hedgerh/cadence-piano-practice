@@ -1,6 +1,6 @@
 // Find the key fixtures over real content (no React): the dev screen and unit tests share them.
 // EarKey.dc.html: Level 1, phrase 2 of 5, one right so far; home E found after trying G, then A.
-import { earTraining, type Level } from '@cadence/content';
+import { earTraining, stepNoun, type Level } from '@cadence/content';
 import { isPitchClass, pcNumber } from '@cadence/music';
 import {
   earReducer,
@@ -43,6 +43,7 @@ export function keySessionFixture(
     levelId,
     levelTitle: level.title,
     levelNote: level.note ?? null,
+    stepNoun: stepNoun(level.steps, level.noun),
     shortTitle: `Find the key · ${level.title}`,
     stageTitle: 'Find the key',
     kind: 'learn',

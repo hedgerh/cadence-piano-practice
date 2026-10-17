@@ -252,3 +252,29 @@ Append-only. One entry per architectural or product decision agents must follow.
   - With it on, an answer is shown only on the chips (the right one teal, a wrong pick lavender), plus a one-line verdict: "✓ Major 3rd" or "It was a major 3rd".
   - The next interval comes after 600 ms when right and 1400 ms when wrong, which leaves time to see the right chip. It plays itself as usual.
   - The feedback panel (explanation, keyboard, Next) shows only with Auto next off.
+
+## 2026-10-17 — Melody tracks
+
+- **Why**: the top two items on the track backlog, roadmap phases 3–4. Arpeggios and chord tones put the strong notes of each chord under the hand. Melody echo trains hearing a line and playing it back. Both build toward improvising.
+- **`sequence.shape`**: the whole run in any octave, same shape.
+  - The first note may be in any octave. Each next note must be exactly the target's distance from the note played before it, in MIDI.
+  - A wrong note resets silently (HANDOFF §5), and the first note's name in any octave starts a new run.
+  - Used by arpeggios (up to the octave and back) and echoes. Chord-tone lines keep `anyOctave`, so each note may be in any octave.
+- **Arpeggios & chord tones** (`arpeggios`, 12 major keys, group "Melody"):
+  - I, IV, V and vi from C4..B4 up to the octave and back, each with a `hint` demo.
+  - Then roots, 3rds and 5ths through I–IV–V–I, and the 3rds of I–V–vi–IV: one note per chord, with `parts` chips (validator: one chip per note of a sequence).
+- **Melody echo** (`melody-echo`, 12 major keys):
+  - 8 phrases per key from `echoPhrase(key, seed, tier)`, seeded by the step key and two per tier:
+    1. 3 notes stepwise from the tonic;
+    2. 4 notes from the tonic back to it, one repeat allowed;
+    3. 5 notes from 1, 3 or 5 to the tonic, with at least one 3rd;
+    4. 5 notes with exactly one leap of a 4th, 5th or octave between chord tones, ending on a chord tone.
+  - Phrases sit in G3..G5. A level never repeats a phrase: the generator avoids earlier ones and the validator checks.
+  - The step names never give the notes away.
+- **Practice sounds**: `useStepSound` (formerly `useHearProgression`).
+  - A progression plays its voice-led path ("Hear it").
+  - A step's `play` sound is a prompt: it plays 300 ms after the step comes up, once per visit (`round:current`), and "Play it again" repeats it.
+  - A `hint` sound is a demo, played only on request ("Hear it").
+  - Starting one stops the previous prompt (live notes are never cut).
+- **Nouns**: `Level.noun` (`arpeggio` | `phrase`) names steps that match types alone can't; `stepNoun(steps, noun)` uses it. `SessionDto.stepNoun` carries it to the practice screen ("Phrase 3 of 8", "3 of 8 phrases"), the plan, the resume card and the Complete screen.
+- **Keyboard**: levels with `shape` sequences use the three-octave keyboard; its window follows the hand (2026-10-12).

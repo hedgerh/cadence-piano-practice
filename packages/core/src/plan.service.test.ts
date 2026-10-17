@@ -221,6 +221,26 @@ describe('PlanService.getToday', () => {
     });
   });
 
+  // decisions.md 2026-10-17 "Melody tracks".
+  it('melody tracks plan with their own nouns', () => {
+    const firstBlock = (trackId: string) => {
+      const { services } = onboarded();
+      services.settings.setTrackSettings({ trackId: 'major-diatonic-chords', active: false });
+      services.settings.setTrackSettings({ trackId: 'ear-training', active: false });
+      services.settings.enroll(trackId);
+      services.settings.markLessonSeen(trackId);
+      return services.plan.getToday().blocks[0];
+    };
+    expect(firstBlock('melody-echo')).toMatchObject({
+      levelId: 'c-major-echo',
+      title: 'C major · 8 phrases to echo',
+    });
+    expect(firstBlock('arpeggios')).toMatchObject({
+      levelId: 'c-major-arpeggios',
+      title: 'C major · arpeggios and chord tones',
+    });
+  });
+
   it('greets by local hour', () => {
     const morning = onboarded('2026-10-01T15:00:00Z'); // 08:00 PDT
     expect(morning.services.plan.getToday().greeting).toBe('Good morning, Harry.');

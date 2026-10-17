@@ -376,6 +376,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       levelId: session.levelId,
       levelTitle: ref.level.title,
       levelNote: ref.level.note ?? null,
+      stepNoun: stepNoun(ref.level.steps, ref.level.noun),
       shortTitle: content.shortTitle(session.levelId),
       stageTitle: ref.stage?.title ?? null,
       kind: session.kind,
@@ -701,15 +702,19 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
     } else if (success) {
       title = `${ref.level.title}, complete`;
       const steps = ref.level.steps;
-      const noun = stepNoun(steps);
+      const noun = stepNoun(steps, ref.level.noun);
       const what =
         noun === 'scale'
           ? `${capitalize(joinAnd(steps.map((s) => s.label.toLowerCase())))}, every note in order.`
           : noun === 'progression'
             ? `All ${numberWord(total)} progressions, every move smooth.`
-            : noun === 'chord' && ref.track.map === 'circle-of-fifths'
-              ? `All ${numberWord(total)} diatonic chords.`
-              : `All ${numberWord(total)} steps.`;
+            : noun === 'arpeggio'
+              ? 'Every arpeggio and chord tone, in your hands.'
+              : noun === 'phrase'
+                ? `All ${numberWord(total)} phrases, played back by ear.`
+                : noun === 'chord' && ref.track.map === 'circle-of-fifths'
+                  ? `All ${numberWord(total)} diatonic chords.`
+                  : `All ${numberWord(total)} steps.`;
       const where =
         ref.track.map === 'circle-of-fifths'
           ? done === 1
@@ -730,7 +735,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       levelTitle: ref.level.title,
       shortTitle,
       isEar: ref.isEar,
-      stepNoun: stepNoun(ref.level.steps),
+      stepNoun: stepNoun(ref.level.steps, ref.level.noun),
       title,
       subtitle,
       completed: success,

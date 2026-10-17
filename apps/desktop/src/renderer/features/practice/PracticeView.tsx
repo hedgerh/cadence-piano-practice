@@ -73,9 +73,13 @@ export interface PracticeViewProps {
   keyProgress?: { position: number; total: number; done: boolean[] } | null;
   /** The session is a circle run (dots count the run, not completion). */
   run?: boolean;
-  /** Progression steps: play the voice-led path ("Hear it"); omitted = no button. */
+  /**
+   * The step's sound: a progression's voice-led path, a demo ("Hear it") or an echo prompt
+   * ("Play it again"); omitted = no button.
+   */
   onHear?: (() => void) | undefined;
   hearing?: boolean;
+  hearLabel?: string;
 }
 
 export function PracticeView({
@@ -99,6 +103,7 @@ export function PracticeView({
   xpToast = null,
   onHear,
   hearing = false,
+  hearLabel = 'Hear it',
   keyProgress = null,
   run: inRun = false,
 }: PracticeViewProps) {
@@ -265,14 +270,14 @@ export function PracticeView({
               >
                 {HINT_LABELS[state.hint]}
               </OutlineInkButton>
-              {onHear !== undefined && parts.length > 0 && (
+              {onHear !== undefined && (
                 <OutlineInkButton
                   icon={<PlayIcon size={18} />}
                   onClick={onHear}
                   disabled={hearing}
                   data-testid="hear-progression"
                 >
-                  Hear it
+                  {hearLabel}
                 </OutlineInkButton>
               )}
               {markPlayed === 'text' && (

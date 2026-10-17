@@ -1,5 +1,5 @@
 // Ear fixtures built from real content (no React): dev screens and unit tests share them.
-import { earTraining, type Level, type Stage } from '@cadence/content';
+import { earTraining, stepNoun, type Level, type Stage } from '@cadence/content';
 import type { EarSession } from './earDrillReducer';
 import type { CompleteDto } from './useEarDrill';
 
@@ -42,6 +42,7 @@ export function earSessionFixture(
     levelId,
     levelTitle: level.title,
     levelNote: level.note ?? null,
+    stepNoun: stepNoun(level.steps, level.noun),
     shortTitle: `${stage.title} · ${level.title}`,
     stageTitle: stage.title,
     kind: 'learn',

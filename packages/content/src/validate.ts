@@ -29,6 +29,8 @@ export interface ValidationError {
 }
 
 const PHRASE_NOTES = 8;
+/** Where `shape` sequences may sit: the three-octave keyboard's two windows, C3..B5. */
+const SHAPE_RANGE = { low: 48, high: 83 } as const;
 
 function formatPath(segments: readonly PropertyKey[]): string {
   return segments
@@ -164,7 +166,19 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
               err(`${path}.notes[${n}]`, `${note} is off the 88 keys`);
             }
           });
-        } else {
+        }
+        // decisions.md 2026-10-17 "Melody tracks": a shape is at least two notes, on the
+        // three-octave keyboard's reach (C3..B5).
+        if (match.type === 'sequence' && match.shape === true) {
+          if (match.notes.length < 2) err(`${path}.notes`, 'a shape needs at least two notes');
+          match.notes.forEach((note, n) => {
+            const m = noteToMidi(note);
+            if (m < SHAPE_RANGE.low || m > SHAPE_RANGE.high) {
+              err(`${path}.notes[${n}]`, `${note} is outside C3..B5`);
+            }
+          });
+        }
+        if (match.type === 'chord') {
           const before = errors.length;
           checkBass(match.notes, match.bass, path);
           const keys = errors.length > before ? [] : (hintFor(match)?.keys ?? []);
@@ -190,9 +204,15 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
   const checkStep = (step: Step, path: string, level: Level): void => {
     checkMatch(step.match, `${path}.match`, level.key);
     if (step.parts) {
-      const chords = step.match.type === 'progression' ? step.match.chords.length : -1;
+      // One chip per chord of a progression, or per note of a sequence (chord tones).
+      const chords =
+        step.match.type === 'progression'
+          ? step.match.chords.length
+          : step.match.type === 'sequence'
+            ? step.match.notes.length
+            : -1;
       if (step.parts.length !== chords) {
-        err(`${path}.parts`, 'parts are one chip per chord of a progression');
+        err(`${path}.parts`, 'parts are one chip per chord of a progression or note of a sequence');
       }
     }
     if (step.play) checkSound(step.play, `${path}.play`);
@@ -219,10 +239,20 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
       ...(level.pool ?? []).map((step, k) => ({ step, path: `${path}.pool[${k}]` })),
     ];
     const stepIds = new Set<string>();
+    const phrases = new Set<string>();
     for (const { step, path: sp } of entries) {
       if (stepIds.has(step.id)) err(`${sp}.id`, `duplicate step id "${step.id}" in ${level.id}`);
       stepIds.add(step.id);
       checkStep(step, sp, level);
+      // An echo level never asks the same phrase twice.
+      if (step.play && step.match.type === 'sequence') {
+        const phrase = step.match.notes.join(' ');
+        if (phrases.has(phrase)) err(`${sp}.match.notes`, `phrase repeated in ${level.id}`);
+        phrases.add(phrase);
+      }
+    }
+    if (level.noun && !level.steps.every((st) => st.match.type === 'sequence')) {
+      err(`${path}.noun`, `"${level.noun}" levels are made of sequences`);
     }
 
     if (!ear) return;

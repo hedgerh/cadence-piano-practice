@@ -9,6 +9,7 @@ import {
   type MatchState,
   type Midi,
 } from '@cadence/music';
+import { stepNoun, type StepNoun } from '@cadence/content';
 import type { ChannelOutput } from '@shared/ipc/contracts';
 
 export type PracticeSession = ChannelOutput<'sessions.get'>;
@@ -65,6 +66,8 @@ export interface PracticeState {
    * same ordinals; the server keeps the latest result and never awards a step's XP twice.
    */
   round: number;
+  /** What the steps are called ("chord", "arpeggio", "phrase"…): the session's, else derived. */
+  noun: StepNoun;
 }
 
 export type PracticeAction =
@@ -103,7 +106,8 @@ export const FLASH_MS = 600;
 const EMPTY_HELD: ReadonlySet<Midi> = new Set();
 
 export function initialPracticeState(
-  session: Pick<PracticeSession, 'steps' | 'results' | 'visibility'>,
+  session: Pick<PracticeSession, 'steps' | 'results' | 'visibility'> &
+    Partial<Pick<PracticeSession, 'stepNoun'>>,
 ): PracticeState {
   const total = session.steps.length;
   const seen = new Set<number>();
@@ -139,6 +143,7 @@ export function initialPracticeState(
     vis: session.visibility,
     timer: { startedAt: null, stoppedAt: null, baseMs, stepStartedAt: null },
     round: 0,
+    noun: session.stepNoun ?? stepNoun(session.steps),
   };
 }
 

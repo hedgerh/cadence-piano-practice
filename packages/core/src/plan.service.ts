@@ -54,10 +54,14 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
     if (steps.every((s) => s.match.type === 'chord')) {
       return `${ref.level.title} · all ${n} diatonic chords`;
     }
-    if (stepNoun(steps) === 'scale') {
+    const noun = stepNoun(steps, ref.level.noun);
+    if (noun === 'scale') {
       return `${ref.level.title} · scale, ${joinAnd(steps.map((s) => s.label.toLowerCase()))}`;
     }
-    if (stepNoun(steps) === 'progression') return `${ref.level.title} · ${n} progressions`;
+    if (noun === 'progression') return `${ref.level.title} · ${n} progressions`;
+    // decisions.md 2026-10-17 "Melody tracks".
+    if (noun === 'arpeggio') return `${ref.level.title} · arpeggios and chord tones`;
+    if (noun === 'phrase') return `${ref.level.title} · ${n} phrases to echo`;
     return `${ref.level.title} · ${n} steps`;
   };
 
@@ -328,7 +332,7 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
         trackId: s.trackId,
         title: content.shortTitle(s.levelId),
         isEar: ref.isEar,
-        stepNoun: stepNoun(ref.level.steps),
+        stepNoun: stepNoun(ref.level.steps, ref.level.noun),
         done,
         total: ref.isEar ? (s.questionOrder?.length ?? done) : ref.level.steps.length,
       };

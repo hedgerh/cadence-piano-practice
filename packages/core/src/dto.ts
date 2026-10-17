@@ -290,6 +290,8 @@ export interface SessionDto {
   levelTitle: string;
   /** Content `Level.note`: a tip the Practice screen shows ("Relative major: **C major**. …"). */
   levelNote: string | null;
+  /** What the level's steps are called ("chord", "arpeggio", "phrase"…). */
+  stepNoun: StepNoun;
   /** "A major" · "Intervals · Level 3". */
   shortTitle: string;
   stageTitle: string | null;

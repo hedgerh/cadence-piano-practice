@@ -76,3 +76,100 @@ export function phrase(key: Key, seed: string, end: PhraseEnd): Note[] {
   }
   throw new RangeError(`no phrase satisfies the rules for seed "${seed}"`);
 }
+
+// ------------------------------------------------------------------ echo phrases
+
+/**
+ * Melody echo (decisions.md 2026-10-17 "Melody tracks"): four tiers of short phrases, two
+ * per tier in each key, from the tonic placed in C4..B4.
+ *   1 — 3 notes from the tonic, scale steps only.
+ *   2 — 4 notes from the tonic back to it, steps (one repeat allowed).
+ *   3 — 5 notes from 1, 3 or 5 to the tonic, steps and 3rds (at least one 3rd).
+ *   4 — 5 notes from 1, 3 or 5 to a chord tone, steps and 3rds plus exactly one leap of a 4th,
+ *       5th or octave between chord tones.
+ */
+export type EchoTier = 1 | 2 | 3 | 4;
+export const ECHO_LENGTH: Readonly<Record<EchoTier, number>> = { 1: 3, 2: 4, 3: 5, 4: 5 };
+/** Leaps (in scale positions) tier 4 may take between chord tones: a 4th, a 5th, an octave. */
+const ECHO_LEAPS = [3, 4, 7] as const;
+
+/**
+ * A deterministic echo phrase in `key` for `tier`. `avoid` lists phrases already used in the
+ * level, so a level never asks the same phrase twice.
+ */
+export function echoPhrase(
+  key: Key,
+  seed: string,
+  tier: EchoTier,
+  avoid: readonly (readonly Note[])[] = [],
+): Note[] {
+  const names = scale(key);
+  const offsets = MODE_OFFSETS[key.mode];
+  const tonicMidi = 60 + pcNumber(key.tonic);
+  const midiAt = (p: number): number =>
+    tonicMidi + 12 * Math.floor(p / 7) + (offsets[mod7(p)] ?? 0);
+  const inRange = (p: number): boolean => {
+    const m = midiAt(p);
+    return m >= PHRASE_RANGE.low && m <= PHRASE_RANGE.high;
+  };
+  const chordTone = (p: number): boolean => CHORD_TONES.has(mod7(p));
+  const length = ECHO_LENGTH[tier];
+  const rand = mulberry32(hashString(seed));
+  const pick = <T>(xs: readonly T[]): T => xs[Math.floor(rand() * xs.length)] as T;
+  const used = new Set(avoid.map((p) => p.join(' ')));
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const positions = [tier <= 2 ? 0 : pick([0, 2, 4])];
+    while (positions.length < length) {
+      const prev = positions[positions.length - 1] ?? 0;
+      const r = rand();
+      const size =
+        tier === 1
+          ? 1
+          : tier === 2
+            ? r < 0.8
+              ? 1
+              : 0
+            : tier === 3
+              ? r < 0.6
+                ? 1
+                : 2
+              : r < 0.3
+                ? pick(ECHO_LEAPS)
+                : r < 0.75
+                  ? 1
+                  : 2;
+      const sign = rand() < 0.5 ? -1 : 1;
+      const next = inRange(prev + sign * size) ? prev + sign * size : prev - sign * size;
+      positions.push(next);
+    }
+    const moves = positions.slice(1).map((p, i) => p - (positions[i] ?? 0));
+    const last = positions[positions.length - 1] ?? 0;
+    const leaps = moves.filter((m) => Math.abs(m) > 2);
+    let ok = positions.every(inRange);
+    if (tier === 1) ok &&= moves.every((m) => Math.abs(m) === 1);
+    if (tier === 2) {
+      ok &&= mod7(last) === 0 && moves.filter((m) => m === 0).length <= 1;
+      ok &&= moves.every((m) => Math.abs(m) <= 1);
+    }
+    if (tier === 3) {
+      ok &&= mod7(last) === 0 && leaps.length === 0 && moves.some((m) => Math.abs(m) === 2);
+      ok &&= moves.every((m) => m !== 0);
+    }
+    if (tier === 4) {
+      const leapAt = moves.findIndex((m) => Math.abs(m) > 2);
+      ok &&= leaps.length === 1 && chordTone(last) && moves.every((m) => m !== 0);
+      ok &&= ECHO_LEAPS.includes(Math.abs(leaps[0] ?? 0) as (typeof ECHO_LEAPS)[number]);
+      ok &&= chordTone(positions[leapAt] ?? 1) && chordTone(positions[leapAt + 1] ?? 1);
+    }
+    if (!ok) continue;
+    const notes = positions.map((p) => {
+      const name = names[mod7(p)];
+      if (name === undefined) throw new RangeError('scale is not 7 notes');
+      return spelledNote(midiAt(p), name);
+    });
+    if (used.has(notes.join(' '))) continue;
+    return notes;
+  }
+  throw new RangeError(`no tier ${tier} echo phrase for seed "${seed}"`);
+}

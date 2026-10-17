@@ -6,7 +6,7 @@ import styles from './PracticePage.module.css';
 import { currentStep, type PracticeSession } from './practiceReducer';
 import { eyebrowFor, markPlayedMode } from './practiceSelectors';
 import { PracticeView } from './PracticeView';
-import { useHearProgression } from './useHearProgression';
+import { useStepSound } from './useStepSound';
 import {
   useLivePracticeIo,
   usePracticeLoader,
@@ -44,7 +44,11 @@ function LivePractice({ session }: { session: PracticeSession }) {
     // decisions.md 2026-10-01 "Hands-free key loop" (off until me.get has loaded).
     autoFinish: me.data?.settings.autoContinue ?? false,
   });
-  const hear = useHearProgression(currentStep(practice.state)?.match);
+  const { state } = practice;
+  const hear = useStepSound(
+    currentStep(state),
+    state.phase === 'listening' ? `${state.round}:${state.current}` : null,
+  );
   return (
     <PracticeView
       state={practice.state}
@@ -68,6 +72,7 @@ function LivePractice({ session }: { session: PracticeSession }) {
       run={session.run === 'circle'}
       onHear={hear.available ? hear.play : undefined}
       hearing={hear.playing}
+      hearLabel={hear.label}
     />
   );
 }

@@ -30,6 +30,7 @@ describe('librarySections', () => {
       ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
       ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
       ['Scales', ['major-scales', 'minor-scales']],
+      ['Melody', ['arpeggios', 'melody-echo']],
       ['Ear training', ['ear-training']],
     ]);
     expect(sections.flatMap((s) => s.cards).length).toBe(buildTracks().length);
@@ -97,6 +98,7 @@ describe('LibraryView', () => {
       'Chords',
       'Voice leading',
       'Scales',
+      'Melody',
       'Ear training',
     ]);
     const scales = screen.getByTestId('library-card-major-scales');

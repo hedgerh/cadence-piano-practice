@@ -11,9 +11,6 @@ import {
   type MatchSpec,
   type Triad,
   diatonicTriads,
-  keySignatureText,
-  keySlug,
-  keyTitle,
   pretty,
 } from '@cadence/music';
 import { numeralAscii } from '../ids';
@@ -21,6 +18,7 @@ import { inversionShapesLesson } from '../lessons/inversionShapes';
 import { smoothMovesLesson } from '../lessons/smoothMoves';
 import type { Level, Step, Track } from '../types';
 import { INVERSIONS, inversionBass } from './inversions';
+import { levelBase, triadAt } from './levelBits';
 
 export const VOICE_LEADING_GROUP = 'Voice leading';
 /** Each voice may move at most a whole step: common tones stay, the rest step. */
@@ -40,26 +38,11 @@ const RECALL: readonly (readonly [degree: number, inv: 1 | 2])[] = [
   [3, 2],
 ];
 
-function triadAt(triads: readonly Triad[], degree: number): Triad {
-  const t = triads[degree];
-  if (t === undefined) throw new RangeError(`no triad on degree ${degree + 1}`);
-  return t;
-}
-
 const notesOf = (t: Triad) => [t.root, t.third, t.fifth];
 const label = (t: Triad, inv: number) => `${t.numeral}${INVERSIONS[inv]?.suffix ?? ''}`;
 /** Chord symbol with the bass after a slash for an inversion: "B♭", "B♭/D", "Gm/D". */
 export const chordSymbol = (t: Triad, inv: number) =>
   inv === 0 ? pretty(t.short) : `${pretty(t.short)}/${pretty(inversionBass(t, inv))}`;
-
-function levelBase(key: Key, suffix: string, blurb: string): Omit<Level, 'steps'> {
-  return {
-    id: `${keySlug(key)}-${suffix}`,
-    title: keyTitle(key),
-    key: { tonic: key.tonic, mode: key.mode },
-    blurb: `${keySignatureText(key).replace(/, /g, ' · ')} ${blurb}`,
-  };
-}
 
 // ------------------------------------------------------------------ Inversion shapes
 

@@ -1,6 +1,6 @@
 // Practice.dc.html:153–196 — derivations from PracticeState to what the screen draws.
 // Pure (no React) so the reducer tests can cover them.
-import { stepNoun, type StepNoun } from '@cadence/content';
+import type { StepNoun } from '@cadence/content';
 import { hintFor, midiToPc, pcNumber, pretty, type Midi, type PitchClass } from '@cadence/music';
 import type { KeyState } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import type { KeyboardVariant } from '../../components/music/PianoKeyboard/keyboardLayout';
@@ -37,9 +37,9 @@ export function progressSegments(state: PracticeState): Segment[] {
   });
 }
 
-/** "chord" for chord levels, "scale" for scale levels: picks the screen's wording. */
-export function practiceNoun(state: Pick<PracticeState, 'steps'>): StepNoun {
-  return stepNoun(state.steps);
+/** "chord" for chord levels, "scale" for scale levels, "phrase" for echoes…: the wording. */
+export function practiceNoun(state: Pick<PracticeState, 'noun'>): StepNoun {
+  return state.noun;
 }
 
 /**
@@ -77,9 +77,16 @@ export function hintNames(state: PracticeState): string[] {
   return hintFor(step.match, state.match)?.names ?? [];
 }
 
-/** Progressions and two-hand work need the three-octave keyboard, for the whole level. */
+/**
+ * Progressions, two-hand work and shapes played in any octave (arpeggios, echoes;
+ * decisions.md 2026-10-17) need the three-octave keyboard, for the whole level.
+ */
 export function keyboardVariant(state: Pick<PracticeState, 'steps'>): KeyboardVariant {
-  return state.steps.some((s) => s.match.type === 'progression') ? 'three-octave' : 'two-octave';
+  const roomy = state.steps.some(
+    (s) =>
+      s.match.type === 'progression' || (s.match.type === 'sequence' && s.match.shape === true),
+  );
+  return roomy ? 'three-octave' : 'two-octave';
 }
 
 /** The three-octave keyboard's two windows: C2..B4 (left-hand bass room) and C3..B5. */
@@ -128,7 +135,17 @@ export interface ProgressionPart {
  */
 export function progressionParts(state: PracticeState): ProgressionPart[] {
   const step = currentStep(state);
-  if (!step?.parts || step.match.type !== 'progression') return [];
+  if (!step?.parts) return [];
+  // A sequence with parts (chord tones): one chip per note, lit as each is played.
+  if (step.match.type === 'sequence') {
+    const done = state.phase === 'listening' ? state.match.index : step.parts.length;
+    return step.parts.map((p, i) => ({
+      label: p.label,
+      sub: p.sub,
+      state: i < done ? 'done' : i === done ? 'current' : 'upcoming',
+    }));
+  }
+  if (step.match.type !== 'progression') return [];
   const chords = step.match.chords;
   const done = state.phase === 'listening' ? state.match.index : step.parts.length;
   return step.parts.map((p, i) => {
@@ -193,7 +210,18 @@ export function canRestart(state: PracticeState): boolean {
 
 /** The caption under the keyboard, by what the current step asks for. */
 export function keyboardCaption(state: PracticeState): string {
-  const match = currentStep(state)?.match;
+  const step = currentStep(state);
+  const match = step?.match;
+  // decisions.md 2026-10-17 "Melody tracks".
+  if (match?.type === 'sequence' && step?.play) {
+    return 'Listen, then play it back in any octave. A wrong note starts the phrase again.';
+  }
+  if (match?.type === 'sequence' && match.shape === true) {
+    return 'Up and back down, starting in any octave. A wrong note starts it again.';
+  }
+  if (match?.type === 'sequence' && step?.parts) {
+    return 'One note for each chord, in any octave. A wrong note starts the line again.';
+  }
   if (match?.type === 'sequence') {
     return 'One note at a time, any octave. Each right note stays lit; a wrong one starts the run again.';
   }
@@ -299,6 +327,12 @@ export function finishCopy(
       return {
         title: `${capital(run)}. Nice.`,
         body: `The ${levelTitle} scale is in your hands now.`,
+      };
+    }
+    if (practiceNoun(state) === 'phrase') {
+      return {
+        title: `All ${word(total)} by ear. Nice.`,
+        body: `You heard ${levelTitle} and played it back.`,
       };
     }
     return { title: `All ${word(total)}. Nice.`, body: `${levelTitle} is in your hands now.` };

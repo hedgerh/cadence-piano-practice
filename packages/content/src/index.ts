@@ -2,6 +2,7 @@
 // engine.md §2: content is generated at runtime from code and validated at startup.
 import { earTraining } from './generators/earTrack';
 import { majorDiatonicChords, minorDiatonicChords } from './generators/keyTrack';
+import { arpeggios, melodyEcho } from './generators/melodyTracks';
 import { majorScales, minorScales } from './generators/scaleTrack';
 import {
   bassAndChords,
@@ -19,9 +20,12 @@ export * from './generators/inversions';
 export * from './generators/voiceLeadingTracks';
 export * from './generators/earTrack';
 export * from './generators/phrase';
+export * from './generators/melodyTracks';
 export * from './lessons/minorPattern';
 export * from './lessons/inversionShapes';
 export * from './lessons/smoothMoves';
+export * from './lessons/arpeggios';
+export * from './lessons/echo';
 export * from './stepNoun';
 
 /**
@@ -37,6 +41,8 @@ export function buildTracks(): Track[] {
     bassAndChords(),
     majorScales(),
     minorScales(),
+    arpeggios(),
+    melodyEcho(),
     earTraining(),
   ];
 }

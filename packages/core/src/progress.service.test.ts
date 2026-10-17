@@ -289,6 +289,21 @@ describe('sessions.finish', () => {
       total: 12,
       subtitle: "All twelve steps. That's your first key on the circle.",
     });
+    // decisions.md 2026-10-17 "Melody tracks": the level's own noun names its steps.
+    expect(finish('c-major-arpeggios')).toMatchObject({
+      stepNoun: 'arpeggio',
+      total: 8,
+      subtitle:
+        "Every arpeggio and chord tone, in your hands. That's your first key on the circle.",
+    });
+    expect(finish('c-major-echo')).toMatchObject({
+      stepNoun: 'phrase',
+      total: 8,
+      subtitle: "All eight phrases, played back by ear. That's your first key on the circle.",
+    });
+    const session = services.progress.startLevel('g-major-echo', 'learn');
+    expect(session.stepNoun).toBe('phrase');
+    expect(session.steps[0]?.play).toMatchObject({ type: 'notes', gapMs: 600 });
   });
 
   it('an incomplete chord level is not completed and earns no level XP', () => {

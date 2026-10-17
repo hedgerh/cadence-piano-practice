@@ -1,9 +1,12 @@
 // docs/engine.md §5 Practice reducer and §6 defaults 1–7 (HANDOFF §5 practice loop).
 import {
+  arpeggiosLevel,
+  echoLevel,
   inversionShapesLevel,
   keyLevel,
   scaleLevel,
   smoothProgressionsLevel,
+  stepNoun,
 } from '@cadence/content';
 import { noteToMidi, type Midi, type Note } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
@@ -54,6 +57,7 @@ function session(results: PracticeSession['results'] = []): PracticeSession {
     levelId: level.id,
     levelTitle: level.title,
     levelNote: level.note ?? null,
+    stepNoun: stepNoun(level.steps, level.noun),
     shortTitle: level.title,
     stageTitle: null,
     kind: 'learn',
@@ -728,5 +732,89 @@ describe('keyProgressView', () => {
       'All keys done',
     );
     expect(keyProgressView(null, false)).toBeNull();
+  });
+});
+
+// decisions.md 2026-10-17 "Melody tracks": arpeggios and echoes are shapes played in any octave;
+// chord tones light one chip per chord; the levels name their own steps.
+describe('melody levels', () => {
+  const stateFor = (level: ReturnType<typeof arpeggiosLevel>) =>
+    initialPracticeState({
+      steps: level.steps.map((st) => ({ ...st, lastResult: null, dueOn: null, intervalDays: 0 })),
+      results: [],
+      visibility: 'all',
+      stepNoun: stepNoun(level.steps, level.noun),
+    });
+  const play = (s: PracticeState, notes: Note[], at = 0): PracticeState =>
+    notes.reduce(
+      (acc, n, i) => practiceReducer(acc, { type: 'NOTE_ON', midi: noteToMidi(n), at: at + i }),
+      s,
+    );
+
+  it('an arpeggio passes an octave up; the level is called arpeggios', () => {
+    let s = stateFor(arpeggiosLevel({ tonic: 'C', mode: 'major' }));
+    expect(practiceNoun(s)).toBe('arpeggio');
+    expect(keyboardVariant(s)).toBe('three-octave');
+    expect(keyboardCaption(s)).toMatch(/^Up and back down/);
+    s = play(s, ['C5', 'E5', 'G5', 'C6', 'G5', 'E5']);
+    expect(s.phase).toBe('listening');
+    s = play(s, ['C5'], 10);
+    expect(s.phase).toBe('matched');
+  });
+
+  it('chord tones light one chip per chord as each note is played', () => {
+    const level = arpeggiosLevel({ tonic: 'C', mode: 'major' });
+    const thirds = level.steps.find((st) => st.id === 'thirds');
+    if (!thirds) throw new Error('missing thirds');
+    let s = initialPracticeState({
+      steps: [{ ...thirds, lastResult: null, dueOn: null, intervalDays: 0 }],
+      results: [],
+      visibility: 'all',
+    });
+    expect(progressionParts(s).map((p) => p.state)).toEqual([
+      'current',
+      'upcoming',
+      'upcoming',
+      'upcoming',
+    ]);
+    expect(keyboardCaption(s)).toMatch(/^One note for each chord/);
+    s = play(s, ['E3', 'A5']);
+    expect(progressionParts(s).map((p) => [p.label, p.sub, p.state])).toEqual([
+      ['I', 'C', 'done'],
+      ['IV', 'F', 'done'],
+      ['V', 'G', 'current'],
+      ['I', 'C', 'upcoming'],
+    ]);
+    s = play(s, ['B4', 'E4'], 5);
+    expect(s.phase).toBe('matched');
+  });
+
+  it('an echo is played back by shape; phrases have their own finish copy', () => {
+    const level = echoLevel({ tonic: 'C', mode: 'major' });
+    let s = stateFor(level);
+    expect(practiceNoun(s)).toBe('phrase');
+    expect(keyboardCaption(s)).toMatch(/^Listen, then play it back/);
+    const first = level.steps[0];
+    if (first?.match.type !== 'sequence') throw new Error('echo steps are sequences');
+    const upOctave = first.match.notes.map(
+      (n) => n.replace(/\d$/, (d) => String(Number(d) + 1)) as Note,
+    );
+    s = play(s, upOctave);
+    expect(s.phase).toBe('matched');
+    const done = {
+      ...s,
+      phase: 'finished' as const,
+      results: level.steps.map((st, i) => ({
+        ordinal: i,
+        stepId: st.id,
+        result: 'clean' as const,
+        hintLevel: 0,
+        elapsedMs: 1,
+      })),
+    };
+    expect(finishCopy(done, 'C major')).toEqual({
+      title: 'All eight by ear. Nice.',
+      body: 'You heard C major and played it back.',
+    });
   });
 });

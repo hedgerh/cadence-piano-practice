@@ -36,10 +36,14 @@ describe('buildTracks', () => {
       'bass-and-chords',
       'major-scales',
       'minor-scales',
+      'arpeggios',
+      'melody-echo',
       'ear-training',
     ]);
     expect(tracks.every((t) => t.available)).toBe(true);
     expect(tracks.map((t) => t.map)).toEqual([
+      'circle-of-fifths',
+      'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
@@ -192,11 +196,13 @@ describe('minor-diatonic-chords', () => {
     expect(at(lesson?.hear?.sounds, 7)).toEqual({ type: 'chord', notes: ['A3', 'C4', 'E4'] });
   });
 
-  it('lessons: the minor pattern, inversion shapes and smooth moves', () => {
+  it('lessons: the minor pattern, inversion shapes, smooth moves, arpeggios and echo', () => {
     expect(tracks.filter((t) => t.lesson).map((t) => t.id)).toEqual([
       'minor-diatonic-chords',
       'inversion-shapes',
       'smooth-progressions',
+      'arpeggios',
+      'melody-echo',
     ]);
   });
 });
@@ -307,6 +313,7 @@ describe('groups (library sections)', () => {
       ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
       ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
       ['Scales', ['major-scales', 'minor-scales']],
+      ['Melody', ['arpeggios', 'melody-echo']],
       ['Ear training', ['ear-training']],
     ]);
     const order = tracks.map((t) => t.group);

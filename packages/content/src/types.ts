@@ -34,6 +34,7 @@ export const MatchSpecSchema: z.ZodType<MatchSpec> = z.lazy(() =>
       notes: z.array(NoteSchema),
       direction: z.enum(['up', 'down']).exactOptional(),
       anyOctave: z.boolean().exactOptional(),
+      shape: z.boolean().exactOptional(),
     }),
     z.object({ type: z.literal('choice'), answer: z.string(), options: z.array(z.string()) }),
     z.object({
@@ -115,6 +116,11 @@ export const LevelSchema = z.object({
   pool: z.array(StepSchema).exactOptional(),
   /** Answer options enabled at this level; the rest render greyed out. */
   activeOptions: z.array(z.string()).exactOptional(),
+  /**
+   * What copy calls this level's steps when the match types alone don't say ("3 of 8
+   * arpeggios", "phrases"); `stepNoun` derives it otherwise (decisions.md 2026-10-17).
+   */
+  noun: z.enum(['arpeggio', 'phrase']).exactOptional(),
 });
 
 /** "Unlocks when <stage> reaches <level>": satisfied when level (N−1) of the stage is passed. */
