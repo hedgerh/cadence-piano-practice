@@ -2,6 +2,7 @@
 export * from './pitch';
 export * from './keys';
 export * from './triads';
+export * from './sevenths';
 export * from './intervals';
 export * from './voicing';
 export * from './voiceLeading';

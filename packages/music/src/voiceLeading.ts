@@ -35,11 +35,16 @@ export function rotateToBass(pcs: readonly Pc[], bass?: Pc): Pc[] {
   return [...pcs.slice(i), ...pcs.slice(0, i)];
 }
 
-/** Close-position voicing with `bass` (or the root) placed in D3..C♯4: the hint placement. */
+/**
+ * Close-position voicing with `bass` (or the root) placed in D3..C♯4: the hint placement. A
+ * chord whose top note would pass B4 (a 7th chord from C♯4) drops an octave, so hints stay on
+ * the practice keyboard (decisions.md 2026-10-18 "7th chords"); triads never reach it.
+ */
 export function placeChord(chord: ChordTarget): Midi[] {
   const [low, ...rest] = rotateToBass(chord.pcs, chord.bass);
   if (low === undefined) return [];
-  return stackAbove(placeRoot(low), rest);
+  const notes = stackAbove(placeRoot(low), rest);
+  return Math.max(...notes) > PRACTICE_RANGE.high ? notes.map((m) => m - 12) : notes;
 }
 
 /**
