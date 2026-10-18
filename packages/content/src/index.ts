@@ -5,6 +5,7 @@ import { majorDiatonicChords, minorDiatonicChords } from './generators/keyTrack'
 import { arpeggios, melodyEcho } from './generators/melodyTracks';
 import { diatonicSeventhChords, twoFiveOne } from './generators/seventhsTracks';
 import { songs } from './generators/songsTrack';
+import { minorProgressions } from './generators/minorProgressionsTrack';
 import { majorScales, minorScales } from './generators/scaleTrack';
 import {
   bassAndChords,
@@ -25,6 +26,7 @@ export * from './generators/phrase';
 export * from './generators/melodyTracks';
 export * from './generators/songsTrack';
 export * from './generators/seventhsTracks';
+export * from './generators/minorProgressionsTrack';
 export * from './lessons/minorPattern';
 export * from './lessons/inversionShapes';
 export * from './lessons/smoothMoves';
@@ -32,6 +34,7 @@ export * from './lessons/arpeggios';
 export * from './lessons/echo';
 export * from './lessons/songs';
 export * from './lessons/sevenths';
+export * from './lessons/minorProgressions';
 export * from './stepNoun';
 
 /**
@@ -45,6 +48,7 @@ export function buildTracks(): Track[] {
     inversionShapes(),
     smoothProgressions(),
     bassAndChords(),
+    minorProgressions(),
     songs(),
     diatonicSeventhChords(),
     twoFiveOne(),

@@ -127,6 +127,11 @@ export const LevelSchema = z.object({
    * arpeggios", "phrases"); `stepNoun` derives it otherwise (decisions.md 2026-10-17).
    */
   noun: z.enum(['arpeggio', 'phrase']).exactOptional(),
+  /**
+   * Spelled notes this level uses outside its key on purpose (decisions.md 2026-10-18 "Notes
+   * outside the key"): a minor key's raised 7th, the blues ♭3 / ♭5 / ♭7.
+   */
+  extraNotes: z.array(PitchClassSchema).exactOptional(),
 });
 
 /** "Unlocks when <stage> reaches <level>": satisfied when level (N−1) of the stage is passed. */

@@ -1,5 +1,5 @@
 // engine.md §1 keys.ts — keys, scales and key signatures (natural minor throughout v1).
-import { MODE_OFFSETS, type PitchClass, pretty, spellOnLetters } from './pitch';
+import { MODE_OFFSETS, type PitchClass, pcName, pcNumber, pretty, spellOnLetters } from './pitch';
 
 export type Mode = 'major' | 'minor';
 export interface Key {
@@ -51,6 +51,28 @@ const NUMBER_WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven
 /** The seven scale degrees, spelled on consecutive letters from the tonic. */
 export function scale(key: Key): PitchClass[] {
   return spellOnLetters(key.tonic, MODE_OFFSETS[key.mode]);
+}
+
+/** Harmonic minor on the key's tonic: natural minor with a raised 7th (the leading tone). */
+export const HARMONIC_MINOR_OFFSETS: readonly number[] = [0, 2, 3, 5, 7, 8, 11];
+
+/**
+ * The harmonic minor scale on `key`'s tonic (decisions.md 2026-10-18 "Minor progressions").
+ * Throws where the raised 7th would need a double sharp (G♯ minor's F𝄪): use the enharmonic
+ * key (`spellableMinor`).
+ */
+export function harmonicMinorScale(key: Key): PitchClass[] {
+  return spellOnLetters(key.tonic, HARMONIC_MINOR_OFFSETS);
+}
+
+/** `key`, or its flat-side twin when its harmonic minor needs a double sharp (G♯ → A♭ minor). */
+export function spellableMinor(key: Key): Key {
+  try {
+    harmonicMinorScale(key);
+    return key;
+  } catch {
+    return { tonic: pcName(pcNumber(key.tonic), 'flats'), mode: key.mode };
+  }
 }
 
 export interface KeySignature {

@@ -1,7 +1,7 @@
 // decisions.md 2026-10-18 "Songs", "7th chords", "Name the progression".
 import { noteToMidi, voiceMotion } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
-import { PROGRESSION_NICKNAMES, buildTracks } from './index';
+import { PROGRESSION_NICKNAMES, buildTracks, validateTracks } from './index';
 import { at, stageById, trackById } from './testUtils';
 
 const tracks = buildTracks();
@@ -134,5 +134,65 @@ describe('ear: name the progression', () => {
     expect(f?.play?.type === 'chords' && f.play.chords.flat().some((n) => n.startsWith('Bb'))).toBe(
       true,
     );
+  });
+});
+
+// decisions.md 2026-10-18 "Minor progressions".
+describe('minor progressions', () => {
+  const minor = trackById(tracks, 'minor-progressions');
+
+  it('12 minor keys; A♭ minor stands in for G♯ minor; the raised 7th is declared', () => {
+    expect(minor.levels?.map((l) => l.key?.tonic)).toEqual([
+      'A',
+      'E',
+      'B',
+      'F#',
+      'C#',
+      'Ab',
+      'Eb',
+      'Bb',
+      'F',
+      'C',
+      'G',
+      'D',
+    ]);
+    const a = at(minor.levels, 0);
+    expect(a.extraNotes).toEqual(['G#']);
+    expect(at(minor.levels, 5).extraNotes).toEqual(['G']);
+  });
+
+  it('i–V–i uses the major V; i–VII–VI–V keeps the natural VII; into V allows a minor 3rd', () => {
+    const steps = at(minor.levels, 0).steps;
+    const byId = (id: string) => steps.find((s) => s.id === id);
+    expect(byId('i-V-i')?.match).toMatchObject({
+      maxMove: 2,
+      chords: [{ notes: ['A', 'C', 'E'] }, { notes: ['E', 'G#', 'B'] }, { notes: ['A', 'C', 'E'] }],
+    });
+    expect(byId('i-VII-VI-V')?.parts?.map((p) => p.sub)).toEqual(['Am', 'G', 'F', 'E']);
+    expect(byId('i-iv-V-i')?.match).toMatchObject({ maxMove: 3 });
+  });
+});
+
+describe('validator: extraNotes', () => {
+  const edited = (edit: (levels: NonNullable<(typeof tracks)[number]['levels']>) => void) => {
+    const copy = structuredClone(tracks);
+    const t = copy.find((x) => x.id === 'minor-progressions');
+    if (!t?.levels) throw new Error('missing');
+    edit(t.levels);
+    return validateTracks(copy).map((e) => e.message);
+  };
+
+  it('without the declared raised 7th, V is out of key; a declared note must be outside', () => {
+    expect(
+      edited((levels) => {
+        delete levels[0]?.extraNotes;
+      }),
+    ).toContain('G# is not in A minor');
+    expect(
+      edited((levels) => {
+        const a = levels[0];
+        if (a) a.extraNotes = ['G#', 'C'];
+      }),
+    ).toContain('C is already in A minor');
   });
 });

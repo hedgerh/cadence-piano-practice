@@ -34,6 +34,7 @@ describe('buildTracks', () => {
       'inversion-shapes',
       'smooth-progressions',
       'bass-and-chords',
+      'minor-progressions',
       'songs',
       'diatonic-sevenths',
       'two-five-one',
@@ -45,6 +46,7 @@ describe('buildTracks', () => {
     ]);
     expect(tracks.every((t) => t.available)).toBe(true);
     expect(tracks.map((t) => t.map)).toEqual([
+      'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
@@ -207,6 +209,7 @@ describe('minor-diatonic-chords', () => {
       'minor-diatonic-chords',
       'inversion-shapes',
       'smooth-progressions',
+      'minor-progressions',
       'songs',
       'diatonic-sevenths',
       'two-five-one',
@@ -320,7 +323,10 @@ describe('groups (library sections)', () => {
   it('every track names a group; tracks of a group are adjacent in display order', () => {
     expect(groupTracks(tracks).map((g) => [g.group, g.tracks.map((t) => t.id)])).toEqual([
       ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
-      ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
+      [
+        'Voice leading',
+        ['inversion-shapes', 'smooth-progressions', 'bass-and-chords', 'minor-progressions'],
+      ],
       ['Songs', ['songs']],
       ['7th chords', ['diatonic-sevenths', 'two-five-one']],
       ['Scales', ['major-scales', 'minor-scales']],

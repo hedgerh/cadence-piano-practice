@@ -96,3 +96,32 @@ describe('7th chords on the keyboard', () => {
     }
   });
 });
+
+// decisions.md 2026-10-18 "Minor progressions".
+describe('harmonic minor', () => {
+  it('raises the 7th: V is major; VII stays natural', async () => {
+    const { harmonicTriads } = await import('./triads');
+    const { harmonicMinorScale, spellableMinor } = await import('./keys');
+    expect(harmonicMinorScale({ tonic: 'A', mode: 'minor' })).toEqual([
+      'A',
+      'B',
+      'C',
+      'D',
+      'E',
+      'F',
+      'G#',
+    ]);
+    const eb = harmonicTriads({ tonic: 'Eb', mode: 'minor' });
+    expect(eb[4]).toMatchObject({
+      numeral: 'V',
+      root: 'Bb',
+      third: 'D',
+      fifth: 'F',
+      quality: 'major',
+    });
+    expect(eb[6]).toMatchObject({ numeral: 'VII', root: 'Db', quality: 'major' });
+    expect(() => harmonicMinorScale({ tonic: 'G#', mode: 'minor' })).toThrow(RangeError);
+    expect(spellableMinor({ tonic: 'G#', mode: 'minor' })).toEqual({ tonic: 'Ab', mode: 'minor' });
+    expect(spellableMinor({ tonic: 'C#', mode: 'minor' })).toEqual({ tonic: 'C#', mode: 'minor' });
+  });
+});

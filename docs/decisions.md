@@ -319,3 +319,27 @@ Append-only. One entry per architectural or product decision agents must follow.
   - the Imaj7–vi7–ii7–V7 turnaround, right hand, then with a left-hand root.
   - The lesson teaches the rule that makes it smooth: each 7th falls to the next 3rd. The voice-leading math was already generic over voice count.
 - **Track map**: `trackPattern` matches 4-note chords against `diatonicSevenths` when no triad matches.
+
+## 2026-10-18 — Notes outside the key
+
+- **Why**: the minor raised 7th and the blues ♭3, ♭5 and ♭7 are outside a key's scale on purpose. The validator rejected them.
+- **What**: `Level.extraNotes` lists the spelled pitch classes a level uses outside its key. `checkInKey` accepts the scale's notes plus these. The validator checks that each extra note really is outside the key, so the list never grows stale.
+
+## 2026-10-18 — Minor progressions
+
+- **What**: a circle track `minor-progressions` (group "Voice leading"), 12 minor keys, 8 steps per key:
+  1. i–iv–i
+  2. i–V–i
+  3. i–iv–V–i
+  4. i–iv–V–i, with a left-hand root
+  5. i–VI–III–VII
+  6. i–VII–VI–V (Andalusian)
+  7. i–VI–VII–i
+  8. ii°–V–i
+- **Music**:
+  - `harmonicMinorScale(key)` gives natural minor with a raised 7th.
+  - `harmonicTriads(key)` gives natural-minor triads with a major V. VII stays the natural major chord, which i–VII–VI–V needs; harmonic minor's vii° and augmented III are not used.
+  - `triadsOn` / `triadOn` build triads on any 7-note scale.
+- **Raised 7th**: each level declares it in `extraNotes`.
+- **G♯ minor**: its raised 7th would be F𝄪, and the pitch model has no double sharps. `spellableMinor` uses A♭ minor in that slot (raised 7th G♮). The circle validator now accepts an enharmonic tonic in a slot.
+- **Into V**: from iv or ii°, one voice must move a minor 3rd. The raised 7th sits an augmented 2nd above the 6th (F → G♯), so no whole-step path exists. Those three steps use `maxMove: 3`, and the level note says why. Everything else keeps the whole-step rule.

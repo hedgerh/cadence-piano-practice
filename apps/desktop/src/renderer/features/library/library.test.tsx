@@ -28,7 +28,10 @@ describe('librarySections', () => {
     const sections = librarySections(libraryFixture());
     expect(sections.map((s) => [s.group, s.cards.map((c) => c.trackId)])).toEqual([
       ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
-      ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
+      [
+        'Voice leading',
+        ['inversion-shapes', 'smooth-progressions', 'bass-and-chords', 'minor-progressions'],
+      ],
       ['Songs', ['songs']],
       ['7th chords', ['diatonic-sevenths', 'two-five-one']],
       ['Scales', ['major-scales', 'minor-scales']],

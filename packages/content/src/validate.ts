@@ -91,11 +91,18 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
   };
 
   /** Every note (or pitch class) is in `key` and spelled for it. */
-  const checkInKey = (notes: readonly string[], path: string, key: Key | undefined): void => {
+  /** The level being checked's `extraNotes` (accepted by `checkInKey` as if in the key). */
+  let levelExtra: readonly PitchClass[] = [];
+  const checkInKey = (
+    notes: readonly string[],
+    path: string,
+    key: Key | undefined,
+    extra: readonly PitchClass[] = levelExtra,
+  ): void => {
     if (!key) return;
     let names: PitchClass[];
     try {
-      names = scale(key);
+      names = [...scale(key), ...extra];
     } catch {
       return; // reported once at the level
     }
@@ -250,6 +257,23 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
       ...level.steps.map((step, k) => ({ step, path: `${path}.steps[${k}]` })),
       ...(level.pool ?? []).map((step, k) => ({ step, path: `${path}.pool[${k}]` })),
     ];
+    // decisions.md 2026-10-18 "Notes outside the key": each extra note really is outside.
+    levelExtra = level.extraNotes ?? [];
+    if (level.key && levelExtra.length > 0) {
+      try {
+        const inKey = new Set(scale(level.key).map(pcNumber));
+        levelExtra.forEach((pc, n) => {
+          if (inKey.has(pcNumber(pc))) {
+            err(
+              `${path}.extraNotes[${n}]`,
+              `${pc} is already in ${keyTitle(level.key ?? { tonic: 'C', mode: 'major' })}`,
+            );
+          }
+        });
+      } catch {
+        // an unspellable key is reported below
+      }
+    }
     const stepIds = new Set<string>();
     const phrases = new Set<string>();
     for (const { step, path: sp } of entries) {
@@ -263,6 +287,7 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
         phrases.add(phrase);
       }
     }
+    levelExtra = [];
     if (level.noun && !level.steps.every((st) => st.match.type === 'sequence')) {
       err(`${path}.noun`, `"${level.noun}" levels are made of sequences`);
     }
@@ -356,7 +381,8 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
       }
       const circle = level.key.mode === 'major' ? CIRCLE_MAJOR : CIRCLE_MINOR;
       const expected = circle[j];
-      if (expected !== undefined && level.key.tonic !== expected) {
+      // An enharmonic twin may stand in (A♭ minor for G♯ minor, whose raised 7th is F𝄪).
+      if (expected !== undefined && pcNumber(level.key.tonic) !== pcNumber(expected)) {
         err(`${lp}.key.tonic`, `level ${j + 1} should be ${expected} (got ${level.key.tonic})`);
       }
       // Diatonic-chord levels: the seven numerals in order.

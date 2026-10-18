@@ -1,5 +1,5 @@
 // engine.md §1 triads.ts — diatonic triads of a key (HANDOFF §4: key → seven chords).
-import { type Key, scale } from './keys';
+import { type Key, harmonicMinorScale, scale } from './keys';
 import { type Pc, type PitchClass, pcNumber, pretty } from './pitch';
 
 export type TriadQuality = 'major' | 'minor' | 'diminished';
@@ -57,23 +57,42 @@ export function triadShort(root: PitchClass, quality: TriadQuality): string {
 
 /** The seven diatonic triads of a key, stacking degrees d, d+2, d+4. */
 export function diatonicTriads(key: Key): Triad[] {
-  const notes = scale(key);
-  return notes.map((root, i) => {
-    const third = notes[(i + 2) % 7];
-    const fifth = notes[(i + 4) % 7];
-    if (third === undefined || fifth === undefined) throw new RangeError('scale is not 7 notes');
-    const pcs: [Pc, Pc, Pc] = [pcNumber(root), pcNumber(third), pcNumber(fifth)];
-    const quality = triadQuality(pcs[0], pcs[1], pcs[2]);
-    return {
-      degree: i + 1,
-      numeral: numeralFor(i + 1, quality),
-      root,
-      third,
-      fifth,
-      pcs,
-      quality,
-      name: triadName(root, quality),
-      short: triadShort(root, quality),
-    };
-  });
+  return triadsOn(scale(key));
+}
+
+/**
+ * A minor key's triads with the leading tone (decisions.md 2026-10-18 "Minor progressions"):
+ * natural minor, except V, which takes the harmonic minor's raised 7th. VII stays the natural
+ * major chord (i–VII–VI–V); harmonic minor's vii° and augmented III are not used.
+ */
+export function harmonicTriads(key: Key): Triad[] {
+  const raised = harmonicMinorScale(key);
+  return diatonicTriads(key).map((t, i) => (i === 4 ? triadOn(raised, i) : t));
+}
+
+/** The seven triads stacked on a seven-note scale `notes` (degrees d, d+2, d+4). */
+export function triadsOn(notes: readonly PitchClass[]): Triad[] {
+  return notes.map((_, i) => triadOn(notes, i));
+}
+
+/** The triad on degree `i` (0-based) of the seven-note scale `notes`. */
+export function triadOn(notes: readonly PitchClass[], i: number): Triad {
+  const root = notes[i];
+  if (root === undefined) throw new RangeError('scale is not 7 notes');
+  const third = notes[(i + 2) % 7];
+  const fifth = notes[(i + 4) % 7];
+  if (third === undefined || fifth === undefined) throw new RangeError('scale is not 7 notes');
+  const pcs: [Pc, Pc, Pc] = [pcNumber(root), pcNumber(third), pcNumber(fifth)];
+  const quality = triadQuality(pcs[0], pcs[1], pcs[2]);
+  return {
+    degree: i + 1,
+    numeral: numeralFor(i + 1, quality),
+    root,
+    third,
+    fifth,
+    pcs,
+    quality,
+    name: triadName(root, quality),
+    short: triadShort(root, quality),
+  };
 }
