@@ -1,0 +1,200 @@
+/* decisions.md 2026-10-18 "Jam" — not in the designs. Built from the app's tokens: the page
+   column and toggles follow Interval practice (IntervalPracticePage.module.css), the chart uses
+   the Practice chips, the keyboard is the three-octave practice keyboard. */
+.page {
+  min-height: 100vh;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px var(--page-x) 48px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.intro {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 34px;
+}
+.lede {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 700;
+  max-width: 62ch;
+}
+
+.settings {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 18px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.bpm {
+  color: var(--ink);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.select {
+  min-height: 44px;
+  padding: 4px 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 800 15px var(--font-body);
+}
+.select:focus-visible,
+.toggle:focus-visible,
+.tempo input:focus-visible {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 2px;
+}
+.tempo input {
+  width: 200px;
+  min-height: 44px;
+  accent-color: var(--tangerine);
+}
+
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.toggle {
+  min-width: 56px;
+  min-height: 44px;
+  padding: 4px 14px;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--muted);
+  font: 800 14px var(--font-body);
+  cursor: pointer;
+}
+.narrow {
+  min-width: 44px;
+  padding: 4px 8px;
+}
+.on {
+  border-color: var(--ink);
+  background: var(--lavender-tint);
+  color: var(--ink);
+}
+
+.blurb {
+  align-self: stretch;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.chart {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.chartChord {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 96px;
+}
+.chartChord > :first-child {
+  align-self: stretch;
+  flex: 0 0 auto;
+}
+.nextLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tangerine-deep);
+}
+
+.position {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 28px;
+}
+.beats {
+  display: flex;
+  gap: 6px;
+}
+.beat {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+.beatOn {
+  background: var(--tangerine);
+}
+.status {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--teal-deep);
+}
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.takes {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 2px solid var(--line);
+}
+.take {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.takeName {
+  font-size: 15px;
+  font-weight: 800;
+  flex: 1 1 auto;
+}

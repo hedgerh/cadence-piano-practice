@@ -9,6 +9,7 @@ export interface RecordedNote {
   /** Absolute synth time, seconds. */
   at: number;
   dur: number;
+  velocity?: number;
 }
 
 /** Silent synth that records every `(midi, at, dur)` it is asked to play (tests, jsdom). */
@@ -33,8 +34,17 @@ export class NullSynth implements Synth {
     return Promise.resolve();
   }
 
-  playMidi(notes: readonly Midi[], at: number, dur: number): void {
-    for (const midi of notes) this.calls.push({ midi, at, dur });
+  playMidi(notes: readonly Midi[], at: number, dur: number, velocity?: number): void {
+    for (const midi of notes) {
+      this.calls.push(velocity === undefined ? { midi, at, dur } : { midi, at, dur, velocity });
+    }
+  }
+
+  /** Clicks, as `{ at, accent }`. */
+  readonly ticks: { at: number; accent: boolean }[] = [];
+
+  tick(at: number, accent: boolean): void {
+    this.ticks.push({ at, accent });
   }
 
   now(): number {
@@ -74,5 +84,6 @@ export class NullSynth implements Synth {
     this.calls.length = 0;
     this.sounds.length = 0;
     this.live.length = 0;
+    this.ticks.length = 0;
   }
 }

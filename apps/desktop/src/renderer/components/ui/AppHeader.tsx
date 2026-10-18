@@ -7,7 +7,7 @@ import { StreakPill } from './StreakPill';
 import { XpPill } from './XpPill';
 
 export interface AppHeaderProps {
-  active: 'today' | 'tracks';
+  active: 'today' | 'tracks' | 'jam';
   streakDays: number;
   xp: number;
   /** Main shows the MIDI pill; Path / EarPath do not (Path:28–36). */
@@ -44,6 +44,14 @@ export function AppHeader({
             aria-current={active === 'tracks' ? 'page' : undefined}
           >
             Tracks
+          </Link>
+          {/* decisions.md 2026-10-18 "Jam": play over a loop, ungraded. */}
+          <Link
+            to="/jam"
+            className={cx(styles.link, active === 'jam' && styles.active)}
+            aria-current={active === 'jam' ? 'page' : undefined}
+          >
+            Jam
           </Link>
         </nav>
       </div>

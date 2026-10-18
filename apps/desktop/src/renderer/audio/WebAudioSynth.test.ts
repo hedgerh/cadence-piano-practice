@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { LIVE_RELEASE, RETRIGGER, velocityGain, WebAudioSynth } from './WebAudioSynth';
+import {
+  LIVE_RELEASE,
+  RETRIGGER,
+  TICK_DECAY,
+  TICK_GAIN_ACCENT,
+  TICK_HZ,
+  TICK_HZ_ACCENT,
+  velocityGain,
+  WebAudioSynth,
+} from './WebAudioSynth';
 
 // docs/engine.md §7 — exact envelope and master chain, checked against a recording fake.
 type Call = [string, ...unknown[]];
@@ -269,5 +278,30 @@ describe('live playing', () => {
     const before = stops(log).length;
     synth.stop();
     expect(stops(log).length).toBe(before);
+  });
+});
+
+// decisions.md 2026-10-18 "Jam": backing at a velocity, and a metronome click.
+describe('jam sounds', () => {
+  it('playMidi with a velocity routes the notes through one gain at that level', () => {
+    const { ctx, log, gains } = fakeContext();
+    const synth = new WebAudioSynth(() => ctx as unknown as AudioContext, noSamples);
+    synth.playMidi([60, 64], 3, 0.5, 64);
+    expect(gains.filter((g) => g.gain.value === velocityGain(64))).toHaveLength(1);
+    expect(log.filter(([k]) => k === 'osc.start')).toHaveLength(2);
+  });
+
+  it('tick: a short square blip, higher and louder on beat 1, cancelled by stop()', () => {
+    const { ctx, log } = fakeContext();
+    const synth = new WebAudioSynth(() => ctx as unknown as AudioContext, noSamples);
+    synth.tick(3, true);
+    synth.tick(3.5, false);
+    expect(log).toContainEqual(['osc.start', 3, 'square', TICK_HZ_ACCENT]);
+    expect(log).toContainEqual(['osc.start', 3.5, 'square', TICK_HZ]);
+    expect(log).toContainEqual(['gain.set', TICK_GAIN_ACCENT, 3]);
+    expect(log).toContainEqual(['gain.exp', 0.0001, 3 + TICK_DECAY]);
+    const before = log.filter(([k]) => k === 'osc.stop').length;
+    synth.stop();
+    expect(log.filter(([k]) => k === 'osc.stop').length).toBe(before + 2);
   });
 });

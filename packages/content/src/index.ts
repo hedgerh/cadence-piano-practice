@@ -42,6 +42,7 @@ export * from './lessons/minorProgressions';
 export * from './lessons/pentatonic';
 export * from './lessons/blues';
 export * from './stepNoun';
+export * from './jam';
 
 /**
  * Every track in display order, kept together by `group` (the library lists groups in the order

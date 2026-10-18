@@ -13,8 +13,16 @@ export interface Synth {
   unlock(): Promise<void>;
   /** Schedule a content Sound (via player.ts); resolves when it has finished sounding. */
   play(sound: Sound, opts?: PlayOptions): Promise<void>;
-  /** Schedule notes together at absolute synth time `at` (seconds) for `dur` seconds. */
-  playMidi(notes: readonly Midi[], at: number, dur: number): void;
+  /**
+   * Schedule notes together at absolute synth time `at` (seconds) for `dur` seconds; with
+   * `velocity` (1..127) they sound that hard (Jam backing and take playback).
+   */
+  playMidi(notes: readonly Midi[], at: number, dur: number, velocity?: number): void;
+  /**
+   * A metronome click at synth time `at` (decisions.md 2026-10-18 "Jam"); `accent` marks
+   * beat 1. `stop()` cancels scheduled clicks.
+   */
+  tick(at: number, accent: boolean): void;
   /** Current synth clock in seconds (AudioContext.currentTime). */
   now(): number;
   /** Silence everything and resolve pending plays. */

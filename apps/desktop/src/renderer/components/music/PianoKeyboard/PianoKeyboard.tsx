@@ -6,9 +6,12 @@ import styles from './PianoKeyboard.module.css';
 
 /**
  * `previous`: the chord just played (progressions), outlined in teal; `far`: a held key that moved
- * too far from it (decisions.md 2026-10-10 "Voice leading").
+ * too far from it (decisions.md 2026-10-10 "Voice leading"). Jam guides (decisions.md
+ * 2026-10-18 "Jam"): `chord` = a tone of the chord playing now, `scale` = a note of the guide
+ * scale; a held key draws over both.
  */
-export type KeyState = 'idle' | 'held' | 'hint' | 'correct' | 'tried' | 'home' | 'previous' | 'far';
+export type KeyState =
+  'idle' | 'held' | 'hint' | 'correct' | 'tried' | 'home' | 'previous' | 'far' | 'chord' | 'scale';
 /** Lighting per MIDI number (enharmonic-safe; build from notes with `keyStates`). */
 export type KeyStates = Readonly<Partial<Record<Midi, KeyState>>>;
 
@@ -17,6 +20,8 @@ const PRIORITY: Readonly<Record<KeyState, number>> = {
   idle: 0,
   tried: 1,
   previous: 1,
+  scale: 1,
+  chord: 1,
   held: 2,
   hint: 3,
   home: 4,

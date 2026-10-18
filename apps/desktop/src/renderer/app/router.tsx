@@ -3,6 +3,7 @@ import { devRoutes } from '../dev/routes';
 import { TodayPage } from '../features/today/TodayPage';
 import { LibraryPage } from '../features/library/LibraryPage';
 import { TracksRoute } from '../features/path/TracksRoute';
+import { JamPage } from '../features/jam/JamPage';
 import { LearnPage } from '../features/learn/LearnPage';
 import { PracticePage } from '../features/practice/PracticePage';
 import { CompletePage } from '../features/complete/CompletePage';
@@ -31,6 +32,7 @@ export function createAppRouter(opts: RouterOptions) {
     { path: '/ear/:levelId', element: <EarDrillPage /> },
     // decisions.md 2026-10-11 "Interval practice": free drill, nothing recorded.
     { path: '/ear-practice/intervals', element: <IntervalPracticePage /> },
+    { path: '/jam', element: <JamPage /> },
     { path: '*', element: <Navigate to="/" replace /> },
   ];
   if (opts.devRoutes) routes.push(...devRoutes);

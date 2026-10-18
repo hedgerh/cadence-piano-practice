@@ -365,3 +365,22 @@ Append-only. One entry per architectural or product decision agents must follow.
   - The form's repeated bars collapse (I7–IV7–I7–V7–IV7–I7): you can't play a held chord "again". The step name gives the bar map.
 - **Out-of-key notes**: the ♭3 and ♭7 the dominants bring (E♭ and B♭ in C) are declared in `extraNotes`, computed as every chord tone outside the key.
 - **G♭ major**: its IV7 would be C♭7, which needs B𝄫. `spellableBlues` uses F♯ major in that slot (B7 = B D♯ F♯ A).
+
+## 2026-10-18 — Jam
+
+- **What**: `/jam`, a header tab next to Today and Tracks. You pick a progression, a key and a tempo, and play over a looping backing. It is **ungraded**: no session, no XP, no plan block. Only the last-used settings are kept (`localStorage`). Roadmap phases 3 and 5.
+- **Content**: `JAM_PRESETS` and `jamChart(preset, tonic)`: the chords spelled in the key, with bars and a guide scale. Minor presets use the major V; the blues preset uses dominant 7ths and the blues scale. G♯ minor plays as A♭ minor and G♭ blues as F♯, as in the tracks.
+- **Synth**:
+  - `playMidi(notes, at, dur, velocity?)` gives the backing and replayed takes a level.
+  - `tick(at, accent)` is a 30 ms square blip, higher and louder on beat 1. `stop()` cancels scheduled clicks too.
+- **Scheduling**: `JamTransport` is a look-ahead scheduler. Every 25 ms `pump()` schedules each beat that starts within the next 0.2 s, one beat at a time from a cursor. So:
+  - nothing is scheduled twice;
+  - a tempo change applies from the next beat;
+  - a bounded run (take playback) ends cleanly.
+  - `jamTiming.eventsForBeat` (pure) decides each beat: count-in clicks; the click; the left-hand root on each chord's first beat; and the right-hand chord, voice-led around the loop (`voiceLead` with a free bass), held for its length or pulsed on every beat.
+- **Guides**: new `chord` and `scale` key states on the three-octave keyboard (C3–B5): the chord playing now, teal-outlined, and the guide scale, sand. Held keys draw over both.
+- **Takes**:
+  - Recording starts at the top of the next loop and lasts 1, 2 or 4 loops. The tempo is locked meanwhile.
+  - MIDI note events are converted to the synth clock with an offset captured when recording is armed.
+  - A take keeps each note's start, length and velocity. Play back restores the take's progression, key and tempo and replays it over the backing.
+  - The newest 5 are kept for the visit. They are not saved to disk yet.

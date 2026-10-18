@@ -34,6 +34,12 @@ export const COMPRESSOR_RATIO = 4;
 export const PIANO_GAIN = 0.9;
 /** After `dur` the key is let go: the damper fades the string out over this long. */
 export const DAMPER = 0.4;
+/** Metronome click (Jam): a short square blip, higher and louder on beat 1. */
+export const TICK_HZ = 1500;
+export const TICK_HZ_ACCENT = 2000;
+export const TICK_GAIN = 0.12;
+export const TICK_GAIN_ACCENT = 0.2;
+export const TICK_DECAY = 0.03;
 /** A live note sounds at most this long while held (every voice has decayed by then). */
 export const LIVE_HOLD = 10;
 /** Key up: the live damper (time to silence; the gain falls with a quarter of it). */
@@ -119,9 +125,38 @@ export class WebAudioSynth implements Synth {
     return this.ensure().ctx.currentTime;
   }
 
-  playMidi(notes: readonly Midi[], at: number, dur: number): void {
+  playMidi(notes: readonly Midi[], at: number, dur: number, velocity?: number): void {
     const { ctx, master } = this.ensure();
-    for (const midi of notes) this.voiceNote(ctx, master, midi, at, dur, this.track);
+    if (velocity === undefined) {
+      for (const midi of notes) this.voiceNote(ctx, master, midi, at, dur, this.track);
+      return;
+    }
+    // One gain per call scales every note to the velocity; it goes once they have all ended.
+    const out = ctx.createGain();
+    out.gain.value = velocityGain(velocity);
+    out.connect(master);
+    let sounding = 0;
+    const track: Track = (src) => {
+      sounding += 1;
+      const done = this.track(src);
+      return () => {
+        done();
+        sounding -= 1;
+        if (sounding === 0) out.disconnect();
+      };
+    };
+    for (const midi of notes) this.voiceNote(ctx, out, midi, at, dur, track);
+  }
+
+  tick(at: number, accent: boolean): void {
+    const { ctx, master } = this.ensure();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = accent ? TICK_HZ_ACCENT : TICK_HZ;
+    gain.gain.setValueAtTime(accent ? TICK_GAIN_ACCENT : TICK_GAIN, at);
+    gain.gain.exponentialRampToValueAtTime(FLOOR_GAIN, at + TICK_DECAY);
+    this.start(osc, gain, master, at, at + TICK_DECAY + 0.01, this.track);
   }
 
   /** One note in the current voice on `dest`; `track` registers each source it starts. */

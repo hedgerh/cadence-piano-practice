@@ -6,14 +6,14 @@ The owner's goal: **improvise** — string chords together fluidly and make up m
 
 Each phase builds on the one before it. ✅ = in Cadence today.
 
-| Phase                        | Skill                                                                                                                                                                        | Why it matters for improvising                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| 0 Foundations ✅             | Diatonic triads in every key, major/minor scales; ear: intervals → degrees → chord quality → chords in a key → find the key                                                  | The vocabulary: what chords and notes belong to a key                              |
-| **1 Hand shapes & movement** | Inversions as shapes you can find by name; voice leading (shared notes held, the rest move by step); left-hand bass under right-hand chords                                  | Chords connect without the hand jumping, so playing sounds fluid instead of blocky |
-| 2 Progression vocabulary     | Common progressions from numerals in any key (I–V–vi–IV, I–vi–IV–V, ii–V–I, i–VI–III–VII, 12-bar blues); hearing and naming them; 7th chords (ii7–V7–Imaj7)                  | Improvising over a progression means knowing it in your hands and ears             |
-| 3 Time & comping             | A progression in time over a slow, adjustable loop; broken chords and arpeggios; simple left-hand patterns                                                                   | Real music has a pulse. The first place tempo appears, and only as an opt-in       |
-| 4 Melody                     | Major/minor pentatonic and blues scales; chord tones vs passing tones; landing on a chord tone at each change; echo phrases (call and response); motifs: repeat, shift, vary | The raw material of melodic improvisation, and the habit that makes it intentional |
-| 5 Improvise                  | Left hand comps a progression while the right hand improvises over a backing loop; record and listen back; chord symbols / lead sheets                                       | The goal itself                                                                    |
+| Phase                       | Skill                                                                                                                                                                        | Why it matters for improvising                                                     |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 0 Foundations ✅            | Diatonic triads in every key, major/minor scales; ear: intervals → degrees → chord quality → chords in a key → find the key                                                  | The vocabulary: what chords and notes belong to a key                              |
+| 1 Hand shapes & movement ✅ | Inversions as shapes you can find by name; voice leading (shared notes held, the rest move by step); left-hand bass under right-hand chords                                  | Chords connect without the hand jumping, so playing sounds fluid instead of blocky |
+| 2 Progression vocabulary ✅ | Common progressions from numerals in any key (I–V–vi–IV, I–vi–IV–V, ii–V–I, i–VI–III–VII, 12-bar blues); hearing and naming them; 7th chords (ii7–V7–Imaj7)                  | Improvising over a progression means knowing it in your hands and ears             |
+| 3 Time & comping ✅         | A progression in time over a slow, adjustable loop; broken chords and arpeggios; simple left-hand patterns                                                                   | Real music has a pulse. The first place tempo appears, and only as an opt-in       |
+| 4 Melody ✅                 | Major/minor pentatonic and blues scales; chord tones vs passing tones; landing on a chord tone at each change; echo phrases (call and response); motifs: repeat, shift, vary | The raw material of melodic improvisation, and the habit that makes it intentional |
+| 5 Improvise ✅              | Left hand comps a progression while the right hand improvises over a backing loop; record and listen back; chord symbols / lead sheets                                       | The goal itself                                                                    |
 
 ## How Cadence helps
 
@@ -26,3 +26,20 @@ Each phase builds on the one before it. ✅ = in Cadence today.
 | 3     | Jam v1: loop a progression and play along; optional soft "on the change" feedback                                                                                                                          | a timing clock and loop scheduler                                                                 |
 | 4     | Pentatonic/blues scale tracks (content only, `sequence`); an Echo drill (the app plays a phrase, you play it back: `phrase.ts` + `sequence`); a "Target tones" drill (land on a chord tone at each change) | a target-tone match                                                                               |
 | 5     | Jam v2: both hands over a backing, chord/scale-tone guides, record and playback                                                                                                                            | MIDI recording and replay                                                                         |
+
+## Built (2026-10-18)
+
+Every phase now has its Cadence feature. Phases 1–4 are tracks; phases 3 and 5 meet in Jam.
+
+- **Phase 1**: Voice leading tracks (task 18).
+- **Phase 2**: Songs, Name the progression (ear), Diatonic 7th chords, ii–V–I, Minor progressions and 12-bar blues (tasks 20, 21).
+- **Phase 3**: Arpeggios & chord tones (task 19) and Jam's backing loop at a tempo you choose (task 22).
+- **Phase 4**: Melody echo (task 19), Pentatonic scales and Blues scale (task 21).
+- **Phase 5**: Jam, with chord-tone and scale guides, and record and play back (task 22).
+
+Still open:
+
+- A "target tones" drill that grades landing on a chord tone at each change.
+- Soft "on the change" timing feedback in Jam.
+- Saving or exporting Jam takes.
+- Lead sheets.

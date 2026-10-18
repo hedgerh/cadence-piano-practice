@@ -92,6 +92,21 @@
 .black.previous {
   background: var(--teal-deep);
 }
+/* Jam guides (decisions.md 2026-10-18 "Jam"): chord tones teal-outlined, scale tones sand. */
+.white.chord {
+  background: var(--teal-tint);
+  box-shadow: inset 0 0 0 3px var(--teal);
+  color: var(--teal-deep);
+}
+.black.chord {
+  background: var(--teal);
+}
+.white.scale {
+  background: var(--sand);
+}
+.black.scale {
+  box-shadow: inset 0 0 0 3px var(--dune);
+}
 /* A voice that moved too far (no red anywhere: a miss is lavender). */
 .white.far,
 .black.far {
@@ -110,6 +125,7 @@
 .black.held,
 .black.tried,
 .black.previous,
-.black.far {
+.black.far,
+.black.chord {
   box-shadow: inset 0 0 0 3px var(--ink);
 }
