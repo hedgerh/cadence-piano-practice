@@ -196,3 +196,36 @@ describe('validator: extraNotes', () => {
     ).toContain('C is already in A minor');
   });
 });
+
+// decisions.md 2026-10-18 "Pentatonic and blues scales".
+describe('pentatonic and blues scales', () => {
+  it('C major: the major pentatonic, then A minor pentatonic on the same keys', () => {
+    const c = at(trackById(tracks, 'pentatonic-scales').levels, 0);
+    expect(c.steps.map((s) => s.label)).toEqual([
+      'Major up',
+      'Major down',
+      'Minor up',
+      'Minor down',
+    ]);
+    expect(c.steps[0]?.match).toEqual({
+      type: 'sequence',
+      notes: ['C3', 'D3', 'E3', 'G3', 'A3', 'C4'],
+      direction: 'up',
+      anyOctave: true,
+    });
+    expect(c.steps[2]?.match).toMatchObject({ notes: ['A3', 'C4', 'D4', 'E4', 'G4', 'A4'] });
+    expect(c.note).toBe(
+      'Same five notes: **C major pentatonic** is **A minor pentatonic** from A.',
+    );
+  });
+
+  it('A blues scale: up and down with the blue note declared', () => {
+    const a = at(trackById(tracks, 'blues-scale').levels, 0);
+    expect(a.extraNotes).toEqual(['Eb']);
+    expect(a.steps.map((s) => s.label)).toEqual(['Up', 'Down']);
+    expect(a.steps[1]?.match).toMatchObject({
+      notes: ['A4', 'G4', 'E4', 'Eb4', 'D4', 'C4', 'A3'],
+      direction: 'down',
+    });
+  });
+});

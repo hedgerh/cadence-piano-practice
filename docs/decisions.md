@@ -343,3 +343,13 @@ Append-only. One entry per architectural or product decision agents must follow.
 - **Raised 7th**: each level declares it in `extraNotes`.
 - **G♯ minor**: its raised 7th would be F𝄪, and the pitch model has no double sharps. `spellableMinor` uses A♭ minor in that slot (raised 7th G♮). The circle validator now accepts an enharmonic tonic in a slot.
 - **Into V**: from iv or ii°, one voice must move a minor 3rd. The raised 7th sits an augmented 2nd above the 6th (F → G♯), so no whole-step path exists. Those three steps use `maxMove: 3`, and the level note says why. Everything else keeps the whole-step rule.
+
+## 2026-10-18 — Pentatonic and blues scales
+
+- **Music** (`scales.ts`):
+  - `majorPentatonic` (1 2 3 5 6) and `minorPentatonic` (1 ♭3 4 5 ♭7), spelled from the key's own scale.
+  - `flatFive`: spelled on the 5th's letter (E♭ in A). Where that would need a double flat (E♭ minor), it is spelled as the sharp 4th (A).
+  - `bluesScale`: minor pentatonic plus the flat 5th.
+  - `placeRun`: a run up to the octave from C3..B3, so it stays on the practice keyboard.
+- **Pentatonic scales** (`pentatonic-scales`, group "Scales"): 12 major keys. Each level runs the major pentatonic up and down, then the relative minor pentatonic up and down: the same five notes from the 6th. Graded like the scale tracks (`sequence`, any octave, keep going one way).
+- **Blues scale** (`blues-scale`, new group "Blues"): 12 minor keys, up and down. The flat 5th is declared in `extraNotes`.

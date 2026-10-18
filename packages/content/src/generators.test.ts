@@ -40,12 +40,16 @@ describe('buildTracks', () => {
       'two-five-one',
       'major-scales',
       'minor-scales',
+      'pentatonic-scales',
+      'blues-scale',
       'arpeggios',
       'melody-echo',
       'ear-training',
     ]);
     expect(tracks.every((t) => t.available)).toBe(true);
     expect(tracks.map((t) => t.map)).toEqual([
+      'circle-of-fifths',
+      'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
@@ -213,6 +217,8 @@ describe('minor-diatonic-chords', () => {
       'songs',
       'diatonic-sevenths',
       'two-five-one',
+      'pentatonic-scales',
+      'blues-scale',
       'arpeggios',
       'melody-echo',
     ]);
@@ -329,7 +335,8 @@ describe('groups (library sections)', () => {
       ],
       ['Songs', ['songs']],
       ['7th chords', ['diatonic-sevenths', 'two-five-one']],
-      ['Scales', ['major-scales', 'minor-scales']],
+      ['Scales', ['major-scales', 'minor-scales', 'pentatonic-scales']],
+      ['Blues', ['blues-scale']],
       ['Melody', ['arpeggios', 'melody-echo']],
       ['Ear training', ['ear-training']],
     ]);
