@@ -29,6 +29,8 @@ describe('librarySections', () => {
     expect(sections.map((s) => [s.group, s.cards.map((c) => c.trackId)])).toEqual([
       ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
       ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
+      ['Songs', ['songs']],
+      ['7th chords', ['diatonic-sevenths', 'two-five-one']],
       ['Scales', ['major-scales', 'minor-scales']],
       ['Melody', ['arpeggios', 'melody-echo']],
       ['Ear training', ['ear-training']],
@@ -97,6 +99,8 @@ describe('LibraryView', () => {
     expect(sections.map((s) => within(s).getByRole('heading').textContent)).toEqual([
       'Chords',
       'Voice leading',
+      'Songs',
+      '7th chords',
       'Scales',
       'Melody',
       'Ear training',

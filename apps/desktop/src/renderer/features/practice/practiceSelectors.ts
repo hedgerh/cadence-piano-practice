@@ -1,7 +1,15 @@
 // Practice.dc.html:153–196 — derivations from PracticeState to what the screen draws.
 // Pure (no React) so the reducer tests can cover them.
 import type { StepNoun } from '@cadence/content';
-import { hintFor, midiToPc, pcNumber, pretty, type Midi, type PitchClass } from '@cadence/music';
+import {
+  chordSymbolOf,
+  hintFor,
+  midiToPc,
+  pcNumber,
+  pretty,
+  type Midi,
+  type PitchClass,
+} from '@cadence/music';
 import type { KeyState } from '../../components/music/PianoKeyboard/PianoKeyboard';
 import type { KeyboardVariant } from '../../components/music/PianoKeyboard/keyboardLayout';
 import type { EyebrowTone } from '../../components/ui/TaskHeader';
@@ -243,6 +251,10 @@ export function chordShort(step: PracticeStep): string {
   const root: PitchClass | undefined =
     step.match.type === 'chord' ? step.match.notes[0] : undefined;
   if (root === undefined || step.quality === undefined) return step.label;
+  // A 7th chord names itself from its four notes ("Cmaj7"; decisions.md 2026-10-18).
+  if (step.match.type === 'chord' && step.match.notes.length === 4) {
+    return chordSymbolOf(step.match.notes) ?? step.label;
+  }
   return `${pretty(root)}${QUALITY_SUFFIX[step.quality]}`;
 }
 

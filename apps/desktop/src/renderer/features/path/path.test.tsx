@@ -1,10 +1,13 @@
 import {
   bassAndChords,
+  diatonicSeventhChords,
   inversionShapes,
   majorDiatonicChords,
   majorScales,
   minorDiatonicChords,
   smoothProgressions,
+  songs,
+  twoFiveOne,
 } from '@cadence/content';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
@@ -160,6 +163,11 @@ describe('circle content (Path:93–129; minor track: outer minors, inner relati
     expect(numerals(smoothProgressions())).toBe('I ii IV V vi');
     expect(numerals(bassAndChords())).toBe('I ii IV V vi');
     expect(trackPattern(majorScales())).toBeNull();
+    // decisions.md 2026-10-18: songs use iii; 7th tracks match the 7ths.
+    expect(numerals(songs())).toBe('I iii IV V vi');
+    expect(trackPattern(diatonicSeventhChords())?.title).toBe('The pattern in every major key');
+    expect(numerals(diatonicSeventhChords())).toBe('Imaj7 ii7 iii7 IVmaj7 V7 vi7 viiø7');
+    expect(numerals(twoFiveOne())).toBe('Imaj7 ii7 V7 vi7');
   });
 
   it('compact labels: slot 6 (Path:110 G♭ at 20px) and three-character labels', () => {

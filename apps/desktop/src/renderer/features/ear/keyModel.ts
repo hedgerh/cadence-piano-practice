@@ -156,7 +156,7 @@ export function keyboardStates(
 export function feedbackKeys(question: EarQuestion, startMidi: Midi = 60): Record<Midi, KeyState> {
   const states: Record<Midi, KeyState> = {};
   const hint = question.hint;
-  if (hint === undefined || hint.type === 'cadence') return states;
+  if (hint === undefined || hint.type === 'cadence' || hint.type === 'chords') return states;
   for (const n of hint.notes) states[startMidi + midiToPc(noteToMidi(n))] = 'correct';
   return states;
 }

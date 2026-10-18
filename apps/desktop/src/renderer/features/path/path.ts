@@ -3,6 +3,7 @@
 // `content.track` and `tracks.overview`; nothing here knows about a particular track.
 import type { Quality } from '@cadence/content';
 import {
+  diatonicSevenths,
   diatonicTriads,
   midiToPc,
   noteToMidi,
@@ -74,18 +75,24 @@ const sameSet = (a: ReadonlySet<Pc>, b: ReadonlySet<Pc>) =>
 export function trackPattern(track: TrackDto): { title: string; chips: PatternChip[] } | null {
   const level = track.levels?.[0];
   if (!level?.key) return null;
-  const triads = diatonicTriads(level.key);
   const used = level.steps.flatMap((s) => chordsOf(s.match));
-  const chips = triads.flatMap((t): PatternChip[] =>
-    used.some((c) => sameSet(c, new Set(t.pcs)))
-      ? [{ numeral: t.numeral, quality: t.quality }]
-      : [],
-  );
+  const chipsOf = (chords: readonly { numeral: string; quality: Quality; pcs: readonly Pc[] }[]) =>
+    chords.flatMap((t): PatternChip[] =>
+      used.some((c) => sameSet(c, new Set(t.pcs)))
+        ? [{ numeral: t.numeral, quality: t.quality }]
+        : [],
+    );
+  // Triads first; 7th-chord tracks match the 7ths (decisions.md 2026-10-18).
+  const triadChips = chipsOf(diatonicTriads(level.key));
+  const chips =
+    triadChips.length > 0
+      ? triadChips
+      : chipsOf(diatonicSevenths(level.key).map((s) => ({ ...s, quality: s.triadQuality })));
   if (chips.length === 0) return null;
   const mode = level.key.mode;
   return {
     title:
-      chips.length === triads.length
+      chips.length === 7
         ? `The pattern in every ${mode} key`
         : `The chords you'll use in every ${mode} key`,
     chips,

@@ -4,6 +4,7 @@
 //   chord:   all notes together, 1.2 s
 //   cadence: cadenceVoicing(key) — four chords 0.65 s apart (~3 s)
 //   phrase:  eight notes 0.5 s apart, 0.5 s each (~4 s)
+//   chords:  one chord every gapMs, each ringing until just before the next (the last 1.2 s)
 import type { Sound } from '@cadence/content';
 import { cadenceVoicing, noteToMidi, type Midi } from '@cadence/music';
 import type { Synth } from './Synth';
@@ -16,6 +17,8 @@ export const CADENCE_SPACING = 0.65;
 /** Each cadence chord lets go just before the next; the final I rings like a chord. */
 export const CADENCE_CHORD_DUR = 0.6;
 export const PHRASE_STEP = 0.5;
+/** A chord of a `chords` sound lets go this long before the next one starts. */
+export const CHORDS_RELEASE = 0.05;
 
 export interface ScheduledGroup {
   /** Notes struck together. */
@@ -51,6 +54,15 @@ export function scheduleSound(sound: Sound): ScheduledGroup[] {
         at: i * PHRASE_STEP,
         dur: PHRASE_STEP,
       }));
+    case 'chords': {
+      // decisions.md 2026-10-18 "Name the progression".
+      const gap = sound.gapMs / 1000;
+      return sound.chords.map((chord, i) => ({
+        notes: chord.map(noteToMidi),
+        at: i * gap,
+        dur: i === sound.chords.length - 1 ? CHORD_DUR : Math.max(0.1, gap - CHORDS_RELEASE),
+      }));
+    }
   }
 }
 

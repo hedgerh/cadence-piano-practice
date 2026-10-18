@@ -301,6 +301,14 @@ describe('sessions.finish', () => {
       total: 8,
       subtitle: "All eight phrases, played back by ear. That's your first key on the circle.",
     });
+    // decisions.md 2026-10-18 "7th chords" and "Songs".
+    expect(finish('c-major-sevenths')).toMatchObject({
+      stepNoun: 'chord',
+      total: 7,
+      subtitle: "All seven 7th chords. That's your first key on the circle.",
+    });
+    expect(finish('c-major-songs')).toMatchObject({ stepNoun: 'progression', total: 8 });
+    expect(finish('c-major-251')).toMatchObject({ stepNoun: 'progression', total: 6 });
     const session = services.progress.startLevel('g-major-echo', 'learn');
     expect(session.stepNoun).toBe('phrase');
     expect(session.steps[0]?.play).toMatchObject({ type: 'notes', gapMs: 600 });
@@ -405,7 +413,7 @@ describe('sessions.finish', () => {
       title: 'Intervals · Level 1, passed',
       correct: 10,
       total: 10,
-      track: { done: 1, total: 24, unit: 'levels', nextTitle: 'Level 2' },
+      track: { done: 1, total: 28, unit: 'levels', nextTitle: 'Level 2' },
       next: { levelId: 'intervals-2', label: 'Keep going — Level 2', route: '/ear/intervals-2' },
     });
     expect(done.chips).toHaveLength(10);
@@ -472,6 +480,7 @@ describe('nextLevel and overview', () => {
       null,
       'Unlocks at Intervals L5',
       'Unlocks at Scale degrees L4',
+      'Unlocks after Chords in a key L3',
       'Unlocks after Chords in a key L2',
     ]);
     expect(o.stages?.[2]).toMatchObject({ state: 'open', progressText: 'Level 1 of 4' });
@@ -497,6 +506,7 @@ describe('nextLevel and overview', () => {
       'complete',
       'open',
       'complete',
+      'open',
       'open',
       'open',
       'open',

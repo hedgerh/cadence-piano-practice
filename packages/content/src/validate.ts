@@ -10,6 +10,7 @@ import {
   PRACTICE_RANGE,
   type PitchClass,
   TWO_HAND_RANGE,
+  diatonicSevenths,
   diatonicTriads,
   hintFor,
   inRange88,
@@ -64,6 +65,17 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
   // ---- rule 3 / 6: sounds anywhere
   const checkSound = (sound: Sound, path: string): void => {
     if (sound.type === 'cadence') return;
+    if (sound.type === 'chords') {
+      sound.chords.forEach((chord, c) => {
+        chord.forEach((note, n) => {
+          if (!inRange88(noteToMidi(note))) {
+            err(`${path}.chords[${c}][${n}]`, `${note} is off the 88 keys`);
+          }
+        });
+      });
+      if (sound.gapMs < 0) err(`${path}.gapMs`, `gapMs must be ≥ 0 (got ${sound.gapMs})`);
+      return;
+    }
     sound.notes.forEach((note, n) => {
       if (!inRange88(noteToMidi(note))) err(`${path}.notes[${n}]`, `${note} is off the 88 keys`);
     });
@@ -350,7 +362,15 @@ export function validateTracks(tracks: readonly Track[]): ValidationError[] {
       // Diatonic-chord levels: the seven numerals in order.
       const plainChord = (st: Step) => st.match.type === 'chord' && st.match.bass === undefined;
       if (level.steps.length === 0 || !level.steps.every(plainChord)) return;
-      const numerals = level.key.mode === 'major' ? MAJOR_NUMERALS : MINOR_NUMERALS;
+      // Triad levels: I..vii°; 7th-chord levels (four notes each): Imaj7..viiø7.
+      const sevenths = level.steps.every(
+        (st) => st.match.type === 'chord' && st.match.notes.length === 4,
+      );
+      const numerals = sevenths
+        ? diatonicSevenths(level.key).map((s) => s.numeral)
+        : level.key.mode === 'major'
+          ? MAJOR_NUMERALS
+          : MINOR_NUMERALS;
       if (level.steps.length !== numerals.length) {
         err(`${lp}.steps`, `a chord level has 7 steps (got ${level.steps.length})`);
         return;

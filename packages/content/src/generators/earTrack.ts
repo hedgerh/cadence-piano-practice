@@ -22,6 +22,7 @@ import {
   pcName,
   pcNumber,
   pretty,
+  progressionPath,
   scale,
   spelledNote,
   transpose,
@@ -537,6 +538,114 @@ function chordsInKeyStage(): Stage {
   };
 }
 
+// ---------------------------------------------------------------- name the progression
+
+/**
+ * decisions.md 2026-10-18 "Name the progression": hear a key, then four (or three) chords
+ * voice-led in it; name the progression. Options are the progressions the chord tracks drill.
+ */
+export const PROGRESSIONS: readonly { id: string; numerals: string; degrees: readonly number[] }[] =
+  [
+    { id: 'I-IV-V-I', numerals: 'I–IV–V–I', degrees: [0, 3, 4, 0] },
+    { id: 'I-V-vi-IV', numerals: 'I–V–vi–IV', degrees: [0, 4, 5, 3] },
+    { id: 'I-vi-IV-V', numerals: 'I–vi–IV–V', degrees: [0, 5, 3, 4] },
+    { id: 'ii-V-I', numerals: 'ii–V–I', degrees: [1, 4, 0] },
+    { id: 'vi-IV-I-V', numerals: 'vi–IV–I–V', degrees: [5, 3, 0, 4] },
+  ];
+
+/** The second line of each answer chip: what musicians call the progression. */
+export const PROGRESSION_NICKNAMES: Readonly<Record<string, string>> = {
+  'I–IV–V–I': 'Plain cadence',
+  'I–V–vi–IV': 'Four-chord pop',
+  'I–vi–IV–V': 'Fifties',
+  'ii–V–I': 'Jazz cadence',
+  'vi–IV–I–V': 'Pop from the minor',
+};
+
+/** Seconds between chords of a progression prompt. */
+export const PROGRESSION_GAP_MS = 900;
+
+const PROGRESSION_LEVELS: readonly { keys: readonly Key[]; count: number; blurb: string }[] = [
+  {
+    keys: ['C', 'G', 'F'].map((t) => major(t as PitchClass)),
+    count: 2,
+    blurb: 'Two to tell apart: the plain I–IV–V–I and four-chord pop. C, G and F major.',
+  },
+  {
+    keys: ['C', 'G', 'D', 'F', 'Bb'].map((t) => major(t as PitchClass)),
+    count: 3,
+    blurb: 'Add the fifties progression, I–vi–IV–V. Five major keys.',
+  },
+  {
+    keys: CIRCLE_MAJOR.map(major),
+    count: 4,
+    blurb: 'Add ii–V–I, three chords that pull home. All twelve major keys.',
+  },
+  {
+    keys: CIRCLE_MAJOR.map(major),
+    count: 5,
+    blurb: 'Add vi–IV–I–V: four-chord pop starting from the minor chord. All twelve keys.',
+  },
+];
+
+function progressionQuestion(
+  key: Key,
+  prog: (typeof PROGRESSIONS)[number],
+  options: string[],
+): Step {
+  const triads = diatonicTriads(key);
+  const chords = prog.degrees.map((d) => {
+    const t = triads[d];
+    if (t === undefined) throw new RangeError(`no triad on degree ${d + 1}`);
+    return t;
+  });
+  const path = progressionPath({
+    type: 'progression',
+    chords: chords.map((t) => ({ notes: [t.root, t.third, t.fifth] })),
+  });
+  const spelled = path.map((voicing, i) => {
+    const t = chords[i];
+    const names = t ? [t.root, t.third, t.fifth] : [];
+    return voicing.map((m) => {
+      const name = names.find((n) => pcNumber(n) === midiToPc(m));
+      if (name === undefined) throw new RangeError('voicing note is not a chord tone');
+      return spelledNote(m, name);
+    });
+  });
+  const nickname = PROGRESSION_NICKNAMES[prog.numerals];
+  return {
+    id: `${keySlug(key)}-${prog.id}`,
+    label: prog.numerals,
+    name: `${prog.numerals} in ${keyTitle(key)}`,
+    context: { type: 'cadence', key: key.tonic, mode: key.mode },
+    play: { type: 'chords', chords: spelled, gapMs: PROGRESSION_GAP_MS },
+    match: { type: 'choice', answer: prog.numerals, options },
+    explain: `That was ${prog.numerals}: ${chords.map((t) => t.short).join(' – ')}.${nickname ? ` ${nickname}.` : ''}`,
+  };
+}
+
+function progressionsStage(): Stage {
+  const options = PROGRESSIONS.map((p) => p.numerals);
+  return {
+    id: 'progressions',
+    title: 'Name the progression',
+    blurb: 'Hear a key, then a few chords. Name the progression — the ones you play in Songs.',
+    unlock: { stage: 'chords-in-key', level: 4 },
+    levels: PROGRESSION_LEVELS.map((def, i): Level => {
+      const wanted = PROGRESSIONS.slice(0, def.count);
+      return {
+        id: `progressions-${i + 1}`,
+        title: `Level ${i + 1}`,
+        blurb: def.blurb,
+        pass: PASS_TEN,
+        steps: [],
+        pool: def.keys.flatMap((key) => wanted.map((p) => progressionQuestion(key, p, options))),
+        activeOptions: wanted.map((p) => p.numerals),
+      };
+    }),
+  };
+}
+
 // ---------------------------------------------------------------- find the key
 
 const PHRASES_PER_KEY = 2;
@@ -631,6 +740,7 @@ export function earTraining(): Track {
       scaleDegreesStage(),
       chordQualityStage(),
       chordsInKeyStage(),
+      progressionsStage(),
       findTheKeyStage(),
     ],
   };

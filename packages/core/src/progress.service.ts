@@ -703,6 +703,8 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
       title = `${ref.level.title}, complete`;
       const steps = ref.level.steps;
       const noun = stepNoun(steps, ref.level.noun);
+      // decisions.md 2026-10-18 "7th chords": four-note chord levels.
+      const sevenths = steps.every((s) => s.match.type === 'chord' && s.match.notes.length === 4);
       const what =
         noun === 'scale'
           ? `${capitalize(joinAnd(steps.map((s) => s.label.toLowerCase())))}, every note in order.`
@@ -713,7 +715,7 @@ export function createProgressService(ctx: ServiceContext, deps: Deps): Progress
               : noun === 'phrase'
                 ? `All ${numberWord(total)} phrases, played back by ear.`
                 : noun === 'chord' && ref.track.map === 'circle-of-fifths'
-                  ? `All ${numberWord(total)} diatonic chords.`
+                  ? `All ${numberWord(total)} ${sevenths ? '7th chords' : 'diatonic chords'}.`
                   : `All ${numberWord(total)} steps.`;
       const where =
         ref.track.map === 'circle-of-fifths'

@@ -59,6 +59,12 @@ export const SoundSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('chord'), notes: z.array(NoteSchema) }),
   z.object({ type: z.literal('cadence'), key: PitchClassSchema, mode: ModeSchema }),
   z.object({ type: z.literal('phrase'), notes: z.array(NoteSchema) }),
+  /** Chords one after another, `gapMs` apart (Name the progression; decisions.md 2026-10-18). */
+  z.object({
+    type: z.literal('chords'),
+    chords: z.array(z.array(NoteSchema)),
+    gapMs: z.number(),
+  }),
 ]);
 
 export const StepSchema = z.object({

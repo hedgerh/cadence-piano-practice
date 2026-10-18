@@ -52,7 +52,9 @@ export function createPlanService(ctx: ServiceContext, deps: Deps): PlanService 
     const steps = ref.level.steps;
     const n = steps.length;
     if (steps.every((s) => s.match.type === 'chord')) {
-      return `${ref.level.title} · all ${n} diatonic chords`;
+      // decisions.md 2026-10-18 "7th chords": four-note chords are 7ths.
+      const sevenths = steps.every((s) => s.match.type === 'chord' && s.match.notes.length === 4);
+      return `${ref.level.title} · all ${n} diatonic ${sevenths ? '7th chords' : 'chords'}`;
     }
     const noun = stepNoun(steps, ref.level.noun);
     if (noun === 'scale') {

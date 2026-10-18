@@ -2,7 +2,7 @@
 // level: a clean result moves the step out along INTERVALS; anything else brings it back
 // tomorrow. A level is mastered when every step is at 7 days or more.
 import type { Level, Step } from '@cadence/content';
-import { pretty, triadShort } from '@cadence/music';
+import { chordSymbolOf, pretty, triadShort } from '@cadence/music';
 import { type ServiceContext, joinAnd, numberWord, todayOf } from './context';
 import { addDays } from './dates';
 import type { DueCount, StepProgressRow, StepProgressUpsert, StepResult } from './ports';
@@ -61,7 +61,11 @@ export function stepShort(step: Step): string {
   if (step.match.type === 'chord' && step.quality) {
     const root = step.match.notes[0];
     if (root) {
-      const short = triadShort(root, step.quality);
+      // A 7th chord names itself from its four notes ("Cmaj7"; decisions.md 2026-10-18).
+      const short =
+        step.match.notes.length === 4
+          ? (chordSymbolOf(step.match.notes) ?? step.label)
+          : triadShort(root, step.quality);
       // decisions.md 2026-10-11: an inversion reads as a slash chord ("F/A").
       return step.match.bass === undefined ? short : `${short}/${pretty(step.match.bass)}`;
     }

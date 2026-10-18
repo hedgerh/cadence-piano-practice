@@ -1,6 +1,7 @@
 // docs/engine.md §5 Practice reducer and §6 defaults 1–7 (HANDOFF §5 practice loop).
 import {
   arpeggiosLevel,
+  diatonicSeventhsLevel,
   echoLevel,
   inversionShapesLevel,
   keyLevel,
@@ -816,5 +817,20 @@ describe('melody levels', () => {
       title: 'All eight by ear. Nice.',
       body: 'You heard C major and played it back.',
     });
+  });
+});
+
+// decisions.md 2026-10-18 "7th chords": strip chips and skip copy name 7ths by their symbols.
+describe('7th chord levels', () => {
+  it('chordShort reads Cmaj7, G7, Bø7', () => {
+    const steps = diatonicSeventhsLevel({ tonic: 'C', mode: 'major' }).steps.map((st) => ({
+      ...st,
+      lastResult: null,
+      dueOn: null,
+      intervalDays: 0,
+    }));
+    expect(steps.map(chordShort)).toEqual(['Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7', 'Am7', 'Bø7']);
+    const s = initialPracticeState({ steps, results: [], visibility: 'all' });
+    expect(keyboardVariant(s)).toBe('two-octave');
   });
 });

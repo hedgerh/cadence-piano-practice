@@ -115,11 +115,11 @@ describe('validateTracks negatives', () => {
 
   it('a phrase without 8 notes', () => {
     const tracks = broken((t) => {
-      const step = at(at(at(ear(t).stages, 5).levels, 0).pool, 0);
+      const step = at(at(at(ear(t).stages, 6).levels, 0).pool, 0);
       if (step.play?.type !== 'phrase') throw new Error('expected phrase');
       step.play = { type: 'phrase', notes: step.play.notes.slice(0, 7) };
     });
-    expectOneError(tracks, `tracks[${T.ear}].stages[5].levels[0].pool[0].play.notes`);
+    expectOneError(tracks, `tracks[${T.ear}].stages[6].levels[0].pool[0].play.notes`);
   });
 
   it('circle levels out of order (G and D swapped)', () => {

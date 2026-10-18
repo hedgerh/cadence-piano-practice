@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, daysBetween } from './dates';
 import type { StepProgressRow, StepResult } from './ports';
-import { inversionShapesLevel, keyLevel, smoothProgressionsLevel } from '@cadence/content';
+import {
+  diatonicSeventhsLevel,
+  inversionShapesLevel,
+  keyLevel,
+  smoothProgressionsLevel,
+  songsLevel,
+} from '@cadence/content';
 import { INTERVALS, type ReviewNoteResult, schedule, stepShort } from './review.service';
 import { TZ, onboarded, testContent } from './testing/harness';
 
@@ -199,6 +205,22 @@ describe('stepShort', () => {
     const smooth = smoothProgressionsLevel(f).steps;
     expect(stepShort(smooth[0] ?? never())).toBe('F – B♭ – F');
     expect(stepShort(smooth[3] ?? never())).toBe('F/A – B♭ – C – F');
+  });
+
+  // decisions.md 2026-10-18 "7th chords" and "Songs".
+  it('7th chords by their symbols; song lines by their chords, slash basses included', () => {
+    const f = { tonic: 'F', mode: 'major' } as const;
+    expect(diatonicSeventhsLevel(f).steps.map(stepShort)).toEqual([
+      'Fmaj7',
+      'Gm7',
+      'Am7',
+      'B♭maj7',
+      'C7',
+      'Dm7',
+      'Eø7',
+    ]);
+    const someone = songsLevel({ tonic: 'A', mode: 'major' }).steps[5];
+    expect(stepShort(someone ?? never())).toBe('A – E/G♯ – F♯m – D');
   });
 });
 

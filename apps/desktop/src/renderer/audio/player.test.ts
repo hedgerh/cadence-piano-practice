@@ -1,10 +1,30 @@
 import { cadenceVoicing } from '@cadence/music';
 import { describe, expect, it } from 'vitest';
 import { NullSynth } from './NullSynth';
-import { soundDuration } from './player';
+import { CHORD_DUR, scheduleSound, soundDuration } from './player';
 
 // docs/engine.md §7 — schedules relative to t0 = currentTime + 0.05.
 const close = (a: number, b: number) => expect(a).toBeCloseTo(b, 9);
+
+// decisions.md 2026-10-18 "Name the progression".
+describe('chords sound', () => {
+  it('one chord per gap, each letting go before the next; the last rings', () => {
+    const groups = scheduleSound({
+      type: 'chords',
+      chords: [
+        ['C4', 'E4', 'G4'],
+        ['B3', 'D4', 'G4'],
+      ],
+      gapMs: 900,
+    });
+    expect(groups.map((g) => [g.notes, g.at])).toEqual([
+      [[60, 64, 67], 0],
+      [[59, 62, 67], 0.9],
+    ]);
+    expect(groups[0]?.dur).toBeCloseTo(0.85);
+    expect(groups[1]?.dur).toBe(CHORD_DUR);
+  });
+});
 
 describe('player → NullSynth (engine.md §7)', () => {
   it('notes: one per gapMs, 0.7 s each, last 0.9 s (EarInterval:199–200)', async () => {

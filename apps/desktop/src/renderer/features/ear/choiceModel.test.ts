@@ -42,6 +42,33 @@ function playsBack(question: EarQuestion, notes: readonly Midi[], held = false):
   return state.status === 'matched';
 }
 
+// decisions.md 2026-10-18 "Name the progression".
+describe('name the progression', () => {
+  const question = q('progressions-1', 'c-major-I-V-vi-IV');
+
+  it('wide chips with nicknames, its own prompt and feedback', () => {
+    expect(stageKindOf('progressions')).toBe('progressions');
+    expect(chipSize('progressions')).toBe('wide');
+    expect(optionLabel('progressions', 'I–V–vi–IV')).toEqual({
+      primary: 'I–V–vi–IV',
+      secondary: 'Four-chord pop',
+    });
+    expect(stageCopy('progressions', [question], question).prompt).toMatch(/Which progression/);
+    expect(feedbackCopy('progressions', question, 'I–V–vi–IV', true)).toEqual({
+      title: 'I–V–vi–IV — yes.',
+      body: 'That was I–V–vi–IV: C – G – Am – F. Four-chord pop.',
+    });
+    expect(feedbackCopy('progressions', question, 'I–IV–V–I', false).body).toMatch(
+      /You said I–IV–V–I/,
+    );
+  });
+
+  it('lights the last chord; offers no play-back', () => {
+    expect(litKeys(question)).toHaveLength(3);
+    expect(playbackSpec(question)).toBeNull();
+  });
+});
+
 describe('stage kinds and labels', () => {
   it('maps stage ids to label maps', () => {
     expect(stageKindOf('intervals')).toBe('intervals');

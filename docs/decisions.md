@@ -278,3 +278,44 @@ Append-only. One entry per architectural or product decision agents must follow.
   - Starting one stops the previous prompt (live notes are never cut).
 - **Nouns**: `Level.noun` (`arpeggio` | `phrase`) names steps that match types alone can't; `stepNoun(steps, noun)` uses it. `SessionDto.stepNoun` carries it to the practice screen ("Phrase 3 of 8", "3 of 8 phrases"), the plan, the resume card and the Complete screen.
 - **Keyboard**: levels with `shape` sequences use the three-octave keyboard; its window follows the hand (2026-10-12).
+
+## 2026-10-18 — Songs
+
+- **Why**: backlog item 3. The progressions of songs the owner knows tie the voice-leading drills to real music.
+- **What**: a circle track `songs` (group "Songs"), 12 major keys, 8 song lines per key:
+  - Let It Be: verse I–V–vi–IV, second line I–V–IV–I.
+  - Don't Stop Believin': I–V–vi–IV, then the turn I–V–iii–IV.
+  - Stand By Me: I–vi–IV–V.
+  - Someone Like You: I–V⁶–vi–IV, with E/G♯ in A, so the bass walks down.
+  - Canon in D: I–V–vi–iii and IV–I–IV–V.
+- **Both hands, every key**: each step is a `progression` with `freeBass` and `maxMove: 2`, the Bass & chords rule. The bass is the chord's root or the written slash bass. Playing a song in every key is what jamming needs.
+- **Original key**: the owner chose every key with the original marked. A step in its song's original key ends its name with " ★", and the level note names those songs ("★ Original key of **Let It Be**.").
+- **Content only**: chord progressions are used, never melodies or lyrics.
+- **Shared builder**: `progressionStep` moved to `generators/levelBits.ts`. Smooth progressions and Bass & chords use it unchanged.
+  - A chord carries `inv`. With two hands it chooses the left-hand bass; with one hand it asks for that inversion.
+  - Chips are figured: triads ⁶ and ⁶₄; 7ths ⁶₅, ⁴₃ and ⁴₂.
+
+## 2026-10-18 — Name the progression
+
+- **What**: an ear-training stage `progressions` between Chords in a key and Find the key. It unlocks after passing Chords in a key level 3 (`{chords-in-key, 4}`).
+  - Each question plays the key's cadence (context), then the progression voice-led (`progressionPath`), spelled in the key, as a new **`chords`** sound (`{chords, gapMs: 900}`).
+  - The learner names it from I–IV–V–I, I–V–vi–IV, I–vi–IV–V, ii–V–I and vi–IV–I–V. Levels 1–4 add one each, over 3, 5, 12 and 12 major keys.
+- **Chips**: the `progressions` stage kind uses wide chips. The second line is the nickname from content `PROGRESSION_NICKNAMES` ("Four-chord pop", "Fifties", "Jazz cadence"…).
+- **Feedback**: the copy spells the chords ("That was I–V–vi–IV: C – G – Am – F. Four-chord pop."). The answered keyboard lights the last chord.
+- **No play-back XP yet**: `playbackSpec` returns null for `chords` sounds.
+
+## 2026-10-18 — 7th chords
+
+- **Music**:
+  - `diatonicSevenths(key)` stacks degrees d, d+2, d+4 and d+6: maj7, 7, m7 and m7♭5 (ø7). Numerals are Imaj7, ii7, iii7, IVmaj7, V7, vi7 and viiø7; symbols are Cmaj7, Dm7, G7, Bø7 and so on.
+  - `chordSymbolOf(notes)` names a triad or 7th chord from root-first pitch classes. Core `stepShort` and renderer `chordShort` use it for 4-note chords.
+  - `placeChord` drops a hint an octave when its top note would pass B4. This only happens to 7ths from C♯4 up, so triads are unchanged and every hint stays on the two-octave keyboard.
+- **Diatonic 7th chords** (`diatonic-sevenths`, group "7th chords"): 7 `chord` steps per key, any octave or inversion. `quality` is the triad's, which keeps the chip colours.
+  - The validator's numeral rule checks triad levels against I..vii° and 4-note levels against `diatonicSevenths`.
+  - Copy: "all 7 diatonic 7th chords" and "All seven 7th chords."
+- **ii–V–I** (`two-five-one`): 6 four-voice `progression` steps per key, `maxMove: 2`:
+  - ii7–V7, then ii7–V7–Imaj7 from root position and from ii7⁶₅, each with the right hand only;
+  - ii7–V7–Imaj7 with a left-hand root;
+  - the Imaj7–vi7–ii7–V7 turnaround, right hand, then with a left-hand root.
+  - The lesson teaches the rule that makes it smooth: each 7th falls to the next 3rd. The voice-leading math was already generic over voice count.
+- **Track map**: `trackPattern` matches 4-note chords against `diatonicSevenths` when no triad matches.

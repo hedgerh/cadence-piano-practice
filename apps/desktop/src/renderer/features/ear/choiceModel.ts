@@ -2,7 +2,7 @@
 // the one-octave keyboard lighting, the play-back match and the prompt sounds. Pure.
 // Copy: EarInterval.dc.html:184–191 (intervals); docs/tasks/13 (degrees, quality);
 // EarChord.dc.html:59–92 (chords in a key, Task 14).
-import { DEGREE_NAMES, type Quality, type Sound } from '@cadence/content';
+import { DEGREE_NAMES, PROGRESSION_NICKNAMES, type Quality, type Sound } from '@cadence/content';
 import {
   diatonicTriads,
   INTERVALS,
@@ -19,7 +19,8 @@ import type { ChannelOutput } from '@shared/ipc/contracts';
 import type { EarQuestion } from './earDrillReducer';
 
 /** Which label map / copy templates a level uses, from its stage id (engine.md §2.2). */
-export type EarStageKind = 'intervals' | 'degrees' | 'quality' | 'numerals' | 'generic';
+export type EarStageKind =
+  'intervals' | 'degrees' | 'quality' | 'numerals' | 'progressions' | 'generic';
 
 /** A track's "Show me" setting (`track_settings.visibility`). */
 export type Visibility = ChannelOutput<'tracks.overview'>['visibility'];
@@ -34,6 +35,8 @@ export function stageKindOf(stageId: string | null | undefined): EarStageKind {
       return 'quality';
     case 'chords-in-key':
       return 'numerals';
+    case 'progressions':
+      return 'progressions';
     default:
       return 'generic';
   }
@@ -107,6 +110,8 @@ export function optionLabel(
         primary: option,
         secondary: chordNamesShown(ctx.visibility) ? chordShort(ctx.question, option) : '',
       };
+    case 'progressions':
+      return { primary: option, secondary: PROGRESSION_NICKNAMES[option] ?? '' };
     case 'generic':
       return { primary: option, secondary: '' };
   }
@@ -124,7 +129,7 @@ const QUALITY_SHAPE: Readonly<Record<string, string>> = {
  * EarChord numeral chips (104×68, EarChord:75).
  */
 export function chipSize(kind: EarStageKind): 'interval' | 'wide' | 'chord' {
-  if (kind === 'quality') return 'wide';
+  if (kind === 'quality' || kind === 'progressions') return 'wide';
   if (kind === 'numerals') return 'chord';
   return 'interval';
 }
@@ -137,6 +142,8 @@ export function feedbackMinWidth(kind: EarStageKind): 260 | 280 {
 /** The prompt's sounding notes. */
 export function soundNotes(sound: Sound | undefined): Note[] {
   if (sound === undefined || sound.type === 'cadence') return [];
+  // A progression lights its last chord (decisions.md 2026-10-18 "Name the progression").
+  if (sound.type === 'chords') return [...(sound.chords[sound.chords.length - 1] ?? [])];
   return [...sound.notes];
 }
 
@@ -165,6 +172,7 @@ export function playbackSpec(question: EarQuestion): MatchSpec | null {
       return { type: 'chord', notes: sound.notes.map((n) => pcOf(n) as PitchClass) };
     case 'cadence':
     case 'phrase':
+    case 'chords':
       return null;
   }
 }
@@ -276,6 +284,15 @@ export function feedbackCopy(
             body: `${explain} You said ${pretty(chosen)} — ${REVIEW}`.trim(),
           };
     }
+    case 'progressions': {
+      // decisions.md 2026-10-18 "Name the progression": `explain` spells the chords in the key.
+      return correct
+        ? { title: `${answer} — yes.`, body: explain }
+        : {
+            title: `Not quite. That was ${answer}.`,
+            body: `${explain} You said ${chosen} — ${REVIEW}`.trim(),
+          };
+    }
     case 'generic':
       return correct
         ? { title: `${pretty(answer)} — yes.`, body: explain }
@@ -375,6 +392,17 @@ export function stageCopy(
         playAria: 'Hear the chord',
         prompt: 'Which chord did you hear?',
         greyed: 'Greyed-out chords arrive in later levels.',
+      };
+    }
+    case 'progressions': {
+      const key = contextKeyTitle(current);
+      return {
+        eyebrow: key !== null ? `Key of ${key}` : 'Name the progression',
+        play: 'Hear the chords',
+        playAgain: 'Hear the chords again',
+        playAria: 'Hear the progression',
+        prompt: 'A few chords in the key. Which progression is it?',
+        greyed: 'Greyed-out progressions arrive in later levels.',
       };
     }
     case 'generic': {

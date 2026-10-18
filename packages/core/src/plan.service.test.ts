@@ -239,6 +239,11 @@ describe('PlanService.getToday', () => {
       levelId: 'c-major-arpeggios',
       title: 'C major · arpeggios and chord tones',
     });
+    // decisions.md 2026-10-18 "7th chords".
+    expect(firstBlock('diatonic-sevenths')).toMatchObject({
+      levelId: 'c-major-sevenths',
+      title: 'C major · all 7 diatonic 7th chords',
+    });
   });
 
   it('greets by local hour', () => {

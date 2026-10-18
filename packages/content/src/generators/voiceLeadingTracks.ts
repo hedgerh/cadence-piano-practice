@@ -5,20 +5,18 @@
 //   - Smooth progressions: common progressions, right hand, every voice moving ≤ 2 semitones
 //     from what you just played (`progression` + `maxMove`).
 //   - Bass & chords: the same with a left-hand root under the right hand (`freeBass`).
-import {
-  CIRCLE_MAJOR,
-  type Key,
-  type MatchSpec,
-  type Triad,
-  diatonicTriads,
-  pretty,
-} from '@cadence/music';
+import { CIRCLE_MAJOR, type Key, type Triad, diatonicTriads, pretty } from '@cadence/music';
 import { numeralAscii } from '../ids';
 import { inversionShapesLesson } from '../lessons/inversionShapes';
 import { smoothMovesLesson } from '../lessons/smoothMoves';
 import type { Level, Step, Track } from '../types';
 import { INVERSIONS, inversionBass } from './inversions';
-import { levelBase, triadAt } from './levelBits';
+import {
+  chordFromTriad,
+  levelBase,
+  progressionStep as sharedProgressionStep,
+  triadAt,
+} from './levelBits';
 
 export const VOICE_LEADING_GROUP = 'Voice leading';
 /** Each voice may move at most a whole step: common tones stay, the rest step. */
@@ -141,31 +139,17 @@ export const BASS_PROGRESSIONS: readonly ProgressionDef[] = SMOOTH_PROGRESSIONS.
 
 function progressionStep(triads: readonly Triad[], def: ProgressionDef, twoHands: boolean): Step {
   const chords = def.degrees.map((d) => triadAt(triads, d));
-  const first = chords[0];
-  if (first === undefined) throw new RangeError('empty progression');
-  const numerals = chords.map((t) => t.numeral).join(' – ');
-  const match: MatchSpec = {
-    type: 'progression',
-    chords: chords.map((t, i) => {
-      if (twoHands) return { notes: notesOf(t), bass: t.root };
-      if (i === 0 && def.start !== undefined) {
-        return { notes: notesOf(t), bass: inversionBass(t, def.start) };
-      }
-      return { notes: notesOf(t) };
-    }),
-    maxMove: MAX_MOVE,
-    ...(twoHands ? { freeBass: true } : {}),
-  };
-  return {
+  if (chords.length === 0) throw new RangeError('empty progression');
+  return sharedProgressionStep({
     id: def.id,
-    label: numerals,
     name: `${chords.map((t) => t.short).join(' – ')} · ${def.about}`,
-    parts: chords.map((t, i) => {
-      const inv = i === 0 && def.start !== undefined ? def.start : 0;
-      return { label: label(t, inv), sub: chordSymbol(t, inv), quality: t.quality };
-    }),
-    match,
-  };
+    chords: chords.map((t, i) => ({
+      chord: chordFromTriad(t),
+      ...(!twoHands && i === 0 && def.start !== undefined ? { inv: def.start } : {}),
+    })),
+    twoHands,
+    maxMove: MAX_MOVE,
+  });
 }
 
 export function smoothProgressionsLevel(key: Key): Level {

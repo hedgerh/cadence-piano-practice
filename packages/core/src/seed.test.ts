@@ -91,6 +91,7 @@ describe('seed day8 → Today (Main.dc.html)', () => {
       ['Scale degrees', 'locked', 'Unlocks at Intervals L4', null],
       ['Chord quality', 'locked', 'Unlocks at Intervals L5', null],
       ['Chords in a key', 'locked', 'Unlocks after Scale degrees L3', null],
+      ['Name the progression', 'locked', 'Unlocks after Chords in a key L3', null],
       ['Find the key', 'locked', 'Unlocks after Chords in a key L2', null],
     ]);
     expect(o.stages?.[0]?.levels.map((l) => l.state)).toEqual([

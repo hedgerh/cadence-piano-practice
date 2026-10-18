@@ -6,7 +6,7 @@ import { noteToMidi, type Note } from '@cadence/music';
 export function voicingForSound(lesson: Lesson, sounding: number | null): number | null {
   if (sounding === null || !lesson.voicings) return null;
   const sound = lesson.hear?.sounds[sounding];
-  if (!sound || sound.type === 'cadence') return null;
+  if (!sound || sound.type === 'cadence' || sound.type === 'chords') return null;
   const key = (notes: readonly Note[]) =>
     notes
       .map(noteToMidi)

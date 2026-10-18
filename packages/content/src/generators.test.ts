@@ -34,6 +34,9 @@ describe('buildTracks', () => {
       'inversion-shapes',
       'smooth-progressions',
       'bass-and-chords',
+      'songs',
+      'diatonic-sevenths',
+      'two-five-one',
       'major-scales',
       'minor-scales',
       'arpeggios',
@@ -42,6 +45,9 @@ describe('buildTracks', () => {
     ]);
     expect(tracks.every((t) => t.available)).toBe(true);
     expect(tracks.map((t) => t.map)).toEqual([
+      'circle-of-fifths',
+      'circle-of-fifths',
+      'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
       'circle-of-fifths',
@@ -196,11 +202,14 @@ describe('minor-diatonic-chords', () => {
     expect(at(lesson?.hear?.sounds, 7)).toEqual({ type: 'chord', notes: ['A3', 'C4', 'E4'] });
   });
 
-  it('lessons: the minor pattern, inversion shapes, smooth moves, arpeggios and echo', () => {
+  it('the tracks that open with a lesson', () => {
     expect(tracks.filter((t) => t.lesson).map((t) => t.id)).toEqual([
       'minor-diatonic-chords',
       'inversion-shapes',
       'smooth-progressions',
+      'songs',
+      'diatonic-sevenths',
+      'two-five-one',
       'arpeggios',
       'melody-echo',
     ]);
@@ -312,6 +321,8 @@ describe('groups (library sections)', () => {
     expect(groupTracks(tracks).map((g) => [g.group, g.tracks.map((t) => t.id)])).toEqual([
       ['Chords', ['major-diatonic-chords', 'minor-diatonic-chords']],
       ['Voice leading', ['inversion-shapes', 'smooth-progressions', 'bass-and-chords']],
+      ['Songs', ['songs']],
+      ['7th chords', ['diatonic-sevenths', 'two-five-one']],
       ['Scales', ['major-scales', 'minor-scales']],
       ['Melody', ['arpeggios', 'melody-echo']],
       ['Ear training', ['ear-training']],
@@ -468,6 +479,7 @@ describe('ear-training', () => {
       ['scale-degrees', 4],
       ['chord-quality', 3],
       ['chords-in-key', 4],
+      ['progressions', 4],
       ['find-the-key', 3],
     ]);
     expect(stages.map((s) => s.unlock ?? null)).toEqual([
@@ -476,6 +488,7 @@ describe('ear-training', () => {
       { stage: 'intervals', level: 4 },
       { stage: 'intervals', level: 5 },
       { stage: 'scale-degrees', level: 4 },
+      { stage: 'chords-in-key', level: 4 },
       { stage: 'chords-in-key', level: 3 },
     ]);
   });
@@ -487,6 +500,7 @@ describe('ear-training', () => {
       'Scale degrees',
       'Chord quality',
       'Chords in a key',
+      'Name the progression',
       'Find the key',
     ]);
     // The design's "Ascending first, then descending." moved to its own stage (2026-10-11).
