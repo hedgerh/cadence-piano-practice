@@ -125,3 +125,26 @@ describe('harmonic minor', () => {
     expect(spellableMinor({ tonic: 'C#', mode: 'minor' })).toEqual({ tonic: 'C#', mode: 'minor' });
   });
 });
+
+// decisions.md 2026-10-18 "12-bar blues".
+describe('dominantSeventhOn', () => {
+  it('spells I7, IV7 and V7 by letters; C♭7 cannot be spelled', async () => {
+    const { dominantSeventhOn } = await import('./sevenths');
+    expect(dominantSeventhOn('C')).toMatchObject({
+      short: 'C7',
+      third: 'E',
+      seventh: 'Bb',
+      numeral: 'I7',
+    });
+    expect(dominantSeventhOn('F', 4)).toMatchObject({ numeral: 'IV7', third: 'A', seventh: 'Eb' });
+    expect(dominantSeventhOn('C#', 5)).toMatchObject({ third: 'E#', seventh: 'B', short: 'C♯7' });
+    expect(() => dominantSeventhOn('Cb')).toThrow(RangeError);
+    const I = dominantSeventhOn('C');
+    const IV = dominantSeventhOn('F', 4);
+    const path = voiceLead([{ pcs: I.pcs }, { pcs: IV.pcs }, { pcs: I.pcs }]);
+    for (let i = 1; i < path.length; i++) {
+      const moves = voiceMotion(path[i - 1] ?? [], path[i] ?? []) ?? [];
+      expect(Math.max(...moves.map(Math.abs))).toBeLessThanOrEqual(2);
+    }
+  });
+});

@@ -353,3 +353,15 @@ Append-only. One entry per architectural or product decision agents must follow.
   - `placeRun`: a run up to the octave from C3..B3, so it stays on the practice keyboard.
 - **Pentatonic scales** (`pentatonic-scales`, group "Scales"): 12 major keys. Each level runs the major pentatonic up and down, then the relative minor pentatonic up and down: the same five notes from the 6th. Graded like the scale tracks (`sequence`, any octave, keep going one way).
 - **Blues scale** (`blues-scale`, new group "Blues"): 12 minor keys, up and down. The flat 5th is declared in `extraNotes`.
+
+## 2026-10-18 — 12-bar blues
+
+- **Music**: `dominantSeventhOn(root, degree)` spells a dominant 7th by stacking letters on the root's mixolydian (C7 = C E G B♭, F7 = F A C E♭).
+- **Track** (`twelve-bar-blues`, group "Blues"): 12 major keys, 8 steps per key:
+  - **Shapes**: I7, IV7 and V7, as 4-note `chord` steps in any octave or inversion.
+  - **Smooth moves** (4 voices, ≤ a whole step): I7–IV7–I7 and V7–IV7–I7.
+  - **The form**: the 12-bar form, right hand, then with a left-hand root.
+  - **Quick change**: with a left-hand root.
+  - The form's repeated bars collapse (I7–IV7–I7–V7–IV7–I7): you can't play a held chord "again". The step name gives the bar map.
+- **Out-of-key notes**: the ♭3 and ♭7 the dominants bring (E♭ and B♭ in C) are declared in `extraNotes`, computed as every chord tone outside the key.
+- **G♭ major**: its IV7 would be C♭7, which needs B𝄫. `spellableBlues` uses F♯ major in that slot (B7 = B D♯ F♯ A).

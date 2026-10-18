@@ -6,6 +6,7 @@ import { arpeggios, melodyEcho } from './generators/melodyTracks';
 import { diatonicSeventhChords, twoFiveOne } from './generators/seventhsTracks';
 import { songs } from './generators/songsTrack';
 import { minorProgressions } from './generators/minorProgressionsTrack';
+import { twelveBarBlues } from './generators/bluesTrack';
 import { bluesScaleTrack, pentatonicScales } from './generators/pentatonicTracks';
 import { majorScales, minorScales } from './generators/scaleTrack';
 import {
@@ -29,6 +30,7 @@ export * from './generators/songsTrack';
 export * from './generators/seventhsTracks';
 export * from './generators/minorProgressionsTrack';
 export * from './generators/pentatonicTracks';
+export * from './generators/bluesTrack';
 export * from './lessons/minorPattern';
 export * from './lessons/inversionShapes';
 export * from './lessons/smoothMoves';
@@ -38,6 +40,7 @@ export * from './lessons/songs';
 export * from './lessons/sevenths';
 export * from './lessons/minorProgressions';
 export * from './lessons/pentatonic';
+export * from './lessons/blues';
 export * from './stepNoun';
 
 /**
@@ -58,6 +61,7 @@ export function buildTracks(): Track[] {
     majorScales(),
     minorScales(),
     pentatonicScales(),
+    twelveBarBlues(),
     bluesScaleTrack(),
     arpeggios(),
     melodyEcho(),

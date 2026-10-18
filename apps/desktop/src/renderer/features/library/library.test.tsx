@@ -35,7 +35,7 @@ describe('librarySections', () => {
       ['Songs', ['songs']],
       ['7th chords', ['diatonic-sevenths', 'two-five-one']],
       ['Scales', ['major-scales', 'minor-scales', 'pentatonic-scales']],
-      ['Blues', ['blues-scale']],
+      ['Blues', ['twelve-bar-blues', 'blues-scale']],
       ['Melody', ['arpeggios', 'melody-echo']],
       ['Ear training', ['ear-training']],
     ]);

@@ -229,3 +229,32 @@ describe('pentatonic and blues scales', () => {
     });
   });
 });
+
+// decisions.md 2026-10-18 "12-bar blues".
+describe('12-bar blues', () => {
+  const blues = trackById(tracks, 'twelve-bar-blues');
+
+  it('C: the three dominant 7ths, then the form; the ♭3 and ♭7 are declared', () => {
+    const c = at(blues.levels, 0);
+    expect(c.extraNotes).toEqual(['Bb', 'Eb']);
+    expect(c.steps.map((s) => s.id)).toEqual([
+      'I7',
+      'IV7',
+      'V7',
+      'I-IV-I',
+      'V-IV-I',
+      'form',
+      'form-bass',
+      'quick-change',
+    ]);
+    expect(c.steps[1]?.match).toEqual({ type: 'chord', notes: ['F', 'A', 'C', 'Eb'] });
+    expect(c.steps[5]?.label).toBe('I7 – IV7 – I7 – V7 – IV7 – I7');
+    expect(c.steps[7]?.match).toMatchObject({ freeBass: true, maxMove: 2 });
+  });
+
+  it('F♯ major stands in for G♭ major (C♭7 would need B𝄫)', () => {
+    const slot = at(blues.levels, 6);
+    expect(slot.key?.tonic).toBe('F#');
+    expect(slot.steps[1]?.name).toBe('B dominant 7th');
+  });
+});

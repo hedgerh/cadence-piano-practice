@@ -1,7 +1,7 @@
 // Diatonic 7th chords (decisions.md 2026-10-18 "7th chords"): each triad of a key plus the
 // scale's next third. In a major key: Imaj7 ii7 iii7 IVmaj7 V7 vi7 viiø7.
 import { type Key, scale } from './keys';
-import { type Pc, type PitchClass, pcNumber, pretty } from './pitch';
+import { type Pc, type PitchClass, pcNumber, pretty, spellOnLetters } from './pitch';
 import { type TriadQuality, numeralFor, triadQuality, triadShort } from './triads';
 
 export type SeventhQuality = 'maj7' | '7' | 'm7' | 'm7b5';
@@ -117,4 +117,33 @@ export function chordSymbolOf(notes: readonly PitchClass[]): string | null {
   if (notes.length !== 4 || seventh === undefined) return null;
   const q = seventhQuality(r, pcNumber(third), pcNumber(fifth), pcNumber(seventh));
   return q === null ? null : `${pretty(root)}${SUFFIX[q]}`;
+}
+
+/** Mixolydian: a major scale with a ♭7; its 1 3 5 7 is the dominant 7th chord. */
+const MIXOLYDIAN = [0, 2, 4, 5, 7, 9, 10] as const;
+
+/**
+ * The dominant 7th chord on `root`, spelled by stacking letters (C7 = C E G B♭, F7 = F A C E♭)
+ * (decisions.md 2026-10-18 "12-bar blues"). Throws where the 7th would need a double flat
+ * (C♭7's B𝄫).
+ */
+export function dominantSeventhOn(root: PitchClass, degree = 1): Seventh {
+  const names = spellOnLetters(root, MIXOLYDIAN);
+  const [r, , third, , fifth, , seventh] = names;
+  if (!r || !third || !fifth || !seventh) throw new RangeError('scale is not 7 notes');
+  const pcs: [Pc, Pc, Pc, Pc] = [pcNumber(r), pcNumber(third), pcNumber(fifth), pcNumber(seventh)];
+  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][degree - 1] ?? 'I';
+  return {
+    degree,
+    numeral: `${roman}7`,
+    root: r,
+    third,
+    fifth,
+    seventh,
+    pcs,
+    quality: '7',
+    triadQuality: 'major',
+    name: `${pretty(r)} ${NAME['7']}`,
+    short: `${pretty(r)}${SUFFIX['7']}`,
+  };
 }
