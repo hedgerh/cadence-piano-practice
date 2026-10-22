@@ -1,7 +1,7 @@
 import { noteToMidi, type Midi, type Note } from '@cadence/music';
 import { cx } from '../../../lib/cx';
 import { useHeldNotes } from '../../../midi/hooks';
-import { blackKeys, whiteKeys, type KeyboardVariant } from './keyboardLayout';
+import { blackKeys, keyboardWidth, whiteKeys, type KeyboardVariant } from './keyboardLayout';
 import styles from './PianoKeyboard.module.css';
 
 /**
@@ -60,6 +60,8 @@ export interface PianoKeyboardProps {
   live?: boolean;
   /** Lowest C; defaults to C3 (two-octave) / C4 (one-octave). */
   startMidi?: Midi;
+  /** More (or fewer) octaves than the variant's, same key sizes (songs; decisions.md 2026-10-21). */
+  octaves?: number;
   'data-testid'?: string;
 }
 
@@ -71,6 +73,7 @@ export function PianoKeyboard({
   held = NO_HELD,
   live = false,
   startMidi,
+  octaves,
   'data-testid': testId,
 }: PianoKeyboardProps) {
   const liveHeld = useHeldNotes();
@@ -78,12 +81,13 @@ export function PianoKeyboard({
   return (
     <div
       className={cx(styles.keyboard, VARIANT_CLASS[variant])}
+      style={octaves === undefined ? undefined : { width: keyboardWidth(variant, octaves) }}
       data-testid={testId}
       data-variant={variant}
       role="img"
       aria-label="Piano keyboard"
     >
-      {whiteKeys(variant, startMidi).map((k) => {
+      {whiteKeys(variant, startMidi, octaves).map((k) => {
         const state = resolveKeyState(states[k.midi], isHeld(k.midi));
         return (
           <span
@@ -97,7 +101,7 @@ export function PianoKeyboard({
           </span>
         );
       })}
-      {blackKeys(variant, startMidi).map((k) => {
+      {blackKeys(variant, startMidi, octaves).map((k) => {
         const state = resolveKeyState(states[k.midi], isHeld(k.midi));
         return (
           <span

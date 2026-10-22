@@ -17,6 +17,7 @@ import type {
   TrackSettingsInput,
   TrackSummaryDto,
 } from '@cadence/core';
+import type { SongData } from '@cadence/music';
 import { z } from 'zod';
 
 /**
@@ -424,6 +425,57 @@ export const SeedScenarioSchema = z.enum([
   'advance-day',
 ]);
 
+// ---------------------------------------------------------------- songs (decisions.md 2026-10-21)
+
+/** A note of an imported song, in beats (quarter notes). */
+const SongNoteSchema = z.object({
+  beat: z.number().min(0),
+  dur: z.number().min(0),
+  midi: z.number().int().min(0).max(127),
+  velocity: z.number().int().min(0).max(127),
+});
+
+/** A song imported from a MIDI file: both hands, tempo, bars and the sustain pedal. */
+export const SongSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  fileName: z.string(),
+  importedAt: z.number(),
+  tempos: z.array(z.object({ beat: z.number(), bpm: z.number().positive() })),
+  bars: z.array(
+    z.object({
+      number: z.number().int(),
+      beat: z.number(),
+      beats: z.number().positive(),
+      num: z.number().int(),
+      den: z.number().int(),
+    }),
+  ),
+  left: z.array(SongNoteSchema),
+  right: z.array(SongNoteSchema),
+  pedal: z.array(z.object({ beat: z.number(), down: z.boolean() })),
+  lengthBeats: z.number(),
+});
+
+export const SongSummarySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  fileName: z.string(),
+  importedAt: z.number(),
+  bars: z.number().int(),
+  notes: z.number().int(),
+  bpm: z.number(),
+});
+
+/** A MIDI file to import: its bytes as base64 (at most ~4 MB of MIDI). */
+const SongImportSchema = z.object({
+  fileName: z.string().min(1).max(260),
+  title: z.string().max(200).exactOptional(),
+  data: z.string().min(1).max(6_000_000),
+});
+
+const SongIdInputSchema = z.object({ songId: z.string().regex(/^[a-z0-9-]{1,80}$/) });
+
 // ---------------------------------------------------------------- the contract
 
 export const contracts = {
@@ -463,6 +515,13 @@ export const contracts = {
     output: RecordPlaybackResultSchema,
   },
   'sessions.finish': { input: FinishSessionInputSchema, output: CompleteSchema },
+
+  /** Imported songs (decisions.md 2026-10-21 "Songs from MIDI"), saved in userData/songs. */
+  'songs.list': { input: z.void(), output: z.array(SongSummarySchema) },
+  'songs.get': { input: SongIdInputSchema, output: SongSchema },
+  /** Rejects with a readable message when the file isn't a usable MIDI file. */
+  'songs.import': { input: SongImportSchema, output: SongSummarySchema },
+  'songs.delete': { input: SongIdInputSchema, output: z.void() },
 
   /** Registered only when CADENCE_E2E=1 or unpackaged (see main/ipc/handlers.ts). */
   'dev.seed': { input: z.object({ scenario: SeedScenarioSchema }), output: z.void() },
@@ -524,4 +583,5 @@ export type _ContractDriftGuards = [
   Assert<Mutual<In<'sessions.finish'>, FinishSessionInput>>,
   Assert<Mutual<Out<'sessions.finish'>, CompleteDto>>,
   Assert<Mutual<In<'dev.seed'>['scenario'], SeedScenario>>,
+  Assert<Mutual<Omit<Out<'songs.get'>, 'id' | 'fileName' | 'importedAt'>, SongData>>,
 ];

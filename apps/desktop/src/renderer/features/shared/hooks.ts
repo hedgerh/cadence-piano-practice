@@ -89,3 +89,37 @@ export function useSetTrackSettings() {
 }
 
 export { sessionRoute } from './routes';
+
+// ---------------------------------------------------------------- songs (decisions.md 2026-10-21)
+
+export type SongSummaryDto = ChannelOutput<'songs.list'>[number];
+export type SongDto = ChannelOutput<'songs.get'>;
+
+export function useSongs() {
+  return useQuery({ queryKey: queryKey('songs.list'), queryFn: () => api['songs.list']() });
+}
+
+export function useSong(songId: string | undefined) {
+  return useQuery({
+    queryKey: queryKey('songs.get', { songId: songId ?? '' }),
+    queryFn: () => api['songs.get']({ songId: songId ?? '' }),
+    enabled: songId !== undefined,
+    staleTime: Infinity,
+  });
+}
+
+export function useImportSong() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ChannelInput<'songs.import'>) => api['songs.import'](input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKey('songs.list') }),
+  });
+}
+
+export function useDeleteSong() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (songId: string) => api['songs.delete']({ songId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKey('songs.list') }),
+  });
+}

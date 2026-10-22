@@ -75,18 +75,26 @@ export interface BlackKey {
   leftPx: number;
 }
 
-/** Total container width: whites + gaps + padding (990 / 661 / 332). */
-export function keyboardWidth(variant: KeyboardVariant): number {
+/** Total container width: whites + gaps + padding (990 / 661 / 332); `octaves` overrides. */
+export function keyboardWidth(variant: KeyboardVariant, octaves?: number): number {
   const g = KEYBOARD_GEOMETRY[variant];
-  const whites = g.octaves * 7;
+  const whites = (octaves ?? g.octaves) * 7;
   return whites * g.whiteWidth + (whites - 1) * g.gap + 2 * g.padding;
 }
 
-export function whiteKeys(variant: KeyboardVariant, startMidi?: Midi): WhiteKey[] {
+/**
+ * The white keys from `startMidi` (default: the variant's). `octaves` widens the keyboard past
+ * the variant's own count (a song spanning six octaves; decisions.md 2026-10-21).
+ */
+export function whiteKeys(
+  variant: KeyboardVariant,
+  startMidi?: Midi,
+  octaves?: number,
+): WhiteKey[] {
   const g = KEYBOARD_GEOMETRY[variant];
   const start = startMidi ?? g.startMidi;
   const keys: WhiteKey[] = [];
-  for (let o = 0; o < g.octaves; o++) {
+  for (let o = 0; o < (octaves ?? g.octaves); o++) {
     WHITE_OFFSETS.forEach((offset, j) => {
       const midi = start + o * 12 + offset;
       keys.push({ index: o * 7 + j, midi, label: pcName(midiToPc(midi)) });
@@ -100,11 +108,15 @@ export function whiteKeys(variant: KeyboardVariant, startMidi?: Midi): WhiteKey[
  * `padding + i·(width + gap)` = 3 + 47i and ends at 47(i+1); the gap centre is
  * 47(i+1) + 1.5, so a 28px key starts at 47(i+1) − 12.5.
  */
-export function blackKeys(variant: KeyboardVariant, startMidi?: Midi): BlackKey[] {
+export function blackKeys(
+  variant: KeyboardVariant,
+  startMidi?: Midi,
+  octaves?: number,
+): BlackKey[] {
   const g = KEYBOARD_GEOMETRY[variant];
   const pitch = g.whiteWidth + g.gap;
   const keys: BlackKey[] = [];
-  for (const white of whiteKeys(variant, startMidi)) {
+  for (const white of whiteKeys(variant, startMidi, octaves)) {
     if (!HAS_BLACK_RIGHT[white.index % 7]) continue;
     const gapCentre = g.padding + pitch * white.index + g.whiteWidth + g.gap / 2;
     keys.push({

@@ -384,3 +384,21 @@ Append-only. One entry per architectural or product decision agents must follow.
   - MIDI note events are converted to the synth clock with an offset captured when recording is armed.
   - A take keeps each note's start, length and velocity. Play back restores the take's progression, key and tempo and replays it over the backing.
   - The newest 5 are kept for the visit. They are not saved to disk yet.
+
+## 2026-10-21 — Songs from MIDI
+
+- **Why**: the owner wants to learn Fred again.. songs exactly as written. Chord sheets don't say which hand plays what, or which inversion and octave, so the notes must come from a MIDI file of the part, not from memory. Delilah (The Theorist's piano cover, the owner's file) is the first.
+- **Reading**: `parseMidi` (`@cadence/music`, pure) reads formats 0 and 1, with running status, velocity-0 note-offs, sysex and meta events. It keeps notes, the sustain pedal (CC64), tempo and meter. In a format-0 file each channel becomes a part.
+- **Hands come from the parts, never a split point.** With two or more parts, the highest on average is the right hand and the lowest the left; any others join whichever is nearer middle C. A file with a single part splits at middle C. Delilah's left hand climbs to G4 B♭4 D5 F5 in bar 18, which a split point would have handed to the right hand.
+- **The song model**: `songFromMidi` gives notes in beats (quarter notes), tempo changes, bar lines that follow meter changes (Delilah's 2/4 bar 17), the pedal and the length. It refuses files with no notes or more than 40,000.
+- **Storage**: the `songs.*` IPC channels. Main reads the file (sent as base64) once and saves it as JSON in `userData/songs/<slug>-<random>.json`. Files that can't be read are skipped in the list. Nothing is bundled: a song is the learner's own file.
+- **Wait for me**:
+  - A step is every key the chosen hands strike at one moment (within 0.04 beats, so a rolled chord counts once).
+  - The song waits until each key of the step has been struck. Grading is exact: the right note in the wrong octave doesn't count. A wrong key is shown in lavender and named, never punished.
+  - Between steps the other hand can play itself at the chosen speed.
+  - The chosen bars loop.
+- **Play along**: `SongPlayer` is a look-ahead scheduler like Jam's transport.
+  - It plays the song's notes (held by the pedal), minus the learner's hand unless asked, at 25–100% speed, looping the chosen bars, after a bar of count-in. The click is optional.
+  - The learner's keys are lit as they sound, and outlined a beat ahead.
+- **Keyboard**: `PianoKeyboard` takes an `octaves` count. A song's keyboard runs from the C below its lowest note through its highest, and scales down to fit the page.
+- **Chord names are a guide only**: `chordName` names the keys held together. It prefers the bass as root ("Dm7"), then a chord over a bass note that isn't in it ("F/G", "Dm7/G"), then an inversion ("Cm/E♭"). The lit keys are the truth.

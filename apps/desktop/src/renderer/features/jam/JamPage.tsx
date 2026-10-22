@@ -23,6 +23,7 @@ import {
 } from './jamPrefs';
 import { BEATS_PER_BAR, COUNT_IN_BEATS, MAX_BPM, MIN_BPM, positionOf } from './jamTiming';
 import type { Take } from './recorder';
+import { JamTabs } from './JamTabs';
 import { useJam } from './useJam';
 
 /** The keyboard window: C3..B5, the melody's home. */
@@ -98,6 +99,7 @@ export function JamView({ streakDays, xp }: { streakDays: number; xp: number }) 
     <div className={styles.page} data-testid="jam">
       <AppHeader active="jam" streakDays={streakDays} xp={xp} showMidi />
       <main className={styles.main}>
+        <JamTabs active="progressions" />
         <div className={styles.intro}>
           <h1 className={styles.title}>Jam</h1>
           <p className={styles.lede}>

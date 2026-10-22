@@ -1,0 +1,26 @@
+/* decisions.md 2026-10-21 — Jam's two spaces, in the toggle look of the Jam settings. */
+.tabs {
+  align-self: stretch;
+  display: flex;
+  gap: 6px;
+}
+.tab {
+  min-height: 40px;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--muted);
+  font: 800 15px var(--font-body);
+  text-decoration: none;
+}
+.tab:focus-visible {
+  outline: 2px solid var(--teal-deep);
+  outline-offset: 2px;
+}
+.on {
+  border-color: var(--ink);
+  background: var(--lavender-tint);
+  color: var(--ink);
+}

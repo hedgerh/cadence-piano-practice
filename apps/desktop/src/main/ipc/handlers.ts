@@ -1,6 +1,8 @@
 import { type Services, type SystemClock, seed } from '@cadence/core';
 import type { Handlers } from '../../shared/ipc/contracts';
+import { join } from 'node:path';
 import { saveClockOffset } from '../dev/clockOffset';
+import { createSongStore } from '../songs';
 
 export interface RuntimeEnv {
   /** Unpackaged run (`pnpm dev`, e2e against `out/`). */
@@ -25,6 +27,7 @@ export interface HandlerContext {
 export function buildHandlers(ctx: HandlerContext): Handlers {
   const { services, clock, env } = ctx;
   const { settings, content, plan, progress } = services;
+  const songs = createSongStore(join(ctx.userDataPath, 'songs'));
 
   const handlers: Handlers = {
     'app.ping': () => ({
@@ -54,6 +57,13 @@ export function buildHandlers(ctx: HandlerContext): Handlers {
     'sessions.recordStep': (input) => progress.recordStep(input),
     'sessions.recordPlayback': (input) => progress.recordPlayback(input),
     'sessions.finish': (input) => progress.finishSession(input),
+
+    'songs.list': () => songs.list(),
+    'songs.get': ({ songId }) => songs.get(songId),
+    'songs.import': (input) => songs.import(input),
+    'songs.delete': ({ songId }) => {
+      songs.delete(songId);
+    },
   };
 
   if (env.dev || env.e2e) {
